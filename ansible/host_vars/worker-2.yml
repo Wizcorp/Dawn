@@ -1,0 +1,23 @@
+docker_hosts:
+- unix:///var/run/docker.sock
+- tcp://10.0.0.101:2376
+docker_ip: 10.0.0.101
+docker_log_driver: "fluentd"
+docker_labels:
+- "node.type=worker"
+
+swarm_worker: true
+swarm_remote_addrs:
+- 10.0.0.50
+swarm_listen_addr: 0.0.0.0
+swarm_advertise_addr: 10.0.0.101
+
+consul_bind_address: 0.0.0.0
+consul_client_address: 10.0.0.101
+consul_advertise_address: 10.0.0.101
+consul_retry_join:
+- 10.0.0.20
+- 10.0.0.50
+- 10.0.0.100
+- 10.0.0.101
+- 10.0.0.200

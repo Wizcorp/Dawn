@@ -1,0 +1,9 @@
+- AerisCloud.consul
+- AerisCloud.consul-service
+- src: git+https://github.com/christopherobin/ansible-docker.git
+  version: rewrite
+  name: AerisCloud.docker
+- AerisCloud.docker-manage
+- AerisCloud.swarm
+- williamyeh.fluentd
+- dj-wasabi.telegraf

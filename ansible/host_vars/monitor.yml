@@ -1,0 +1,50 @@
+docker_hosts:
+- unix:///var/run/docker.sock
+- tcp://10.0.0.20:2376
+docker_ip: 10.0.0.20
+docker_log_driver: "fluentd"
+docker_labels:
+- "node.type=monitor"
+
+consul_bind_address: 0.0.0.0
+consul_client_address: 10.0.0.20
+consul_advertise_address: 10.0.0.20
+consul_ui_enabled: true
+consul_retry_join:
+- 10.0.0.20
+- 10.0.0.50
+- 10.0.0.100
+- 10.0.0.101
+- 10.0.0.200
+
+docker_containers:
+  # setup elastic search for log storage from remote fluentd instances
+  - name: elastic
+    image: elasticsearch
+    command: "-Etransport.host=0.0.0.0 -Ediscovery.zen.minimum_master_nodes=1 -Enode.name='Monitor'"
+    published_ports:
+      - "9200:9200"
+      - "9300:9300"
+  # setup kibana for reading those logs
+  - name: kibana
+    image: kibana
+    published_ports:
+      - "5601:5601"
+    links:
+      - "elastic:elasticsearch"
+  # prometheus is a time series database, provided config will scrape anything tagged monitor in consul
+  - name: prometheus
+    image: "prom/prometheus"
+    volumes:
+      - "/etc/prometheus.yml:/etc/prometheus/prometheus.yml"
+    sync_files:
+      - src: prometheus.yml
+        dest: /etc/prometheus.yml
+        mode: 0644
+  # graphana to read the logs from above
+  - name: grafana
+    image: grafana/grafana
+    links:
+      - prometheus
+    published_ports:
+      - "3000:3000"
