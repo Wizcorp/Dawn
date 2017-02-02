@@ -1,47 +1,73 @@
-HeilHydra
-=========
+![Logo](./logo.png)
 
-![if a head is cut off, two more will take its place](https://upload.wikimedia.org/wikipedia/en/thumb/4/4b/440px-HydraOrganization_Head.jpg/250px-440px-HydraOrganization_Head.jpg)
-
-[Architecture Overview](https://docs.google.com/document/d/1l5bsWv6ARzTVkm9x84ONRJS0tzwvQeuIdP3CStg3Mro/edit#)
-
-WIP, coming soon.
+Dawn is a set of tools and configuration to help you bootstrap and maintain
+a Docker-based PaaS. On top of configuring Docker Swarm, Dawn also 
+configures and maintain the systems required for traffic routing, service
+discovery, logging, monitoring and storage.
 
 Requirements
 ------------
 
-Virtualbox
-Vagrant (1.9.1+)
-Ansible (2.2+)
-8GB of available memory to start all 5 VMs
+Coming soon.
+
+|  Software  | Version |
+|------------|---------|
+| Ansible    | 2.2+    |
 
 Quick Start
 -----------
 
-Run vagrant up, wait for it to finish, once finished set your DNS to point to 10.0.0.50 and you should get access to:
+```bash
+# coming soon
+```
 
-* Docker Swarm:
-  - Leader-1: 10.0.0.50:2376
-  - Worker-1: 10.0.0.100:2376
-  - Worker-2: 10.0.0.101:2376
-  - Balancer: 10.0.0.200:2376
-* Monitoring:
-  - Kibana: http://10.0.0.20:5601/
-  - ElasticSearch: http://10.0.0.20:9200/
-  - Grafana: http://10.0.0.20:3000/ (admin:admin)
-* Service Discovery:
-  - Consul: http://10.0.0.20:8500/ui/
-  - Consul DNS: 10.0.0.20:8600
-  - DNSMasq DNS: 10.0.0.20:53
-* Load Balancing:
-  - Traefik: http://10.0.0.200
+For a more elaborate walkthrough video, see [this tutorial](link-to-asciivideo).
+You can also find the [documentation here](./docs-coming-soon).
 
-Docker Swarm
+What does it include?
+---------------------
+
+|  System                 | Software            | 
+|-------------------------|---------------------|
+| Container execution     | [Docker Swarm](https://www.docker.com/products/docker-swarm)    | 
+| Traffic routing         | [Traefik](https://traefik.io/)         | 
+| Service discovery       | [Consul](https://www.consul.io/)          | 
+| Logging                 | [Kibana](https://www.elastic.co/products/kibana)          | 
+| Metrics                 | [Grafana](https://grafana.net/)         | 
+| Storage                 | [Ceph](https://ceph.com/)            | 
+
+We also install additional subsystems which will sit behind each components above; 
+for instance, logs are collected using [FluentD](http://www.fluentd.org/) 
+and are sent to [ElasticSearch](https://www.elastic.co/products/elasticsearch), 
+while metrics are collected with [Telegraf](https://github.com/influxdata/telegraf) 
+before being sent to [Prometheus](https://prometheus.io/).
+
+For a more detailed view of what software Dawn will install for you, please
+see the [ansible folder](./ansible). 
+
+Contributors
 ------------
 
-Leader-1 is acting as the manager, just run `export DOCKER_HOST=10.0.0.50:2376` and you should be able to start sending
-commands to the swarm manager.
+Before contributing, please make sure to get familiar with [this document](./CONTRIBUTING.md)
 
-All logs are forwarded to kibana, just go to http://10.0.0.20:5601/ and use the default settings when asked on the first
-connection, logs should appear inside the top tab of Kibana.
+All new contributors are welcome.
 
+Credits
+-------
+
+### Logo
+
+Nature graphic by <a href="http://www.flaticon.com/authors/freepik">Freepik</a>
+from <a href="http://www.flaticon.com/">Flaticon</a> is licensed under
+<a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0">CC BY 3.0</a>.
+Made with <a href="http://logomakr.com" title="Logo Maker">Logo Maker</a>
+
+License
+-------
+
+Private.
+
+Copyrights
+----------
+
+@wizcorp 2017 - All rights reserved
