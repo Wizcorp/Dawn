@@ -22,12 +22,14 @@ docker_containers:
   - name: elastic
     image: elasticsearch
     command: "-Etransport.host=0.0.0.0 -Ediscovery.zen.minimum_master_nodes=1 -Enode.name='Monitor'"
+    restart_policy: unless-stopped
     published_ports:
       - "9200:9200"
       - "9300:9300"
   # setup kibana for reading those logs
   - name: kibana
     image: kibana
+    restart_policy: unless-stopped
     published_ports:
       - "5601:5601"
     links:
@@ -35,6 +37,7 @@ docker_containers:
   # prometheus is a time series database, provided config will scrape anything tagged monitor in consul
   - name: prometheus
     image: "prom/prometheus"
+    restart_policy: unless-stopped
     volumes:
       - "/etc/prometheus.yml:/etc/prometheus/prometheus.yml"
     sync_files:
@@ -44,6 +47,7 @@ docker_containers:
   # graphana to read the logs from above
   - name: grafana
     image: grafana/grafana
+    restart_policy: unless-stopped
     links:
       - prometheus
     published_ports:

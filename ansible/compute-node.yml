@@ -27,7 +27,8 @@
   gather_facts: true
   become: true
   roles:
-    - AerisCloud.docker
+    - role: AerisCloud.docker
+      docker_insecure_registries: ["10.0.0.50:5000"]
     - role: AerisCloud.consul-service
       consul_service_name: "docker"
       consul_service_port: 2376

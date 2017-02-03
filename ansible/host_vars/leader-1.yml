@@ -1,10 +1,10 @@
 docker_hosts:
-- unix:///var/run/docker.sock
-- tcp://10.0.0.50:2376
+  - unix:///var/run/docker.sock
+  - tcp://10.0.0.50:2376
 docker_ip: 10.0.0.50
 docker_log_driver: "fluentd"
 docker_labels:
-- "node.type=leader"
+  - "node.type=leader"
 
 swarm_leader: true
 swarm_listen_addr: 0.0.0.0
@@ -14,8 +14,15 @@ consul_bind_address: 0.0.0.0
 consul_client_address: 10.0.0.50
 consul_advertise_address: 10.0.0.50
 consul_retry_join:
-- 10.0.0.20
-- 10.0.0.50
-- 10.0.0.100
-- 10.0.0.101
-- 10.0.0.200
+  - 10.0.0.20
+  - 10.0.0.50
+  - 10.0.0.100
+  - 10.0.0.101
+  - 10.0.0.200
+
+docker_containers:
+  - name: registry
+    image: registry:2
+    restart_policy: always
+    published_ports:
+      - "5000:5000"
