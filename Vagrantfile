@@ -26,10 +26,10 @@ Vagrant.configure("2") do |config|
 
   machines = [
     # monitor needs 4G due to elasticsearch
-    Machine.new("monitor",  "10.0.0.20",  ["docker", "consul"], memory: "4096"),
+    Machine.new("monitor",  "10.0.0.20",  ["docker", "swarm", "consul"], memory: "4096"),
     Machine.new("leader-1", "10.0.0.50",  ["docker", "swarm", "consul"]),
-    Machine.new("worker-1", "10.0.0.100", ["docker", "swarm", "consul"]),
-    Machine.new("worker-2", "10.0.0.101", ["docker", "swarm", "consul"]),
+    Machine.new("worker-1", "10.0.0.100", ["docker", "swarm", "consul"], memory: "1024"),
+    Machine.new("worker-2", "10.0.0.101", ["docker", "swarm", "consul"], memory: "1024"),
     Machine.new("balancer", "10.0.0.200", ["docker", "swarm", "consul"])
   ]
 

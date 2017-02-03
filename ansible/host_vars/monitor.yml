@@ -6,6 +6,12 @@ docker_log_driver: "fluentd"
 docker_labels:
 - "node.type=monitor"
 
+swarm_manager: true
+swarm_remote_addrs:
+- 10.0.0.50
+swarm_listen_addr: 0.0.0.0
+swarm_advertise_addr: 10.0.0.20
+
 consul_bind_address: 0.0.0.0
 consul_client_address: 10.0.0.20
 consul_advertise_address: 10.0.0.20
