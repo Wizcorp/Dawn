@@ -1,0 +1,58 @@
+---
+# the image to use for vagrant and the default user for that image
+#image: "centos/7"
+image: "ubuntu/xenial"
+user: vagrant
+# the base instance
+base: &base
+  groups: &base_groups
+    ? docker
+    ? swarm
+    ? consul
+  cpus: 2
+  memory: 1024
+  swarm: worker
+instances:
+  # monitoring node, is actually a worker
+  monitor:
+    <<: *base
+    ip: 10.0.0.20
+    labels:
+      - dawn.node.type=worker
+      - dawn.node.subtype=storage
+    memory: 4096
+    groups:
+      <<: *base_groups
+      ? monitor
+  # leader nodes, hosts the registry
+  control-1: &control
+    <<: *base
+    ip: 10.0.0.50
+    labels:
+      - dawn.node.type=control
+    swarm: leader
+    groups:
+      <<: *base_groups
+      ? control
+  # balancer nodes, usually one is more than enough
+  edge-1: &edge
+    <<: *base
+    ip: 10.0.0.200
+    labels:
+      - dawn.node.type=edge
+    memory: 512
+    swarm: leader
+    groups:
+      <<: *base_groups
+      ? edge
+  # worker nodes are where the app actually run
+  worker-1: &worker
+    <<: *base
+    ip: 10.0.0.100
+    labels:
+      - dawn.node.type=worker
+      - dawn.node.subtype=app
+    memory: 2048
+  worker-2:
+    <<: *worker
+    ip: 10.0.0.101

@@ -1,0 +1,15 @@
+#docker_networks:
+#  - name: traefik-net
+#    driver: overlay
+
+#docker_service:
+#  # setup elastic search for log storage from remote fluentd instances
+#  - name: traefik
+#    image: traefik
+#    constraint: engine.labels.node.type==balancer
+#    published_ports:
+#      - "80:80"
+#      - "8080:8080"
+#    mount:
+#      - type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock
+#    network: traefik-net
