@@ -1,2 +1,12 @@
+# Ansible
 *.log
+*.retry
+
+# Vagrant
 /.vagrant
+
+# System files
+*.swp
+*~
+*.DS_Store
+._*

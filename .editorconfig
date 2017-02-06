@@ -1,0 +1,15 @@
+root = true
+
+[*]
+end_of_line = lf
+charset = utf-8
+
+# yaml configuration
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# vagrantfile (official indentation scheme)
+[Vagrantfile]
+indent_style = space
+indent_size = 2
