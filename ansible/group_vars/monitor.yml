@@ -1,28 +1,3 @@
-docker_hosts:
-- unix:///var/run/docker.sock
-- tcp://10.0.0.20:2376
-docker_ip: 10.0.0.20
-docker_log_driver: "fluentd"
-docker_labels:
-- "node.type=monitor"
-
-swarm_manager: true
-swarm_remote_addrs:
-- 10.0.0.50
-swarm_listen_addr: 0.0.0.0
-swarm_advertise_addr: 10.0.0.20
-
-consul_bind_address: 0.0.0.0
-consul_client_address: 10.0.0.20
-consul_advertise_address: 10.0.0.20
-consul_ui_enabled: true
-consul_retry_join:
-- 10.0.0.20
-- 10.0.0.50
-- 10.0.0.100
-- 10.0.0.101
-- 10.0.0.200
-
 docker_containers:
   # setup elastic search for log storage from remote fluentd instances
   - name: elastic

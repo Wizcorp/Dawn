@@ -7,6 +7,7 @@
   vars:
     consul_domain: local
     consul_datacenter: docker
+    consul_retry_join: "{{ groups['consul'] | map('extract', hostvars, ['ansible_ssh_host']) | list }}"
 
 # setup fluentd on everything
 - hosts: all
@@ -38,7 +39,20 @@
   vars:
     docker_log_driver: "fluentd"
 
-# setup swarm, expose it on consul
+# setup on the control nodes first (to setup leader and managers)
+- hosts: control
+  gather_facts: true
+  become: true
+  roles:
+    - AerisCloud.swarm
+    - role: AerisCloud.consul-service
+      consul_service_name: "swarm"
+      consul_service_port: 2377
+      consul_service_checks:
+      - type: http
+        http: "http://{{ docker_ip }}:2376/_ping"
+
+# then run swarm again on all the nodes
 - hosts: swarm
   gather_facts: true
   become: true
