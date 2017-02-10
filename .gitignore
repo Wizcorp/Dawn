@@ -1,6 +1,7 @@
 # Ansible
 *.log
 *.retry
+/ansible/inventory
 
 # Vagrant
 /.vagrant

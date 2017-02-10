@@ -85,8 +85,6 @@ Vagrant.configure("2") do |config|
           apt-get update
           apt-get install -y python-minimal
         fi
-
-        [[ "$( cat /proc/sys/vm/max_map_count )" -lt 262144 ]] && sysctl -w vm.max_map_count=262144 || true
 SHELL
 
       # only run ansible once everything is up
