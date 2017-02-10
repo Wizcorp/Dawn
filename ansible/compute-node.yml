@@ -17,7 +17,7 @@
   vars:
     tdagent_plugins:
       - fluent-plugin-elasticsearch
-    tdagent_conf_template: "td-agent.conf"
+    tdagent_conf_template: "files/td-agent.conf"
 #    tdagent_conf_others:
 #      es_index:
 #        src: "files/index.tpl.json"
@@ -29,7 +29,7 @@
   become: true
   roles:
     - role: AerisCloud.docker
-      docker_insecure_registries: "{{ groups['control'] | map('extract', hostvars, ['ansible_ssh_host']) | list }}"
+      docker_insecure_registries: "{{ groups['control'] | map('extract', hostvars, ['ansible_ssh_host']) | map('regex_replace', '$', ':5000') | list }}"
     - role: AerisCloud.consul-service
       consul_service_name: "docker"
       consul_service_port: 2376
