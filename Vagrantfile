@@ -85,6 +85,8 @@ Vagrant.configure("2") do |config|
           apt-get update
           apt-get install -y python-minimal
         fi
+
+        [[ -f /etc/redhat-release ]] && systemctl restart network
 SHELL
 
       # only run ansible once everything is up
@@ -94,6 +96,7 @@ SHELL
           ansible.playbook = "ansible/compute-node.yml"
           ansible.galaxy_role_file = "ansible/dependencies.yml" if ENV['DAWN_SKIP_GALAXY'].nil?
           ansible.inventory_path = "ansible/inventory"
+          ansible.host_key_checking = false
         end
       end
     end
