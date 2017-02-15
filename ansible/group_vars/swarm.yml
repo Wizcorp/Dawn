@@ -1,6 +1,0 @@
-swarm_leader: "{{ groups['control'][0] == inventory_hostname }}"
-swarm_manager: "{{ (inventory_hostname in groups['control'] and groups['control'][0] != inventory_hostname) or inventory_hostname in groups['edge'] }}"
-swarm_worker: "{{ inventory_hostname not in groups['control'] and inventory_hostname not in groups['edge'] }}"
-swarm_listen_addr: 0.0.0.0
-swarm_advertise_addr: "{{ hostvars[inventory_hostname]['ansible_' + private_interface]['ipv4']['address'] }}"
-swarm_remote_addrs: "{{ groups['control'] | map('extract', hostvars, ['ansible_ssh_host']) | list }}"

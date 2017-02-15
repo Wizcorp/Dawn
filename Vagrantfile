@@ -23,8 +23,6 @@ def generate_inventory(configuration)
       "docker_labels='#{instance_info["labels"].to_json}'"
     ]
 
-    #ansible_vars.push (if instance_info.fetch("swarm", "worker") == "worker" then "swarm_worker=True" else "swarm_leader=True" end)
-
     inventory_file.puts ansible_vars.join(" ")
 
     instance_info["groups"].each do |group, _|
@@ -54,7 +52,7 @@ end
 
 Vagrant.configure("2") do |config|
   # load configuration
-  configuration = YAML::load_file("instances.yml")
+  configuration = YAML::load_file(ENV['DAWN_CONFIG_FILE'] || "instances.yml")
 
   config.vm.box = configuration["image"]
 
@@ -86,15 +84,18 @@ Vagrant.configure("2") do |config|
           apt-get install -y python-minimal
         fi
 
-        [[ -f /etc/redhat-release ]] && systemctl restart network
+        # Vagrant >1.8.7,<=1.9.1 has a bug where private interfaces are not
+        # provisioned properly on centos boxes, manually restart the network
+        # to deal with those
+        [[ -f /etc/redhat-release ]] && systemctl restart network || true
 SHELL
 
       # only run ansible once everything is up
       if instance_name == configuration["instances"].keys.last
         instance.vm.provision "ansible" do |ansible|
           ansible.limit = "all"
-          ansible.playbook = "ansible/compute-node.yml"
-          ansible.galaxy_role_file = "ansible/dependencies.yml" if ENV['DAWN_SKIP_GALAXY'].nil?
+          ansible.playbook = "ansible/dawn.yml"
+          ansible.galaxy_role_file = "ansible/requirements.yml" if ENV['DAWN_SKIP_GALAXY'].nil?
           ansible.inventory_path = "ansible/inventory"
           ansible.host_key_checking = false
         end

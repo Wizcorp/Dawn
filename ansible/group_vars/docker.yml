@@ -1,5 +1,0 @@
-docker_hosts:
-- unix:///var/run/docker.sock
-- "{{ hostvars[inventory_hostname]['ansible_' + private_interface]['ipv4']['address'] }}:2376"
-docker_ip: "{{ hostvars[inventory_hostname]['ansible_' + private_interface]['ipv4']['address'] }}"
-docker_log_driver: "fluentd"

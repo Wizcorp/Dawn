@@ -1,7 +1,0 @@
-consul_ui_enabled: true
-docker_containers:
-  - name: registry
-    image: registry:2
-    restart_policy: always
-    published_ports:
-      - "5000:5000"
