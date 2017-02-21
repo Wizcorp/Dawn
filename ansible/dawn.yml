@@ -63,6 +63,8 @@
     consul_bind_address: 0.0.0.0
     consul_client_address: "{{ private_ipv4 }}"
     consul_advertise_address: "{{ private_ipv4 }}"
+    consul_domain: dawn
+    consul_datacenter: in
     consul_ui_enabled: "{{ inventory_hostname in groups['control'] }}"
 
 ### Fluentd
@@ -102,6 +104,29 @@
       consul_service_checks:
       - type: http
         http: "http://{{ private_ipv4 }}:2376/_ping"
+  # This task is related to how overlay networks behave. The way overlay works
+  # is that it will mark your packet at the mangle stage with the service id you
+  # are trying to reach, IPVS then catches those marked packets and route them
+  # dynamically to the right target. The issue is that ipvs will stop tracking
+  # an idle connection after 900 seconds, after that any packet on this
+  # connection will not be routed properly and try to access the original virtual
+  # IP associated with the task, resulting in failure since that IP doesn't exists.
+  # By setting the tcp_keepalive below 900 we make sure that the connection will
+  # never expire in ipvs.
+  #
+  # The values below come from: https://community.emc.com/blogs/cairo_BRS/2014/03/23/networker-best-practice-and-performance-tuning-on-os-level-windows-and-linux
+  tasks:
+    - name: "Set sysctl values for tcp_keepalive (necessary for overlay)"
+      sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+      with_items:
+        - { name: "net.ipv4.tcp_keepalive_time", value: 600 }
+        - { name: "net.ipv4.tcp_keepalive_intvl", value: 30 }
+        - { name: "net.ipv4.tcp_keepalive_probes", value: 10 }
+      tags:
+        - sysctl
   vars:
     docker_log_driver: "fluentd"
 

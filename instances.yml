@@ -46,7 +46,7 @@ instances:
   # not run many containers (by default it only runs the registry)
   control-1: &control
     <<: *base
-    ip: 10.0.0.50
+    ip: 172.24.0.50
     cpus: 2
     memory: 2048
     # for now we merge monitor and control nodes since not everyone has a crazy
@@ -68,7 +68,7 @@ instances:
   # will run traefik in swarm+consul mode
   edge-1: &edge
     <<: *base
-    ip: 10.0.0.200
+    ip: 172.24.0.200
     cpus: 1
     memory: 512
     groups:
@@ -82,7 +82,7 @@ instances:
   # possible
   worker-1: &worker
     <<: *base
-    ip: 10.0.0.100
+    ip: 172.24.0.100
     memory: 2048
     groups:
       <<: *base_groups
@@ -97,10 +97,10 @@ instances:
 
   worker-2:
     <<: *worker
-    ip: 10.0.0.101
+    ip: 172.24.0.101
 #  worker-3:
 #    <<: *worker
-#    ip: 10.0.0.102
+#    ip: 172.24.0.102
 #  worker-4:
 #    <<: *worker
-#    ip: 10.0.0.103
+#    ip: 172.24.0.103
