@@ -25,7 +25,7 @@ echo ""
 pushd /dawn/templates/ > /dev/null
 declare -A templates
 for template in \
-   $(find ./ -maxdepth 1 \
+   $(find ./ -type d -maxdepth 1 \
      | sed "s#./##" \
      | tail -n +2)
 do
@@ -54,7 +54,7 @@ if
 then
   pushd /dawn/templates > /dev/null
   rsync -av "./${template}/" \
-    "${DAWN_ENVIRONMENT_FILES_PATH}/"
+    "${DAWN_ENVIRONMENT_FILES_PATH}/" &> /dev/null
   popd > /dev/null
 fi
 

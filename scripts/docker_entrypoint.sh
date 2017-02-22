@@ -39,10 +39,11 @@ pushd /dawn/scripts/ > /dev/null
 # Store the command we have received, and create
 # a variable holding the path to the environment files
 # in the project
-COMMAND="$@"
+export COMMAND="${@}"
 export DAWN_PROJECT_FILES_PATH="/dawn/project/dawn"
 export DAWN_PROJECT_CONFIG_FILE_PATH="${DAWN_PROJECT_FILES_PATH}/dawn.yml"
 export DAWN_ENVIRONMENT_FILES_PATH="${DAWN_PROJECT_FILES_PATH}/${DAWN_ENVIRONMENT}"
+export PS1="${DAWN_PROJECT_NAME} (${DAWN_ENVIRONMENT}):\w# "
 
 # We make sure that the base directory structure is present,
 # and that a configuration file is indeed present.
@@ -58,20 +59,12 @@ then
   exit 1
 fi
 
-# If no commands have been specified, we 
-# use bash by default
-if
-  [ "${COMMAND}" == "" ]
-then
-  COMMAND="bash --login"
-fi
-
 # If ./dawn/${environment_name} does not exist,
 # we invite the user to create it
 if
   [ ! -d "${DAWN_ENVIRONMENT_FILES_PATH}" ]
 then
-  ./create_environment.sh
+  source ./create_environment.sh
 fi
 
 # Once all of this has been done, we set up
@@ -80,4 +73,7 @@ fi
 # the requested command
 source ./setup_environment.sh
 popd > /dev/null
+
+pushd ${DAWN_ENVIRONMENT_FILES_PATH} > /dev/null
 ${COMMAND}
+popd > /dev/null
