@@ -79,6 +79,16 @@ Before contributing, please make sure to get familiar with [this document](./CON
 
 All new contributors are welcome.
 
+Local Development
+-----------------
+
+You will need the latest version of vagrant for that, for a quick start just run `vagrant up` in the current folder
+and it will start a basic cluster with 2 workers, 1 edge and 1 control (6.5GB of memory necessary). If you want to
+experiment with different types of clusters, create a copy of `instances.yml` under a new name then modify it to your
+liking, then `export DAWN_CONFIG_FILE="my-config.yml"` to use it.
+
+Once everything is up you should be able to access the different services on the IPs set inside your configuration file.
+
 Credits
 -------
 

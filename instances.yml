@@ -1,0 +1,106 @@
+---
+# This file allows you to configure which machines gets spawned by the
+# Vagrantfile, it is also used when generating the inventory that comes with it,
+# you could directly edit this file, or make a copy somewhere else then use the
+# DAWN_CONFIG_FILE environment variable set to that file path to have vagrant
+# use it
+
+# the image to use for vagrant and the default user for that image
+image: "centos/7"
+user: vagrant
+
+# this is the name of the private interface created by vagrant, which can vary
+# per operating system (it is eth1 on centos7 and enp0s8 on ubuntu xenial)
+interface: eth1
+
+# this is our base instance, it is saved as a YAML anchor and is used by all
+# the instance to defined some safe default values for the vms being created, to
+# use this anchor in your instance just do something like:
+#   instance_name:
+#     <<: *base # import the base instance in the current object
+base: &base
+  # default is 2 cpus and 1024MB of memory per node
+  cpus: 2
+  memory: 1024
+
+  # base groups are docker, swarm and consul, in the case of vagrant we always
+  # have those 3 groups enabled on all nodes but in more complex setups (custom
+  # inventories) a user might have nodes that do not need those services
+  # installed we create a separate instance here since some boxes might want to
+  # extend this.
+  #
+  # The "? key" format creates an object with the "key" value as a key and no
+  # value, this is because while objects can be aliased in YAML, arrays cannot
+  # (do not ask me why) so for example the value below would look like
+  # {"docker":null,"swarm":null,"consul":null} in JSON
+  groups: &base_groups
+    ? docker
+    ? swarm
+    ? consul
+
+# this is our list of instances, usually you will want at least one control, one
+# edge and one worker, though you should be able to merge them by specifying the
+# right groups
+instances:
+  # this is our control node, it acts as the leader on docker swarm and should
+  # not run many containers (by default it only runs the registry)
+  control-1: &control
+    <<: *base
+    ip: 172.24.0.50
+    cpus: 2
+    memory: 2048
+    # for now we merge monitor and control nodes since not everyone has a crazy
+    # amount of memory on their dev machine
+    groups:
+      <<: *base_groups
+      ? control
+      ? monitor
+    # labels are written on the docker daemon and are used by constraints, you
+    # can for example start a service on control nodes only by adding the
+    # following flag to the docker service create call:
+    #   --constraint engine.labels.dawn.node.type==control
+    # though usually you should not start anything on those nodes since their
+    # job is mainly to keep the swarm healthy
+    labels:
+      - dawn.node.type=control
+
+  # balancer nodes, they are your door to the outside world, by default they
+  # will run traefik in swarm+consul mode
+  edge-1: &edge
+    <<: *base
+    ip: 172.24.0.200
+    cpus: 1
+    memory: 512
+    groups:
+      <<: *base_groups
+      ? edge
+    labels:
+      - dawn.node.type=edge
+
+  # worker nodes are where you should actually run your applications, we create
+  # another anchor here to make further worker's declaration as succint as
+  # possible
+  worker-1: &worker
+    <<: *base
+    ip: 172.24.0.100
+    memory: 2048
+    groups:
+      <<: *base_groups
+      ? worker
+    # same as the control node, the subtype label allows us to specialize even
+    # more the constraints, for example a compose file should target only
+    # workers, but have the database start on special subtype==db nodes with
+    # better SSD drives or more memory
+    labels:
+      - dawn.node.type=worker
+      - dawn.node.subtype=app
+
+  worker-2:
+    <<: *worker
+    ip: 172.24.0.101
+#  worker-3:
+#    <<: *worker
+#    ip: 172.24.0.102
+#  worker-4:
+#    <<: *worker
+#    ip: 172.24.0.103

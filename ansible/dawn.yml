@@ -1,0 +1,358 @@
+---
+# This is our main playbook, it takes care of setting up all the nodes with the
+# proper software necessary to run dawn, that is consul, flutend, docker, etc...
+# The cruft or the logic is down the the roles themselves but you can find in
+# this files all variables passed to those roles as well as a couple minor tasks
+# for the monitoring tasks
+
+#########
+# SETUP #
+#########
+
+### Force fact gathering
+# We iterate on every machines in the "all" group and make sure we at least get
+# the IPv4 of each system, this allows us to run --limit plays while still
+# providing templates with up-to-date informations about other nodes in the inv.
+###
+- hosts: all
+  gather_facts: true
+  tasks:
+    # This works around a bug in ansible 2.2.x where delegate_facts doesn't work
+    # when using with_items, so instead we do the loop above the setup call.
+    # This allows us to do --limit=something without all hell breaking loose
+    - name: "Gather IP informations"
+      include: gather_facts.yml gather_facts_host="{{ item }}"
+      with_items: "{{ groups['all'] }}"
+      tags:
+        - always
+
+### Caching
+# Here we cache some unreadable blobs of filters into custom facts to make the
+# rest of this playbook easier to read
+###
+- hosts: all
+  tasks:
+    - name: "Set IP facts"
+      set_fact:
+        group_ipv4:
+          consul: "{{ groups['consul'] | map('extract', hostvars, ['private_ipv4']) | list }}"
+          control: "{{ groups['control'] | map('extract', hostvars, ['private_ipv4']) | list }}"
+          monitor: "{{ groups['monitor'] | map('extract', hostvars, ['private_ipv4']) | list }}"
+      tags:
+        - always
+
+##########################
+# PRIMARY INFRASTRUCTURE #
+##########################
+
+### Consul
+# Consul is installed on all the nodes and is a cornerstone of this infra and is
+# used to advertise every services in the cluster.
+#
+# Most components will use consul as a configuration source (both services and
+# the kv store) when possible/supported, see prometheus as an exemple of service
+# using consul for configuration.
+#
+# Consul is installed on every node, but only control nodes gets the consul UI.
+###
+- hosts: consul
+  become: true
+  roles:
+  - role: AerisCloud.consul
+    consul_retry_join: "{{ group_ipv4.consul | list }}"
+    consul_bind_address: 0.0.0.0
+    consul_client_address: "{{ private_ipv4 }}"
+    consul_advertise_address: "{{ private_ipv4 }}"
+    consul_domain: dawn
+    consul_datacenter: in
+    consul_ui_enabled: "{{ inventory_hostname in groups['control'] }}"
+
+### Fluentd
+# Fluentd is installed on all the nodes and is used to collect logs from local
+# containers and services, those logs are then forwarded to a configurable
+# target which is by default elasticsearch on the monitoring nodes.
+#
+# TODO: setup rsyslog to forward logs into fluentd too
+###
+- hosts: all
+  become: true
+  roles:
+    - role: williamyeh.fluentd
+      tdagent_plugins:
+        - fluent-plugin-elasticsearch
+      tdagent_conf_template: "files/td-agent.conf"
+
+### Docker
+# Docker is installed on every node, default setup is to listen on both the
+# docker socket (for running docker directly via SSH) but also via HTTP on the
+# default port (2376). We also register the insecure registry that will be
+# started on the first control node. Finally we advertise the daemon consul
+###
+- hosts: docker
+  become: true
+  roles:
+    - role: AerisCloud.docker
+      docker_hosts:
+        - unix:///var/run/docker.sock
+        - "{{ private_ipv4 }}:2376"
+      docker_ip: "{{ private_ipv4 }}"
+      docker_log_driver: "fluentd"
+      docker_insecure_registries: "{{  group_ipv4.control | map('regex_replace', '$', ':5000') | list }}"
+    - role: AerisCloud.consul-service
+      consul_service_name: "docker"
+      consul_service_port: 2376
+      consul_service_checks:
+      - type: http
+        http: "http://{{ private_ipv4 }}:2376/_ping"
+  # This task is related to how overlay networks behave. The way overlay works
+  # is that it will mark your packet at the mangle stage with the service id you
+  # are trying to reach, IPVS then catches those marked packets and route them
+  # dynamically to the right target. The issue is that ipvs will stop tracking
+  # an idle connection after 900 seconds, after that any packet on this
+  # connection will not be routed properly and try to access the original virtual
+  # IP associated with the task, resulting in failure since that IP doesn't exists.
+  # By setting the tcp_keepalive below 900 we make sure that the connection will
+  # never expire in ipvs.
+  #
+  # The values below come from: https://community.emc.com/blogs/cairo_BRS/2014/03/23/networker-best-practice-and-performance-tuning-on-os-level-windows-and-linux
+  tasks:
+    - name: "Set sysctl values for tcp_keepalive (necessary for overlay)"
+      sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+      with_items:
+        - { name: "net.ipv4.tcp_keepalive_time", value: 600 }
+        - { name: "net.ipv4.tcp_keepalive_intvl", value: 30 }
+        - { name: "net.ipv4.tcp_keepalive_probes", value: 10 }
+      tags:
+        - sysctl
+  vars:
+    docker_log_driver: "fluentd"
+
+### Swarm
+# We first create the swarm cluster on the first control node, then have every
+# other nodes join this node in the swarm.
+# Finally we also advertise the swarm on consul
+###
+- hosts: control
+  become: true
+  roles:
+    - role: AerisCloud.swarm
+      swarm_leader: true
+      swarm_listen_addr: 0.0.0.0
+      swarm_advertise_addr: "{{ private_ipv4 }}"
+      when: groups['control'][0] == inventory_hostname
+
+# Run swarm again on all the nodes to have them join and setup the consul service
+- hosts: swarm
+  become: true
+  roles:
+    - role: AerisCloud.swarm
+      swarm_leader: "{{ groups['control'][0] == inventory_hostname }}"
+      swarm_manager: "{{ (inventory_hostname in groups['control'] and groups['control'][0] != inventory_hostname) or inventory_hostname in groups['edge'] }}"
+      swarm_worker: "{{ inventory_hostname not in groups['control'] and inventory_hostname not in groups['edge'] }}"
+      swarm_listen_addr: 0.0.0.0
+      swarm_advertise_addr: "{{ private_ipv4 }}"
+      swarm_remote_addrs: "{{  group_ipv4.control | list }}"
+    - role: AerisCloud.consul-service
+      consul_service_name: "swarm"
+      consul_service_port: 2377
+      consul_service_checks:
+      - type: http
+        http: "http://{{ private_ipv4 }}:2376/_ping"
+
+### Telegraf
+# Telegraf is our monitoring agent, by default it is set to monitor the local
+# machine (cpu/memory/disk/etc...) as well as the local docker daemon, it is
+# also advertised on consul so that prometheus can detect it and start polling
+# from it as soon as it is available.
+###
+- hosts: all
+  become: true
+  roles:
+    - role: dj-wasabi.telegraf
+      telegraf_agent_version: 1.2.0
+      telegraf_agent_version_sub_l: ""
+      telegraf_agent_output:
+        - type: prometheus_client
+          config:
+            - listen = "0.0.0.0:9126"
+      telegraf_plugins_extra:
+        - plugin: docker
+          config:
+            - endpoint = "unix:///var/run/docker.sock"
+            - container_names = []
+    - role: AerisCloud.consul-service
+      consul_service_name: "telegraf"
+      consul_service_port: 9126
+      consul_service_tags:
+        - monitor
+  tasks:
+    - name: Give the Telegraf user access to docker
+      user:
+        name: telegraf
+        groups: docker
+      tags:
+        - telegraf
+
+#####################
+# DOCKER CONTAINERS #
+#####################
+
+### Monitoring nodes
+# Monitoring nodes are running:
+#  * elasticsearch+kibana to aggregate, store and visualize logs from the nodes
+#    in the cluster. By default the source of logs comes from fluentd on each
+#    host.
+#  * prometheus+grafana to aggregate, store and visualize live metrics from hosts
+#    and containers. Source of metrics are automatically picked up from any
+#    service in consul that is announced with the tag "monitor"
+###
+
+# monitoring nodes need some adjustements so that elasticsearch doesn't scream
+# at us, see: https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html
+- hosts: monitor
+  become: true
+  tasks:
+    - name: "Set vm.max_map_count for elasticsearch"
+      sysctl:
+        name: vm.max_map_count
+        value: 262144
+        state: present
+      tags:
+        - sysctl
+        - monitoring
+
+# start containers, all those containers are set to "restart_policy: unless-stopped"
+# so that the user can stop those containers if they do not need/want them
+- hosts: monitor
+  become: true
+  roles:
+    - role: AerisCloud.docker-manage
+      docker_containers:
+        # setup elastic search for log storage from remote fluentd instances
+        - name: elastic
+          image: elasticsearch
+          command: "-Etransport.host=0.0.0.0 -Ediscovery.zen.minimum_master_nodes=1 -Enode.name='{{ inventory_hostname }}'"
+          env:
+            ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+          restart_policy: unless-stopped
+          published_ports:
+            - "9200:9200"
+            - "9300:9300"
+        # setup kibana for reading those logs
+        - name: kibana
+          image: kibana
+          restart_policy: unless-stopped
+          published_ports:
+            - "5601:5601"
+          links:
+            - "elastic:elasticsearch"
+        # prometheus is a time series database, provided config will scrape
+        # anything tagged as monitor in consul
+        - name: prometheus
+          image: "prom/prometheus"
+          restart_policy: unless-stopped
+          volumes:
+            - "/etc/prometheus.yml:/etc/prometheus/prometheus.yml"
+          sync_templates:
+            - src: "{{ playbook_dir }}/files/prometheus.yml"
+              dest: /etc/prometheus.yml
+              mode: 0644
+        # graphana to read the logs from above
+        - name: grafana
+          image: grafana/grafana
+          restart_policy: unless-stopped
+          links:
+            - prometheus
+          published_ports:
+            - "3000:3000"
+  # the following tasks will automatically provision grafana with the prometheus
+  # source as well as a custom dashboard
+  tasks:
+    - name: "Build grafana URL"
+      set_fact:
+        grafana_url: "http://{{ group_ipv4.monitor[0] }}:3000"
+      tags:
+        - docker
+        - grafana
+    - name: "Check if prometheus source exists"
+      uri:
+        url: "{{ grafana_url}}/api/datasources"
+        return_content: yes
+        user: admin
+        password: admin
+        force_basic_auth: yes
+      register: grafana_datasources
+      tags:
+        - docker
+        - grafana
+    - name: "Setup prometheus source on grafana"
+      uri:
+        url: "{{ grafana_url}}/api/datasources"
+        method: POST
+        user: admin
+        password: admin
+        body:
+          name: prometheus
+          type: prometheus
+          url: http://prometheus:9090
+          access: proxy
+          basicAuth: false
+        force_basic_auth: yes
+        status_code: 200
+        body_format: json
+      when: "{{ 'prometheus' not in grafana_datasources.json|map(attribute='name') }}"
+      tags:
+      - docker
+      - grafana
+    - name: "Check if a dashboard exists"
+      uri:
+        url: "{{ grafana_url}}/api/search?query=Hardware"
+        return_content: yes
+        user: admin
+        password: admin
+        force_basic_auth: yes
+      register: grafana_dashboards
+      tags:
+        - docker
+        - grafana
+    - name: "Register hardware dashboard"
+      uri:
+        url: "{{ grafana_url}}/api/dashboards/db"
+        method: POST
+        user: admin
+        password: admin
+        body: "{\"dashboard\":{{ lookup('file','files/dashboard.json') }},\"overwrite\":false}"
+        force_basic_auth: yes
+        status_code: 200
+        body_format: json
+      when: "{{ grafana_dashboards.json|length == 0 }}"
+      tags:
+      - docker
+      - grafana
+
+### Control Nodes
+# The first control node has a registry running on it, it is used by the swarm
+# when deploying custom built images accross the cluster
+###
+- hosts: control
+  become: true
+  roles:
+    - role: AerisCloud.docker-manage
+      docker_containers:
+        - name: registry
+          image: registry:2
+          restart_policy: always
+          published_ports:
+            - "5000:5000"
+
+### All nodes
+# This is for custom containers setup that might have been setup by the user in
+# group_vars/host_vars
+###
+- hosts: all
+  become: true
+  roles:
+    - AerisCloud.docker-manage

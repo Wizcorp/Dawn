@@ -22,7 +22,7 @@ scrape_configs:
 
     # The location of our consul source
     consul_sd_configs:
-      - server: '10.0.0.20:8500'
+      - server: '{{ ansible_ssh_host }}:8500'
 
     # Only keep services that have the monitor label
     relabel_configs:
@@ -31,4 +31,6 @@ scrape_configs:
         action: keep
 
       - source_labels: [__meta_consul_service]
+        regex: (.*)
         target_label: job
+        replacement: ${1}

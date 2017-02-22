@@ -1,3 +1,17 @@
+# Ansible
 *.log
+
+*.retry
+/ansible/inventory
+
+# Vagrant
 /.vagrant
+
+# System files
+*.swp
+*~
+*.DS_Store
+._*
+
+# Dawn folde
 ./dawn

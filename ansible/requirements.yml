@@ -1,0 +1,26 @@
+# This files defines the roles to be downloaded from ansible-galaxy, the latest
+# version of all roles can be downloaded by running the following commands from
+# the root of the dawn project:
+#
+#   ansible-galaxy install -r ansible/requirements.yml -p ansible/roles
+#
+# See http://docs.ansible.com/ansible/galaxy.html#installing-multiple-roles-from-a-file
+# for more details about the format of this file
+
+# aeriscloud roles, those are maintained by us
+- name: AerisCloud.consul
+  version: master
+- name: AerisCloud.consul-service
+  version: master
+- name: AerisCloud.docker
+  version: v1.1.0
+- name: AerisCloud.docker-manage
+  version: master
+- name: AerisCloud.swarm
+  version: master
+
+# external roles
+- name: williamyeh.fluentd
+  version: 1.4.1
+- name: dj-wasabi.telegraf
+  version: master
