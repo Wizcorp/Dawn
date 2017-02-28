@@ -118,7 +118,7 @@
     - name: "Restart rsyslog"
       service:
         name: rsyslog
-        state: restart
+        state: restarted
       when: rsyslog_conf.changed
 
 ### Docker
