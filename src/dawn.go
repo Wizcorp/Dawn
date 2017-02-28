@@ -278,13 +278,28 @@ func runEnvironmentContainer(environment string, configuration *Config, command 
 	arguments := []string{
 		"run",
 		"--rm",
+		"-it",
 		"-e", fmt.Sprintf("DAWN_ENVIRONMENT=%s", environment),
 		"-e", fmt.Sprintf("DAWN_PROJECT_NAME=%s", configuration.ProjectName),
 		"-v", fmt.Sprintf("%s:/dawn/project", getWorkingDirectory()),
 		"-v", fmt.Sprintf("%s:/root", localEnvironmentDir),
-		"-it",
-		getFullImageName(configuration.Image),
 	}
+
+	// During development, it is possible to mount directly the local
+	// files which normally are already baked into the container
+	development := os.Getenv("DAWN_DEVELOPMENT")
+	if development != "" {
+		fmt.Println("************************************************************************")
+		fmt.Printf("WARNING: Running in develop mode! (using: %s)\n", development)
+		fmt.Println("************************************************************************")
+
+		arguments = append(arguments, "-v")
+		arguments = append(arguments, fmt.Sprintf("%s/ansible:/dawn/ansible", development))
+		arguments = append(arguments, "-v")
+		arguments = append(arguments, fmt.Sprintf("%s/templates:/dawn/templates", development))
+	}
+
+	arguments = append(arguments, getFullImageName(configuration.Image))
 
 	return runSubProcess("docker", append(arguments, command...))
 }

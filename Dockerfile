@@ -46,11 +46,20 @@ ADD ./templates /dawn/templates
 ADD ./scripts /dawn/scripts
 ADD motd /etc/motd
 
+# Install Ansible's required roles
+RUN cd /dawn/ansible \
+    && ansible-galaxy install -r requirements.yml
+
 # Volumes. The first one is where the project files will be found;
 # The second one will be mounted from 
 # %APP_DATA%/projects/[project_name]/[environment_name]
 VOLUME /dawn/project
 VOLUME /root
+
+# The following two volumes should only be mounted during
+# development
+VOLUME /dawn/ansible
+VOLUME /dawn/templates
 
 # Entrypoint will help create new environments
 # as well as set up the local shell to connect
