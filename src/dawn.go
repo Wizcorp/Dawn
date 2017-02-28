@@ -73,12 +73,12 @@ func printHelp() {
 }
 
 func printVersion() {
+	fmt.Printf("Platform:      %s\n", runtime.GOOS)
 	fmt.Printf("Version:       %s\n", dawnVersion)
 	fmt.Printf("Commit hash:   %s\n", dawnCommitHash)
-	fmt.Printf("Built with:    %s\n", runtime.Version())
-	fmt.Printf("Built at:      %s\n", dawnBuildTime)
-	fmt.Printf("Built on:      %s\n", dawnBuildServer)
-	fmt.Printf("Platform:      %s\n", runtime.GOOS)
+	fmt.Printf("Built using:   %s\n", runtime.Version())
+	fmt.Printf("Build date:    %s\n", dawnBuildTime)
+	fmt.Printf("Build server:  %s\n", dawnBuildServer)
 }
 
 func runSubProcess(command string, arguments []string) error {

@@ -13,5 +13,5 @@
 *.DS_Store
 ._*
 
-# Dawn folde
-./dawn
+# Dawn folder
+/dawn
