@@ -1,11 +1,13 @@
-Contributing to Dawn
-====================
+Contributing
+============
 
 Before getting started
 ----------------------
 
-Make sure to read the [Architecture Overview](https://docs.google.com/document/d/1l5bsWv6ARzTVkm9x84ONRJS0tzwvQeuIdP3CStg3Mro/edit#) 
-document. If you wish to add or alter a feature, please create an issue to present your idea first; this should make it
+Make sure to read the
+[Architecture Overview](https://docs.google.com/document/d/1l5bsWv6ARzTVkm9x84ONRJS0tzwvQeuIdP3CStg3Mro/edit#)
+document. If you wish to add or alter a feature, please create an
+issue to present your idea first; this should make it
 easier for your contributions to get merged afterward.
 
 Requirements
@@ -17,34 +19,66 @@ Requirements
 |------------|---------|
 | Virtualbox | 5.1.14+ |
 | Vagrant    | 1.9.1+  |
-| Ansible    | 2.2+    |
+| Docker     | 1.13+   |
+| Go	     | 1.7+    |
 
 Quick Start
 -----------
 
-Run vagrant up, wait for it to finish, once finished set your DNS to point to 10.0.0.50 and you should get access to:
+### `dawn` binary
 
-* Docker Swarm:
-  - Leader-1: 10.0.0.50:2376
-  - Worker-1: 10.0.0.100:2376
-  - Worker-2: 10.0.0.101:2376
-  - Balancer: 10.0.0.200:2376
-* Monitoring:
-  - Kibana: http://10.0.0.20:5601/
-  - ElasticSearch: http://10.0.0.20:9200/
-  - Grafana: http://10.0.0.20:3000/ (admin:admin)
-* Service Discovery:
-  - Consul: http://10.0.0.20:8500/ui/
-  - Consul DNS: 10.0.0.20:8600
-  - DNSMasq DNS: 10.0.0.20:53
-* Load Balancing:
-  - Traefik: http://10.0.0.200
+You can run the `dawn` binary from the current codebase as follow:
 
-Docker Swarm
-------------
+```bash
+go run ./src/dawn.go [arguments]
+```
 
-Leader-1 is acting as the manager, just run `export DOCKER_HOST=10.0.0.50:2376` and you should be able to start sending
-commands to the swarm manager.
+See [./src/README.md] for more details (how to build, etc).
 
-All logs are forwarded to kibana, just go to http://10.0.0.20:5601/ and use the default settings when asked on the first
-connection, logs should appear inside the top tab of Kibana.
+### Local container
+
+You will need to build the local container as follow:
+
+```bash
+docker build . -t dawn:development
+```
+
+You will need to run this command every time you make a change
+to the content of the container; however, this step is not necessary
+when you are making changes to either templates or Ansible playbook.
+Instead, set the following environment variable to make `dawn` mount
+the related folders onto the container:
+
+```bash
+# *nix
+export DAWN_DEVELOPMENT=$(pwd)
+# Windows
+set env:DAWN_DEVELOPMENT="$pwd"
+```
+
+### Ansible playbook development
+
+Simply make your change, create a local environment and
+run provision. From the project's root, you can run:
+
+```bash
+export DAWN_DEVELOPMENT=$(pwd)
+go run ./src/dawn.go local
+# Select the local template, then start provisioning
+cd dawn/local
+vagrant up
+cd ../..
+go run ./src/dawn.go local 
+
+# Then, from inside the container
+ansible-playbook /dawn/ansible/dawn.yml
+```
+
+### Templates development
+
+Template development works in the same way as Ansible 
+playbook development.
+
+
+
+
