@@ -9,18 +9,19 @@
 
 # aeriscloud roles, those are maintained by us
 - name: AerisCloud.consul
-  version: master
+  version: v1.0.0
 - name: AerisCloud.consul-service
   version: master
 - name: AerisCloud.docker
   version: v1.1.0
 - name: AerisCloud.docker-manage
   version: master
+- name: AerisCloud.rsyslog
+  version: master
 - name: AerisCloud.swarm
   version: master
 
 # external roles
-- name: williamyeh.fluentd
-  version: 1.4.1
 - name: dj-wasabi.telegraf
-  version: master
+  src: https://github.com/christopherobin/ansible-telegraf.git
+  version: bugfix/pip_deps

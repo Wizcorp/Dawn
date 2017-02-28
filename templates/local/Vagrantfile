@@ -93,8 +93,7 @@ Vagrant.configure("2") do |config|
         # to deal with those
         [[ -f /etc/redhat-release ]] && systemctl restart network || true
 SHELL
-
-      # only run ansible once everything is up
+      # only run once everything is up
       if instance_name == configuration["instances"].keys.last
         # output a message to guide the user as to what to do next
         instance.vm.provision "shell", inline: <<-SHELL
