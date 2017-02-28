@@ -1,55 +1,86 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-class Machine
-  attr_reader :name, :ip, :groups, :memory
-  def initialize(name, ip, groups, memory: "1024")
-    @name = name
-    @ip = ip
-    @groups = groups
-    @memory = memory
-  end
-end
+require 'yaml'
 
-class Container
-  attr_reader :image, :cmd, :args
-  def initialize(image, cmd: "", args: "")
-    @image = image
-    @cmd = cmd
-    @args = args
+# generates the inventory file for our setup
+def generate_inventory(configuration, environment_name)
+  inventory_filename = File.expand_path('inventory', File.dirname(__FILE__))
+  inventory_file = File.new(inventory_filename, "w")
+
+  groups = {}
+
+  # first write the instance informations
+  configuration["instances"].each do |instance_name, instance_info|
+    private_key = "/dawn/project/dawn/#{environment_name}/.vagrant/machines/#{instance_name}/virtualbox/private_key"
+
+     ansible_vars = [
+      instance_name,
+      "ansible_ssh_host=#{instance_info["ip"]}",
+      "ansible_ssh_port=22",
+      "ansible_ssh_user=#{configuration.fetch("user", "vagrant")}",
+      "ansible_ssh_private_key_file='#{private_key}'",
+      "docker_labels='#{instance_info["labels"].to_json}'"
+    ]
+
+    inventory_file.puts ansible_vars.join(" ")
+
+    instance_info["groups"].each do |group, _|
+      groups.store(group, []) unless groups.has_key?(group)
+      groups[group].push instance_name
+    end
   end
+
+  # write groups
+  groups.each do |group_name, instances|
+    inventory_file.puts "\n[#{group_name}]"
+    instances.each do |instance|
+      inventory_file.puts instance
+    end
+  end
+
+  # finally some useful variables related to vagrant
+  inventory_file.puts <<-vars
+
+[all:vars]
+private_interface=eth1
+
+vars
+
+  inventory_file.close
 end
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "ubuntu/xenial64"
-  #config.vm.box = "centos/7"
+  # the current working directory name should be the same
+  # as the environment's name
+  environment_name = File.basename(Dir.getwd)
 
-  machines = [
-    # monitor needs 4G due to elasticsearch
-    Machine.new("monitor",  "10.0.0.20",  ["docker", "consul"], memory: "4096"),
-    Machine.new("leader-1", "10.0.0.50",  ["docker", "swarm", "consul"]),
-    Machine.new("worker-1", "10.0.0.100", ["docker", "swarm", "consul"]),
-    Machine.new("worker-2", "10.0.0.101", ["docker", "swarm", "consul"]),
-    Machine.new("balancer", "10.0.0.200", ["docker", "swarm", "consul"])
-  ]
+  # load configuration
+  configuration = YAML::load_file(ENV['DAWN_CONFIG_FILE'] || "instances.yml")
 
-  machines.each_index do |machine_id|
-    machine_info = machines[machine_id]
+  config.vm.box = configuration["image"]
 
-    config.vm.define machine_info.name do |machine|
-      machine.vm.provider "virtualbox" do |vb|
+  # generate the inventory
+  generate_inventory(configuration, environment_name)
+
+  configuration["instances"].each do |instance_name, instance_info|
+    config.vm.define instance_name do |instance|
+      instance.vm.provider "virtualbox" do |vb|
         # Customize the amount of memory on the VM:
         vb.linked_clone = true
-        vb.memory = machine_info.memory
-        vb.cpus = 2
+        vb.memory = instance_info['memory'].to_s # for some reason virtualbox wants a string here
+        vb.cpus = instance_info['cpus']
       end
 
-      machine.vm.hostname = machine_info.name
-      machine.vm.network :private_network, ip: machine_info.ip
+      # we don't need this (also causes issues with centos 7 image)
+      instance.vm.synced_folder ".", "/vagrant", disabled: true
+
+      instance.vm.hostname = instance_name
+      instance.vm.network :private_network, ip: instance_info['ip']
 
       # The base xenial box doesn't have python installed so we need to install it manually
       # We also boost the max map count, though it's only used by elasticsearch
-      machine.vm.provision "shell", inline: <<-SHELL
+      instance.vm.provision "shell", inline: <<-SHELL
         if
           [[ ! -f /usr/bin/python ]];
         then
@@ -57,15 +88,23 @@ Vagrant.configure("2") do |config|
           apt-get install -y python-minimal
         fi
 
-        [[ "$( cat /proc/sys/vm/max_map_count )" -lt 262144 ]] && sysctl -w vm.max_map_count=262144 || true
+        # Vagrant >1.8.7,<=1.9.1 has a bug where private interfaces are not
+        # provisioned properly on centos boxes, manually restart the network
+        # to deal with those
+        [[ -f /etc/redhat-release ]] && systemctl restart network || true
 SHELL
 
-      machine.vm.provision "ansible" do |ansible|
-        ansible.playbook = "ansible/compute-node.yml"
-        ansible.galaxy_role_file = "ansible/dependencies.yml"
-        ansible.groups = machine_info.groups.map{
-          |group| [group, [machine_info.name]]
-        }.to_h
+      # only run ansible once everything is up
+      if instance_name == configuration["instances"].keys.last
+        # output a message to guide the user as to what to do next
+        instance.vm.provision "shell", inline: <<-SHELL
+        echo "All machines are now up. You can provision them by running:"
+        echo ""
+        echo "  dawn #{environment_name}"
+        echo "  # Then, in the dawn shell"
+        echo "  ansible-playbook /dawn/ansible/dawn.yml"
+        echo ""
+SHELL
       end
     end
   end
