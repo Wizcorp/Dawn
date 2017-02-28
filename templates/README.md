@@ -12,6 +12,7 @@ new templates:
                  displayed to the user when they create a new environment
   - create.sh:   script which will run once the template has been copied to
                  the user's project.
+  - run.sh:      script which will run when the container is started.
 
 Both files are optional; however, you will likely want to create a description file.
 You should also consider adding a README.md providing more details; however,
