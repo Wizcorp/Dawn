@@ -3,16 +3,18 @@
 
 require 'yaml'
 
+DAWN_ROOT = File.dirname(__FILE__)
+
 # generates the inventory file for our setup
 def generate_inventory(configuration)
-  inventory_filename = File.expand_path('ansible/inventory', File.dirname(__FILE__))
+  inventory_filename = File.expand_path('ansible/inventory', DAWN_ROOT)
   inventory_file = File.new(inventory_filename, "w")
 
   groups = {}
 
   # first write the instance informations
   configuration["instances"].each do |instance_name, instance_info|
-    private_key = File.expand_path(".vagrant/machines/#{instance_name}/virtualbox/private_key", File.dirname(__FILE__))
+    private_key = File.expand_path(".vagrant/machines/#{instance_name}/virtualbox/private_key", DAWN_ROOT)
 
      ansible_vars = [
       instance_name,
@@ -89,17 +91,6 @@ Vagrant.configure("2") do |config|
         # to deal with those
         [[ -f /etc/redhat-release ]] && systemctl restart network || true
 SHELL
-
-      # only run ansible once everything is up
-      if instance_name == configuration["instances"].keys.last
-        instance.vm.provision "ansible" do |ansible|
-          ansible.limit = "all"
-          ansible.playbook = "ansible/dawn.yml"
-          ansible.galaxy_role_file = "ansible/requirements.yml" if ENV['DAWN_SKIP_GALAXY'].nil?
-          ansible.inventory_path = "ansible/inventory"
-          ansible.host_key_checking = false
-        end
-      end
     end
   end
 end
