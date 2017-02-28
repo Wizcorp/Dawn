@@ -40,16 +40,16 @@ RUN wget -q https://get.docker.com/builds/Linux/x86_64/docker-1.13.1.tgz \
     && mv docker/* /usr/bin \
     && rmdir docker
 
-# Create the directory structure
+# Create the directory structure, install ansible galaxy roles
 RUN mkdir -p /dawn/project
 ADD ./ansible /dawn/ansible
+
+RUN cd /dawn/ansible \
+    && ansible-galaxy install -r requirements.yml
+
 ADD ./templates /dawn/templates
 ADD ./scripts /dawn/scripts
 ADD motd /etc/motd
-
-# Install Ansible's required roles
-RUN cd /dawn/ansible \
-    && ansible-galaxy install -r requirements.yml
 
 # Volumes. The first one is where the project files will be found;
 # The second one will be mounted from 
