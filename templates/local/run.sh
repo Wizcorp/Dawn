@@ -1,7 +1,7 @@
 if
     [ ! -f ./inventory ]
 then
-    echo "You must first run Vagrant locally! "
+    echo "You must first run Vagrant locally!"
     exit 1
 fi
 
