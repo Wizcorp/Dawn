@@ -16,8 +16,9 @@ RUN apk add \
     py-pip \
     unzip
 
-# Install Ansible
+# Install Ansible and configuration
 RUN apk add ansible
+ADD ./ansible.cfg /etc/ansible/
 
 # Install Ansible Python dependencies
 RUN pip install boto
