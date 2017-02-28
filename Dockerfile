@@ -2,11 +2,12 @@ FROM alpine:3.5
 MAINTAINER Marc Trudel <mtrudel@wizcorp.jp>
 
 # Update the package list
-RUN apk update 
+RUN apk update && apk upgrade
 
 # Install general dependencies
-RUN apk add \
+RUN apk add --no-cache \
     bash \
+    git \
     openssh \
     rsync \
     curl \
