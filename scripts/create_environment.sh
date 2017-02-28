@@ -53,8 +53,14 @@ if
   [ "${template}" != "" ]
 then
   pushd /dawn/templates > /dev/null
+
+  # Sync files
   rsync -av "./${template}/" \
     "${DAWN_ENVIRONMENT_FILES_PATH}/" &> /dev/null
+
+  # Remove description file if present
+  rm ${DAWN_ENVIRONMENT_FILES_PATH}/description
+
   popd > /dev/null
 fi
 
