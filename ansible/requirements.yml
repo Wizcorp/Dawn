@@ -22,6 +22,8 @@
   version: master
 
 # external roles
+- name: williamyeh.fluentd
+  version: 1.4.1
 - name: dj-wasabi.telegraf
   src: https://github.com/christopherobin/ansible-telegraf.git
   version: bugfix/pip_deps
