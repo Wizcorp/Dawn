@@ -17,8 +17,6 @@ import (
 	"time"
 
 	"flag"
-
-	"github.com/fatih/color"
 )
 
 var (
@@ -69,13 +67,7 @@ func runSubProcess(command string, arguments []string) {
 }
 
 func runStep(description string, step Step) {
-	c := color.New(color.BgCyan, color.FgBlack)
-	fmt.Println("")
-	c.Printf(" make ")
-	fmt.Printf(" %s ", description)
-	c.Printf(" make ")
-	fmt.Println("")
-
+	fmt.Printf("\n[make] %s [make]\n\n", description)
 	step()
 }
 

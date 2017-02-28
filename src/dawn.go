@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"runtime"
 	"strings"
+
+	"path"
 
 	"github.com/ProtonMail/go-appdir"
 	"gopkg.in/yaml.v2"
@@ -15,7 +18,7 @@ import (
 // The following variables values should normally
 // be injected at compile-time
 var dawnURL = "https://dawn.sh"
-var dawnDefaultImage = "dawn"
+var dawnDefaultImage = "development"
 var dawnVersion = "development"
 var dawnCommitHash = "n/a"
 var dawnBuildTime = "n/a"
@@ -169,15 +172,36 @@ func createConfigurationFile(projectName string) error {
 		return err
 	}
 
-	// create config file
+	content := fmt.Sprintf("project_name: %s\nimage: %s", projectName, dawnDefaultImage)
+	err = ioutil.WriteFile(getConfigurationFilePath(), []byte(content), 0644)
+
 	return err
 }
 
 func requestConfigurationFileCreation() bool {
-	var err error
+	fmt.Print("This project is not configured yet to use dawn. Would you like to configure it? [y/n]: ")
+	reader := bufio.NewReader(os.Stdin)
+	answer, _ := reader.ReadString('\n')
 
+	if answer != "y\n" {
+		return false
+	}
+
+	wd, err := os.Getwd()
+	folderName := path.Base(wd)
+
+	fmt.Printf("What is the name of this project [%s]: ", folderName)
+	answer, _ = reader.ReadString('\n')
+	projectName := answer[:len(answer)-1]
+
+	if projectName == "" {
+		projectName = folderName
+	}
+
+	err = createConfigurationFile(projectName)
 	if err != nil {
-		panic(err)
+		fmt.Printf("Failed to create configuration: %#v", err)
+		return false
 	}
 
 	return true
