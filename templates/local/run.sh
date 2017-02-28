@@ -16,7 +16,7 @@ export DAWN_EDGE="$(echo ${hosts} | grep edge | head -n1 | cut -d " " -f2)"
 export DAWN_CONTROL="$(echo ${hosts} | grep control | head -n1 | cut -d " " -f2)"
 
 # set DOCKER_HOST
-export DOCKER_HOST="http://${DAWN_CONTROL}:2376"
+export DOCKER_HOST="${DAWN_CONTROL}:2376"
 
 # display additional information
 echo "* Monitoring:"
