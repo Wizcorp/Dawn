@@ -49,7 +49,7 @@ done
 # a template was selected.
 mkdir -p ${DAWN_ENVIRONMENT_FILES_PATH}
 
-if 
+if
   [ "${template}" != "" ]
 then
   pushd /dawn/templates > /dev/null
@@ -66,7 +66,7 @@ if
   [ -f "${TEMPLATE_CREATE_SCRIPT}" ]
 then
   pushd "${DAWN_ENVIRONMENT_FILES_PATH}" > /dev/null
-  ./create.sh
+  source create.sh
   rm create.sh
   popd > /dev/null
 fi
