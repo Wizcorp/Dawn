@@ -53,8 +53,11 @@
       file: path=/opt/dawn state=directory mode=0755
     - name: "Make sure virtualenv is available"
       package:
-        name: python-virtualenv
+        name: "{{ item }}"
         state: present
+      with_items:
+        - python-virtualenv
+        - openssl-devel
     - name: "Install docker python library"
       pip:
         name: "{{ item }}"
@@ -117,9 +120,12 @@
       register: rsyslog_conf
     - name: "Restart rsyslog"
       service:
-        name: rsyslog
+        name: "{{ item }}"
         state: restarted
       when: rsyslog_conf.changed
+      with_items:
+        - rsyslog
+        - td-agent
 
 ### Docker
 # Docker is installed on every node, default setup is to listen on both the
@@ -209,7 +215,7 @@
   become: true
   roles:
     - role: dj-wasabi.telegraf
-      telegraf_agent_version: 1.2.0
+      telegraf_agent_version: 1.2.1
       telegraf_agent_version_sub_l: ""
       telegraf_agent_output:
         - type: prometheus_client
@@ -328,7 +334,10 @@
         user: admin
         password: admin
         force_basic_auth: yes
+      retries: 5
+      delay: 5
       register: grafana_datasources
+      until: grafana_datasources.json != None
       tags:
         - docker
         - grafana
