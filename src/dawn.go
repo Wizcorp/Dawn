@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"strings"
 
-	"path"
+	"path/filepath"
 
 	"github.com/ProtonMail/go-appdir"
 	"gopkg.in/yaml.v2"
@@ -53,6 +53,23 @@ type FileEnvironments map[string]FileEnvironmentConfig
 // apply to the global environment
 type FileEnvironmentConfig struct {
 	Image string `yaml:"image"`
+}
+
+// Used by readLine
+var reader = bufio.NewReader(os.Stdin)
+
+func readLine() string {
+	var stripCount int
+	line, _ := reader.ReadString('\n')
+
+	switch runtime.GOOS {
+	case "windows":
+		stripCount = 2 // strip \r\n
+	default:
+		stripCount = 1 // strip \n
+	}
+
+	return line[:len(line) - stripCount]
 }
 
 func printHelp() {
@@ -180,25 +197,21 @@ func createConfigurationFile(projectName string) error {
 
 func requestConfigurationFileCreation() bool {
 	fmt.Print("This project is not configured yet to use dawn. Would you like to configure it? [y/n]: ")
-	reader := bufio.NewReader(os.Stdin)
-	answer, _ := reader.ReadString('\n')
-
-	if answer != "y\n" {
+	answer := readLine()
+	if answer != fmt.Sprintf("y") {
 		return false
 	}
 
-	wd, err := os.Getwd()
-	folderName := path.Base(wd)
+	wd := getWorkingDirectory()
+	folderName := filepath.Base(wd)
 
 	fmt.Printf("What is the name of this project [%s]: ", folderName)
-	answer, _ = reader.ReadString('\n')
-	projectName := answer[:len(answer)-1]
-
+	projectName := readLine()
 	if projectName == "" {
 		projectName = folderName
 	}
 
-	err = createConfigurationFile(projectName)
+	err := createConfigurationFile(projectName)
 	if err != nil {
 		fmt.Printf("Failed to create configuration: %#v", err)
 		return false
@@ -282,7 +295,7 @@ func runEnvironmentContainer(environment string, configuration *Config, command 
 		"-e", fmt.Sprintf("DAWN_ENVIRONMENT=%s", environment),
 		"-e", fmt.Sprintf("DAWN_PROJECT_NAME=%s", configuration.ProjectName),
 		"-v", fmt.Sprintf("%s:/dawn/project", getWorkingDirectory()),
-		"-v", fmt.Sprintf("%s:/root", localEnvironmentDir),
+		"-v", fmt.Sprintf("%s:/home/dawn", localEnvironmentDir),
 	}
 
 	// During development, it is possible to mount directly the local

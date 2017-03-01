@@ -8,6 +8,11 @@ discovery, logging, monitoring and storage.
 Requirements
 ------------
 
+**Note**: Windows users will need to make sure that 
+their work drive (normally C:) is shared in Docker.
+See https://blogs.msdn.microsoft.com/stevelasker/2016/06/14/configuring-docker-for-windows-volumes/
+for more details.
+
 |  Software  | Version |
 |------------|---------|
 | Docker     | 1.13.0+ |

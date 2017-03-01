@@ -13,6 +13,7 @@ RUN apk add --no-cache \
     curl \
     wget \
     vim \
+    sudo \
     python2 \
     py-pip \
     unzip
@@ -51,11 +52,15 @@ ADD ./templates /dawn/templates
 ADD ./scripts /dawn/scripts
 ADD motd /etc/motd
 
+# Add user 'dawn', without password
+RUN adduser -D -s /bin/bash dawn
+RUN chown -fR dawn.dawn /dawn
+
 # Volumes. The first one is where the project files will be found;
-# The second one will be mounted from 
+# The second one will be mounted from
 # %APP_DATA%/projects/[project_name]/[environment_name]
 VOLUME /dawn/project
-VOLUME /root
+VOLUME /home/dawn
 
 # The following two volumes should only be mounted during
 # development
