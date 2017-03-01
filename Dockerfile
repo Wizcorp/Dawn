@@ -31,7 +31,7 @@ RUN wget -q https://releases.hashicorp.com/terraform/0.8.5/terraform_0.8.5_linux
     && unzip -q /tmp/terraform.zip \
     && rm /tmp/terraform.zip
 
-# Install docker binaries
+# Install Docker binaries
 RUN wget -q https://get.docker.com/builds/Linux/x86_64/docker-1.13.1.tgz \
       -O /tmp/docker.tgz \
     && cd /tmp \
@@ -40,7 +40,7 @@ RUN wget -q https://get.docker.com/builds/Linux/x86_64/docker-1.13.1.tgz \
     && mv docker/* /usr/bin \
     && rmdir docker
 
-# Create the directory structure, install ansible galaxy roles
+# Create the directory structure, install Ansible Galaxy roles
 RUN mkdir -p /dawn/project
 ADD ./ansible /dawn/ansible
 
