@@ -27,10 +27,11 @@ If (-NOT $myWindowsPrincipal.IsInRole($adminRole)) {
   $newProcess.Verb = "runas";
 
   # Start the new process
-  [System.Diagnostics.Process]::Start($newProcess);
+  $proc = [System.Diagnostics.Process]::Start($newProcess);
+  $proc.WaitForExit()
 
   # Exit from the current, unelevated, process
-  break
+  exit
 }
 
 # We are running "as Administrator" - so change the title and background color to indicate this
@@ -64,4 +65,4 @@ If ($res -ne $null) {
 }
 
 Write-Output ""
-Read-Host "Done. Press any key to continue"
+Start-Sleep -s 3
