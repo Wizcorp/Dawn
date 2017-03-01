@@ -5,13 +5,20 @@
 # DAWN_CONFIG_FILE environment variable set to that file path to have vagrant
 # use it
 
-# the image to use for vagrant and the default user for that image
-image: "centos/7"
+# the image to use for vagrant and the default user for that image;
+# on Windows, we will be using Hyper-V, while we use virtualbox
+# for all other supported platforms
+images:
+  virtualbox: "centos/7"
+  hyperv: "jmkekala/centos73"
+
 user: vagrant
 
 # this is the name of the private interface created by vagrant, which can vary
 # per operating system (it is eth1 on centos7 and enp0s8 on ubuntu xenial)
-interface: eth1
+interfaces:
+  virtualbox: eth1
+  hyperv: eth0
 
 # this is our base instance, it is saved as a YAML anchor and is used by all
 # the instance to defined some safe default values for the vms being created, to
