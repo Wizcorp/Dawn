@@ -115,10 +115,6 @@ Vagrant.configure("2") do |config|
           # still need to tell how much startup memory to allocate
           vb.memory = "512"
           vb.maxmemory = instance_info['memory'].to_s
-
-          # this enables differencing disk instead
-          # of making a full clone of the VHD drive
-          vb.differencing_disk = true
         end
       end
 
@@ -131,10 +127,12 @@ Vagrant.configure("2") do |config|
       instance.vm.network :private_network, ip: instance_info['ip'], auto_config: !isWindows()
       if provider == "hyperv"
         instance.vm.provision "shell", inline: <<-SHELL
-          file="/etc/sysconfig/network-scripts/ifcfg-#{get_interface(configuration)}"
+          virtual_interface="#{get_interface(configuration)}:0"
+          file="/etc/sysconfig/network-scripts/ifcfg-#{virtual_interface}"
           echo "Generating ${file}"
 
-          echo "TYPE=Ethernet" > $file
+          echo "DEVICE=\"#{virtual_interface}\"" > $file
+          echo "TYPE=Ethernet" >> $file
           echo "BOOTPROTO=static" >> $file
           echo "ONBOOT=YES" >> $file
           echo "IPADDR=#{instance_info['ip']}" >> $file
