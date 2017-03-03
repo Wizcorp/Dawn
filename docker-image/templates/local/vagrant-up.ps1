@@ -17,6 +17,10 @@ If (Test-Path "C:\Program Files\Git\bin\") {
   Exit 1
 }
 
+# Find the dawn-local virtual switch
+$switch = Get-VMSwitch | Select-String "dawn-local"
+$index = $switch.LineNumber
+
 # This option is just to automate
 # the virtual switch selection
-sh -c "yes 2 | vagrant up"
+sh -c "yes $index | vagrant up"

@@ -10,15 +10,24 @@
 # for all other supported platforms
 images:
   virtualbox: "centos/7"
-  hyperv: "jmkekala/centos73"
+  hyperv: "pascalhegy/centos-7.2-64-puppet-hyperv"
 
 user: vagrant
 
 # this is the name of the private interface created by vagrant, which can vary
 # per operating system (it is eth1 on centos7 and enp0s8 on ubuntu xenial)
 interfaces:
+  # Put the name of the interface on which the private
+  # network created by vagrant will be connected to.
   virtualbox: eth1
-  hyperv: eth0
+
+  # Unfortunately, vagrant does not support private networks
+  # for Hyper-V.
+  #
+  # Intsead, will manually configure a virtual interface on it;
+  # simply put the name of the default interface present
+  # in the image
+  hyperv: enp0s3
 
 # this is our base instance, it is saved as a YAML anchor and is used by all
 # the instance to defined some safe default values for the vms being created, to
