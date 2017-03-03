@@ -53,6 +53,7 @@ type Step func()
 
 func runSubProcess(command string, arguments []string) {
 	cmd := exec.Command(command, arguments...)
+
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -76,7 +77,7 @@ func getCommitHash() string {
 	output, err := cmd.Output()
 
 	if err != nil {
-		log.Fatalf("Failed to retrieve git commit hash: %#v", err)
+		log.Fatalf("Failed to retrieve git commit hash: %v", err)
 	}
 
 	return string(output)
@@ -102,6 +103,7 @@ func build() {
 
 	ldFlags := []string{
 		fmt.Sprintf("-X main.dawnVersion=%s", version),
+		fmt.Sprintf("-X main.dawnDefaultImage=%s", version),
 		fmt.Sprintf("-X main.dawnCommitHash=%s", commitHash),
 		fmt.Sprintf("-X main.dawnBuildTime=%s", now.Format(time.RFC3339)),
 		fmt.Sprintf("-X main.dawnBuildServer=%s", hostname),

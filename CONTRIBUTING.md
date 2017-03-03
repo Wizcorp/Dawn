@@ -13,72 +13,81 @@ easier for your contributions to get merged afterward.
 Requirements
 ------------
 
-**Note**: you will need at least 8GB of available memory to start all 5 VMs locally.
+**Note**: you will need at least 8GB of available memory (16GB recommended)
+to start all 5 VMs locally.
 
-|  Software  | Version |
-|------------|---------|
-| Virtualbox | 5.1.14+ |
-| Vagrant    | 1.9.1+  |
-| Docker     | 1.13+   |
-| Go	     | 1.7+    |
+|  Software  | Version | Note                    |
+|------------|---------|-------------------------|
+| Docker     | 1.13+   |                         |
+| Vagrant    | 1.9.1+  |                         |
+| Virtualbox | 5.1.14+ | Not required on Windows |
+
 
 Quick Start
 -----------
 
-### `dawn` binary
+All scripts for building, developing and releasing Dawn's docker image and binary are
+under `./script`.
 
-You can run the `dawn` binary from the current codebase as follow:
+### Development
 
-```bash
-go run ./src/dawn.go [arguments]
-```
-
-See [./src/README.md] for more details (how to build, etc).
-
-### Local container
-
-You will need to build the local container as follow:
+#### macOS, Linux
 
 ```bash
-docker build . -t dawn:development
+./scripts/development/bash.sh
 ```
 
-You will need to run this command every time you make a change
-to the content of the container; however, this step is not necessary
-when you are making changes to either templates or Ansible playbook.
-Instead, set the following environment variable to make `dawn` mount
-the related folders onto the container:
+#### Windows
+
+```powershell
+.\scripts\development\powershell.ps1
+```
+
+#### Details
+
+The development scripts will:
+
+  1. Make a local build of the docker image (`./docker-image`)
+  2. Make a local build of the local binary (`./src`)
+  3. Add `./src/dist/[platform]/` to your PATH (env:Path on Windows)
+  4. Make the binary mount `./docker-image/ansible` and `./docker-image/templates` at runtime 
+     (so you will not need to rebuild the Docker image every time you make a change to either 
+     folder's content)
+  5. Open a sub-shell
+
+Once you are in the sub-shell, you can run `dawn` anywhere. From there, you will normally want
+to set up a local environment; you will be using this environment to run the playbook against.
+Simply run `dawn local`, and select the local template to get started.
+
+### Building
+
+#### macOS, Linux
 
 ```bash
-# *nix
-export DAWN_DEVELOPMENT=$(pwd)
-# Windows
-set env:DAWN_DEVELOPMENT="$pwd"
+./scripts/build/nix.sh [version number, default: development] [darwin|windows|linux|all, default: local platform]
 ```
 
-### Ansible playbook development
+#### Windows
 
-Simply make your change, create a local environment and
-run provision. From the project's root, you can run:
-
-```bash
-export DAWN_DEVELOPMENT=$(pwd)
-go run ./src/dawn.go local
-# Select the local template, then start provisioning
-cd dawn/local
-vagrant up
-cd ../..
-go run ./src/dawn.go local 
-
-# Then, from inside the container
-ansible-playbook /dawn/ansible/dawn.yml
+```powershell
+.\scripts\build\windows.ps1 [-version version number, default: development] [-target darwin|windows|linux|all, default: windows]
 ```
 
-### Templates development
+#### Details
 
-Template development works in the same way as Ansible 
-playbook development.
+The build script will
+  
+  1. Build the docker image, and tag it with dawn:[version number] 
+  2. Build the local binary and assign it [version number] as the default 
+     image and the binary's own version (if target is `all`, binaries for all
+     supported platforms will be built)
 
+Releasing
+---------
 
+To make a release:
 
-
+```
+git tag v0.0.1
+./scripts/release/release.sh
+```

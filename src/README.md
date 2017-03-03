@@ -1,25 +1,25 @@
 dawn binary
 ===========
 
-The `dawn` binary is written in Go.
+The dawn binary is essentially a wrapper around `docker run`;
+it takes care of ensuring that a `./dawn` folder exists in your 
+project, and that a `./dawn/dawn.yml` configuration file is present.
 
-Requirements
-------------
-
-  - [glide](https://glide.sh/)
-
-Build
------
 
 ```bash
-# Make a development build for your local environment
-go run make.go
+dawn starts a pre-configured docker container on your local machine,
+from which you can set up and manage your deployments.
 
-# Assign a version number to this build (default: development)
-go run make.go --version [semver|development]
+Usage: dawn [environment] [command]
 
-# Cross-compile (or build for all targets)
-go run make.go --target [windows|darwin|linux|all]
+    environment    The environment you wish to set up for
+    command        Command you wish to run (or run bash if omitted)
+
+Flags
+
+    --update       Update this binary
+    --version      Show version information
+    --help         Show this screen
+
+For more information: https://dawn.sh/docs
 ```
-
-You will find the built binary under the `./dist` folder

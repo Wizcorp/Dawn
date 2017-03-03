@@ -69,7 +69,7 @@ func readLine() string {
 		stripCount = 1 // strip \n
 	}
 
-	return line[:len(line) - stripCount]
+	return line[:len(line)-stripCount]
 }
 
 func printHelp() {
@@ -168,7 +168,7 @@ func getConfigurationFilePath() string {
 
 func getFullImageName(image string) string {
 	if strings.Index(image, ":") == -1 {
-		return fmt.Sprintf("dawn:%s", image)
+		return fmt.Sprintf("dawn/dawn:%s", image)
 	}
 
 	return image
@@ -307,9 +307,9 @@ func runEnvironmentContainer(environment string, configuration *Config, command 
 		fmt.Println("************************************************************************")
 
 		arguments = append(arguments, "-v")
-		arguments = append(arguments, fmt.Sprintf("%s/ansible:/dawn/ansible", development))
+		arguments = append(arguments, fmt.Sprintf("%s/docker-image/ansible:/dawn/ansible", development))
 		arguments = append(arguments, "-v")
-		arguments = append(arguments, fmt.Sprintf("%s/templates:/dawn/templates", development))
+		arguments = append(arguments, fmt.Sprintf("%s/docker-image/templates:/dawn/templates", development))
 	}
 
 	arguments = append(arguments, getFullImageName(configuration.Image))
