@@ -39,7 +39,7 @@ under `./script`.
 
 #### Windows
 
-```powershell
+```posh
 .\scripts\development\powershell.ps1
 ```
 
@@ -71,7 +71,7 @@ Simply run `dawn local`, and select the local template to get started.
 
 #### Windows
 
-```powershell
+```posh
 .\scripts\build\windows.ps1 [-version version number, default: development] [-target darwin|windows|linux|all, default: windows]
 ```
 
