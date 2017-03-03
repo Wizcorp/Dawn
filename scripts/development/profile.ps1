@@ -8,3 +8,6 @@ function prompt {
     "PS [dawn-development] $(Get-Location)> "
 }
 
+function rebuild {
+    & "${PROJECT_DIR}\scripts\build\windows.ps1"
+}

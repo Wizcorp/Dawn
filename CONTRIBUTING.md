@@ -55,6 +55,8 @@ The development scripts will:
      folder's content)
   5. Open a sub-shell
 
+Whenever you need to rebuild the project, simply type `rebuild`.
+
 Once you are in the sub-shell, you can run `dawn` anywhere. From there, you will normally want
 to set up a local environment; you will be using this environment to run the playbook against.
 Simply run `dawn local`, and select the local template to get started.
