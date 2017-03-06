@@ -39,7 +39,7 @@ images (additional tools, playbook customisations, etc).
 
 ### Windows
 
-```powershell
+```posh
 # Must run as administrator
 Invoke-RestMethod https://dawn.sh/install-win | powershell -command -
 # Or, to install a specific version
