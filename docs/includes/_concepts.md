@@ -1,0 +1,101 @@
+# Concepts
+
+## Architecture
+
+![Basic architecture](./images/architecture.png)
+
+The goal of Dawn is to maintain a minimum viable Docker Swarm
+cluster; that is, an infrastructure where we can not only execute,
+but also log, quantify, route and store.
+
+We sometimes refer to this infrastructure as the Primary Infrastructure.
+It is meant to provide the upmost basic computation, storage and networking
+need all applications should require.
+
+Of course, such a name hints at the fact that we have other
+infrastructural layers:
+
+![Infrastructure layers](./images/infra-layers.png)
+ 
+The goal of splitting the global infrastructure into those three layers is to
+ensure proper decoupling of requirements and separation of responsibilities:
+developers should never have to care about anything else than Docker,
+system adminstrators should be provided the tooling to visualise and operate
+on the cluster, and so on.
+
+## Node Types
+
+| type    | role                                                                   |
+|---------|------------------------------------------------------------------------|
+| control | Manages the cluster                                                    | 
+| edge    | Provides an entry point to services, routes traffic to them            |
+| worker  | Provide an execution space to services, runs them in Docker containers | 
+| storage | Provides distributed storage, store data                               |
+
+Users may decide to run containers wherever they wish, through tagging; for instance, 
+you will normally want to make the configuration of your storage nodes different
+from your worker nodes, and you may also want to run you databases containers directly 
+on the storage nodes.
+
+## Services
+
+Here is a map of what services are installed on each nodes:
+
+<table>
+    <thead>
+        <tr>
+            <td colspan="1" rowspan="1"><p><span>type</span></p></td>
+            <td colspan="1" rowspan="1"><p><span>services</span></p></td>
+            <td colspan="1" rowspan="1"><p><span>description</span></p></td>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td colspan="1" rowspan="5" class="node-type"><p><span>control</span></p></td>
+            <td colspan="1" rowspan="1"><p><span>consul-ui</span></p></td>
+            <td colspan="1" rowspan="1"><p><span>Service discovery, config management</span></p></td>
+        </tr>
+        <tr>
+            <td colspan="1" rowspan="1"><p><span>fluentd-ui</span></p></td>
+            <td colspan="1" rowspan="1"><p><span>Monitor and configure fluentd</span></p></td>
+        </tr>
+        <tr>
+            <td colspan="1" rowspan="1"><p><span>Portainer</span></p></td>
+            <td colspan="1" rowspan="1"><p><span>Docker container management</span></p></td>
+        </tr>
+        <tr>
+            <td colspan="1" rowspan="1"><p><span>Kibana</span></p></td>
+            <td colspan="1" rowspan="1"><p><span>Log viewer, can be replaced by papertrail</span></p></td>
+        </tr>
+        <tr>
+            <td colspan="1" rowspan="1"><p><span>Grafana</span></p></td>
+            <td colspan="1" rowspan="1"><p><span>Graph data from prometheus, can be replaced by librato</span></p></td>
+        </tr>
+        <tr>
+            <td colspan="1" rowspan="3" class="node-type"><p><span>edge</span></p></td>
+            <td colspan="1" rowspan="1"><p><span>traefik</span></p></td>
+            <td colspan="1" rowspan="1"><p><span>HTTP/S Load balancer</span></p></td>
+        </tr>
+        <tr>
+            <td colspan="1" rowspan="1"><p><span>consul</span></p></td>
+            <td colspan="1" rowspan="1"><p><span>Service discovery and internal DNS</span></p></td>
+        </tr>
+        <tr>
+            <td colspan="1" rowspan="1"><p><span>ceph rgw</span></p></td>
+            <td colspan="1" rowspan="1"><p><span>S3 API-compatible routing gateway</span></p></td>
+        </tr>
+        <tr>
+            <td colspan="1" rowspan="2" class="node-type"><p><span>storage</span></p></td>
+            <td colspan="1" rowspan="1"><p><span>docker registry</span></p></td>
+            <td colspan="1" rowspan="1"><p><span>Container image registry.</span></p></td>
+        </tr>
+        <tr>
+            <td colspan="1" rowspan="1"><p><span>elasticsearch</span></p></td>
+            <td colspan="1" rowspan="1"><p><span>Log storage; logs from fluentd processes running on each nodes will store logs in this cluster</span></p></td>
+        </tr>
+    </tbody>
+</table>
+
+## Local Binary & Local Containers
+
+Coming soon.

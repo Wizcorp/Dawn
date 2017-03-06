@@ -1,5 +1,10 @@
 ![Logo](./logo.png)
 
+[![Chat on Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg?style=flat-square)](https://gitter.im/Wizcorp/Dawn)
+[![Search on StackOverflow](https://img.shields.io/stackexchange/stackoverflow/t/dawn.svg?style=flat-square)](https://stackoverflow.com/questions/tagged/dawn)
+[![GitHub issues](https://img.shields.io/github/issues/Wizcorp/Dawn.svg?style=flat-square)](https://github.com/Wizcorp/Dawn)
+[![Docker Pulls](https://img.shields.io/docker/pulls/wizcorp/dawn.svg?style=flat-square)](https://hub.docker.com/r/wizcorp/dawn/)
+
 Dawn is a set of tools and configuration to help you bootstrap and maintain
 a Docker-based PaaS. On top of configuring Docker Swarm, Dawn also
 configures and maintain the systems required for traffic routing, service
