@@ -49,8 +49,8 @@ If ($res -ne $null) {
   New-VMSwitch -SwitchName "dawn-local" -SwitchType Internal > $null
   Write-Output "[Done]"
 
-  Write-Host -NoNewline "Setting local IP interface"
-  New-NetIPAddress -IPAddress 172.24.0.1 -PrefixLength 16 -InterfaceAlias "vEthernet (dawn-local)" > $null
+  Write-Host -NoNewline "Setting local IP interface... "
+  New-NetIPAddress -IPAddress 172.24.0.1 -PrefixLength 24 -InterfaceAlias "vEthernet (dawn-local)" > $null
   Write-Output "[Done]"
 }
 

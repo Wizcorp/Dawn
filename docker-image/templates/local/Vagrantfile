@@ -136,7 +136,7 @@ Vagrant.configure("2") do |config|
           echo "BOOTPROTO=\"static\"" >> $file
           echo "ONBOOT=\"yes\"" >> $file
           echo "IPADDR=\"#{instance_info['ip']}\"" >> $file
-          echo "NETMASK=\"255.255.0.0\"" >> $file
+          echo "NETMASK=\"255.255.255.0\"" >> $file
           echo "DNS1=\"8.8.8.8\"" >> $file
 
           echo ""

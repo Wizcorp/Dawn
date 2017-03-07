@@ -24,10 +24,8 @@ interfaces:
   # Unfortunately, vagrant does not support private networks
   # for Hyper-V.
   #
-  # Intsead, will manually configure a virtual interface on it;
-  # simply put the name of the default interface present
-  # in the image
-  hyperv: enp0s3
+  # Intsead, we will override the existing interface.
+  hyperv: eth0
 
 # this is our base instance, it is saved as a YAML anchor and is used by all
 # the instance to defined some safe default values for the vms being created, to
