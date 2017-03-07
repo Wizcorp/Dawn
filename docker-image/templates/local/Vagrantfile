@@ -132,11 +132,13 @@ Vagrant.configure("2") do |config|
           echo "Generating ${file}"
 
           echo "NAME=\"$interface\"" > $file
+          echo "DEVICE=\"$interface\"" >> $file
           echo "TYPE=\"Ethernet\"" >> $file
           echo "BOOTPROTO=\"static\"" >> $file
           echo "ONBOOT=\"yes\"" >> $file
           echo "IPADDR=\"#{instance_info['ip']}\"" >> $file
-          echo "NETMASK=\"255.255.0.0\"" >> $file
+          echo "NETMASK=\"255.255.255.0\"" >> $file
+          echo "GATEWAY=\"172.24.0.1\"" >> $file
           echo "DNS1=\"8.8.8.8\"" >> $file
 
           echo ""
