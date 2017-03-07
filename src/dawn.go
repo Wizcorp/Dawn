@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -158,8 +159,37 @@ func getLocalProjectEnvironmentDirectory(project string, environment string) (st
 	return ensureDirectoryExists(dir)
 }
 
+func findDawnFolder(path string)  (string, error) {
+	dawnPath := fmt.Sprintf("%s/%s", path, "dawn")
+	src, err := os.Stat(dawnPath)
+
+	if (err != nil || !src.IsDir()) {
+		parent := filepath.Dir(path)
+
+		// If we reached the top
+		if (parent == path) {
+			return "", errors.New("Could not find dawn folder in folder tree")
+		}
+
+		return findDawnFolder(parent)
+	}
+
+	return path, nil
+}
+
+func getDawnProjectRoot() string {
+	cwd := getWorkingDirectory()
+	path, err := findDawnFolder(cwd)
+
+	if err != nil {
+		return cwd
+	}
+
+	return path
+}
+
 func getDawnFolderPath() string {
-	return fmt.Sprintf("%s/%s", getWorkingDirectory(), "dawn")
+	return fmt.Sprintf("%s/%s", getDawnProjectRoot(), "dawn")
 }
 
 func getConfigurationFilePath() string {
@@ -184,7 +214,7 @@ func doesConfigurationFileExist() bool {
 }
 
 func createConfigurationFile(projectName string) error {
-	err := os.MkdirAll(getDawnFolderPath(), 0700)
+	err := os.MkdirAll("./dawn", 0700)
 	if err != nil {
 		return err
 	}
@@ -294,7 +324,7 @@ func runEnvironmentContainer(environment string, configuration *Config, command 
 		"-it",
 		"-e", fmt.Sprintf("DAWN_ENVIRONMENT=%s", environment),
 		"-e", fmt.Sprintf("DAWN_PROJECT_NAME=%s", configuration.ProjectName),
-		"-v", fmt.Sprintf("%s:/dawn/project", getWorkingDirectory()),
+		"-v", fmt.Sprintf("%s:/dawn/project", getDawnProjectRoot()),
 		"-v", fmt.Sprintf("%s:/home/dawn", localEnvironmentDir),
 	}
 
