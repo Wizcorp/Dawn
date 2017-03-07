@@ -1,18 +1,8 @@
-hash: 89961b39c11d31fdddf7e05e56fd661ca4fce7b73f0ee117569f358bbe349cef
-updated: 2017-02-28T12:24:40.685653979+09:00
+hash: 0f9005c4e436d58ae812bb78b7c89f1d2c6eb771faa5a6c51f66136b9953b23b
+updated: 2017-03-07T18:06:40.2050582+09:00
 imports:
-- name: github.com/fatih/color
-  version: 7824417a424b65227be8ac9b14d545a7f3e6c3f0
-- name: github.com/mattn/go-colorable
-  version: d898aa9fb31c91f35dd28ca75db377eff023c076
-- name: github.com/mattn/go-isatty
-  version: dda3de49cbfcec471bd7a70e6cc01fcc3ff90109
 - name: github.com/ProtonMail/go-appdir
   version: 8d01ef4fc20182002039a9d8d7130b104975d130
-- name: golang.org/x/sys
-  version: e4594059fe4cde2daf423055a596c2cd1e6c9adf
-  subpackages:
-  - unix
 - name: gopkg.in/yaml.v2
   version: a3f3340b5840cee44f372bddb5880fcbc419b46a
 testImports: []

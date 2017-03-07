@@ -43,7 +43,7 @@ export COMMAND="${@}"
 export DAWN_PROJECT_FILES_PATH="/dawn/project/dawn"
 export DAWN_PROJECT_CONFIG_FILE_PATH="${DAWN_PROJECT_FILES_PATH}/dawn.yml"
 export DAWN_ENVIRONMENT_FILES_PATH="${DAWN_PROJECT_FILES_PATH}/${DAWN_ENVIRONMENT}"
-export PS1="${DAWN_PROJECT_NAME} (${DAWN_ENVIRONMENT}):\w$ "
+export PS1="${DAWN_PROJECT_NAME} (${DAWN_ENVIRONMENT}):\w\\$ "
 
 # We make sure that the base directory structure is present,
 # and that a configuration file is indeed present.

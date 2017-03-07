@@ -55,6 +55,7 @@ ADD motd /etc/motd
 # Add user 'dawn', without password
 RUN adduser -D -s /bin/bash dawn
 RUN chown -fR dawn.dawn /dawn
+RUN echo "dawn ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # Volumes. The first one is where the project files will be found;
 # The second one will be mounted from
