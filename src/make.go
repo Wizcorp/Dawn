@@ -9,6 +9,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -16,8 +17,48 @@ import (
 	"strings"
 	"time"
 
+	yaml "gopkg.in/yaml.v2"
+
 	"flag"
 )
+
+type BuildConfig struct {
+	Homepage      string              `yaml:"homepage"`
+	GitHub        GitHubBuildConfig   `yaml:"github"`
+	Configuration ConfigurationConfig `yaml:"configuration"`
+	Binary        BinaryBuildConfig   `yaml:"binary"`
+	Image         ImageBuildConfig    `yaml:"image"`
+}
+
+type ConfigurationConfig struct {
+	Folder   string `yaml:"folder"`
+	Filename string `yaml:"filename"`
+}
+
+type GitHubBuildConfig struct {
+	Organization string `yaml:"organization"`
+	Name         string `yaml:"name"`
+}
+
+type BinaryBuildConfig struct {
+	Name             string                 `yaml:"name"`
+	Version          string                 `yaml:"version"`
+	DocumentationURL string                 `yaml:"documentation_url"`
+	InstallURLs      InstallURLsBuildConfig `yaml:"install_urls,omitempty"`
+}
+
+type InstallURLsBuildConfig struct {
+	Windows string `yaml:"windows,omitempty"`
+	Others  string `yaml:"others,omitempty"`
+}
+
+type ImageBuildConfig struct {
+	Organization string `yaml:"organization"`
+	Name         string `yaml:"name"`
+	Version      string `yaml:"version"`
+}
+
+type Step func()
 
 var (
 	target  string
@@ -25,8 +66,6 @@ var (
 )
 
 func main() {
-	runStep("Installing dependencies", install)
-
 	targetPtr := flag.String("target", runtime.GOOS, "Operating system to build for. (windows, linux, darwin or all)")
 	versionPtr := flag.String("version", "development", "Version number to attach to this build)")
 
@@ -37,19 +76,54 @@ func main() {
 
 	if target == "all" {
 		target = "darwin"
-		runStep("Building dawn binary (darwin)", build)
+		runStep("Building binary (darwin)", build)
 
 		target = "windows"
-		runStep("Building dawn binary (windows)", build)
+		runStep("Building binary (windows)", build)
 
 		target = "linux"
-		runStep("Building dawn binary (linux)", build)
+		runStep("Building binary (linux)", build)
 	} else {
-		runStep("Building dawn binary", build)
+		runStep("Building binary", build)
 	}
 }
 
-type Step func()
+func getBuildConfiguration() (*BuildConfig, error) {
+	var buildConfig BuildConfig
+
+	data, err := ioutil.ReadFile("../buildconfig.yml")
+	if err != nil {
+		return nil, err
+	}
+
+	err = yaml.Unmarshal(data, &buildConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	if buildConfig.Binary.InstallURLs.Windows == "" {
+		buildConfig.Binary.InstallURLs.Windows = fmt.Sprintf(
+			"https://github.com/%s/%s/blob/develop/scripts/install/install.ps1",
+			buildConfig.GitHub.Organization,
+			buildConfig.GitHub.Name)
+	}
+
+	if buildConfig.Binary.InstallURLs.Others == "" {
+		buildConfig.Binary.InstallURLs.Others = fmt.Sprintf(
+			"https://github.com/%s/%s/blob/develop/scripts/install/install.sh",
+			buildConfig.GitHub.Organization,
+			buildConfig.GitHub.Name)
+	}
+
+	if buildConfig.Binary.DocumentationURL == "" {
+		buildConfig.Binary.DocumentationURL = fmt.Sprintf(
+			"https://%s.github.io/%s",
+			strings.ToLower(buildConfig.GitHub.Organization),
+			strings.ToLower(buildConfig.GitHub.Name))
+	}
+
+	return &buildConfig, nil
+}
 
 func runSubProcess(command string, arguments []string) {
 	cmd := exec.Command(command, arguments...)
@@ -83,18 +157,18 @@ func getCommitHash() string {
 	return string(output)
 }
 
-func install() {
-	runSubProcess("glide", []string{
-		"install",
-	})
-}
-
 func build() {
+	buildConfiguration, err := getBuildConfiguration()
+
+	if err != nil {
+		log.Fatalf("Failed to load build configuration: %#v", err)
+	}
+
 	targetPath := fmt.Sprintf("./dist/%s", target)
-	bin := "dawn"
+	bin := buildConfiguration.Binary.Name
 
 	if target == "windows" {
-		bin = "dawn.exe"
+		bin = fmt.Sprintf("%s.exe", bin)
 	}
 
 	hostname, _ := os.Hostname()
@@ -102,8 +176,19 @@ func build() {
 	commitHash := getCommitHash()
 
 	ldFlags := []string{
+		fmt.Sprintf("-X main.dawnName=%s", buildConfiguration.Binary.Name),
 		fmt.Sprintf("-X main.dawnVersion=%s", version),
-		fmt.Sprintf("-X main.dawnDefaultImage=%s", version),
+
+		fmt.Sprintf("-X main.dawnConfigurationFolder=%s", buildConfiguration.Configuration.Folder),
+		fmt.Sprintf("-X main.dawnConfigurationFilename=%s", buildConfiguration.Configuration.Filename),
+
+		fmt.Sprintf("-X main.dawnWindowsInstallURL=%s", buildConfiguration.Binary.InstallURLs.Windows),
+		fmt.Sprintf("-X main.dawnOthersInstallURL=%s", buildConfiguration.Binary.InstallURLs.Others),
+		fmt.Sprintf("-X main.dawnDocsURL=%s", buildConfiguration.Binary.DocumentationURL),
+
+		fmt.Sprintf("-X main.dawnDefaultImageName=%s/%s", buildConfiguration.Image.Organization, buildConfiguration.Image.Name),
+		fmt.Sprintf("-X main.dawnDefaultImageVersion=%s", version),
+
 		fmt.Sprintf("-X main.dawnCommitHash=%s", commitHash),
 		fmt.Sprintf("-X main.dawnBuildTime=%s", now.Format(time.RFC3339)),
 		fmt.Sprintf("-X main.dawnBuildServer=%s", hostname),

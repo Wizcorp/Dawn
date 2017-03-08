@@ -3,9 +3,9 @@
 ## Requirements
 
 <aside class="warning">
-   Windows users will need to make sure that 
-    their work drive (normally C:) is shared in Docker. See 
-    [the Docker documentation](https://blogs.msdn.microsoft.com/stevelasker/2016/06/14/configuring-docker-for-windows-volumes/)
+   Windows users will need to make sure that
+    their work drive (normally C:) is shared in Docker. See
+    <a href="https://blogs.msdn.microsoft.com/stevelasker/2016/06/14/configuring-docker-for-windows-volumes/" target="_blank">the Docker documentation</a>
     for more details.
 </aside>
 <aside class="notice">
@@ -21,15 +21,15 @@
 > You will need to run this as administrator.
 
 ```shell
-~/ \# curl -fsSL https://dawn.sh/install | sh
+~/ \# curl -fsSL <%= build_config['binary']['install_urls']['others'] %> | sh
 # Or, to install a specific version
-~/ \# curl -fsSL https://dawn.sh/install | version=v0.0.1 sh
+~/ \# curl -fsSL <%= build_config['binary']['install_urls']['others'] %> | version=v0.0.1 sh
 ```
 
 ```powershell
-PS C:\Users\stelcheck> Invoke-RestMethod https://dawn.sh/install-win | powershell -command -
+PS C:\Users\stelcheck> Invoke-RestMethod <%= build_config['binary']['install_urls']['windows'] %>  | powershell -command -
 # Or, to install a specific version
-PS C:\Users\stelcheck> Invoke-WebRequest -uri https://dawn.sh/install-win -OutFile install.ps1
+PS C:\Users\stelcheck> Invoke-WebRequest -uri <%= build_config['binary']['install_urls']['windows'] %> -OutFile install.ps1
 .\install.ps1 -version v0.0.1
 ```
 
@@ -37,7 +37,7 @@ Installing the local binary is all about running this single one-liner. You can
 additionally specify which version to install at runtime, if desired; by default,
 the installation process will try to find the latest version and install it.
 
-The only file which will be downloaded is the `dawn` binary itself, so the 
+The only file which will be downloaded is the `<%= build_config['binary']['name'] %>` binary itself, so the
 install process should be quick.
 
 ## Updating the local binary
@@ -49,12 +49,12 @@ install process should be quick.
 > You will need to run this as administrator.
 
 ```shell
-~/ \# dawn --update
+~/ \# <%= build_config['binary']['name'] %> --update
 ```
 
 ```powershell
-PS C:\Users\stelcheck> dawn --update
+PS C:\Users\stelcheck> <%= build_config['binary']['name'] %> --update
 ```
 
 The local binary can self-update. It will download the same script used
-for the installation and run it for you. 
+for the installation and run it for you.

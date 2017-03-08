@@ -1,0 +1,81 @@
+---
+# This file will be used by the different build scripts and tools
+# to define outputs and destination
+
+# Homepage for your project
+homepage: https://dawn.sh
+
+### GitHub repository
+# The GitHub repository information will be used when building the
+# documentation and pushing releases
+###
+github:
+  # User or organization name
+  organization: Wizcorp
+
+  # The name of the repository
+  name: Dawn
+
+### Configuration format
+# Both the binary and the image will expect a top-level folder
+# in the project containing environment specific folders, and
+# a YAML configuration file in it. Here, we define the name of This
+# folder and the name of the configuration file so that
+# documentation, binary and image will remain consistent
+###
+configuration:
+  # The name of the folder to create and use
+  folder: 'dawn'
+
+  # The name of the main configuration file which will be put in this folder
+  filename: 'dawn.yml'
+
+### Local binary
+# The local binary is built from the source found under ./src,
+# and is responsible for configuration management and executing the
+# local Docker container. The information here will inform its build
+# process as well as its documentation.
+###
+binary:
+  # The name of the binary to output
+  name: dawn
+
+  # The current version of the binary
+  version: "0.0.1"
+
+  # (Optional) URLs to call when attempting auto-update.
+  # Defaults:
+  #   windows: https://github.com/[github.organization]/[github.name]/blob/develop/scripts/install/install.ps1
+  #   others: https://github.com/[github.organization]/[github.name]/blob/develop/scripts/install/install.sh
+  #
+  # Note: the install scripts and release scripts expect custom URLs to redirect to the
+  # default URLs mentioned above
+  install_urls:
+    windows: https://dawn.sh/install-win
+    others: https://dawn.sh/install
+
+  # (Optional) URL where the documentation can be found
+  # Default: https://[github.organization].github.io/[github.name]
+  #
+  # Note: custom documentation URL must either redirect or point to
+  # the GitHub repository.
+  documentation_url: https://dawn.sh/docs
+
+### Docker image
+# The Docker image is where most of the tooling is installed; source
+# files (including Dockerfile, Ansible playbooks and so on) can be found
+# under ./docker-image.
+#
+# The information here will be used to tag and publish
+# the generated image, inform the binary of which image
+# to use by default and for generating the documentation.
+###
+image:
+  # User or organization on Docker Hub
+  organization: wizcorp
+
+  # Image name (must match the Docker Hub repository name)
+  name: dawn
+
+  # Current image version
+  version: "0.0.1"

@@ -14,6 +14,12 @@ docker run -it `
     -v "${PROJECT_DIR}:/go/src/dawn" `
     -w /go/src/dawn/src `
     myobplatform/go-glide:1.7-alpine `
+    glide install
+
+docker run -it `
+    -v "${PROJECT_DIR}:/go/src/dawn" `
+    -w /go/src/dawn/src `
+    myobplatform/go-glide:1.7-alpine `
     go run make.go `
         --target "${target}" `
         --version "${version}"

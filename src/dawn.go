@@ -17,21 +17,33 @@ import (
 )
 
 // The following variables values should normally
-// be injected at compile-time
-var dawnURL = "https://dawn.sh"
-var dawnDefaultImage = "development"
-var dawnVersion = "development"
-var dawnCommitHash = "n/a"
-var dawnBuildTime = "n/a"
-var dawnBuildServer = "n/a"
+// be injected at compile-time. See make.go for more information
+var (
+	dawnWindowsInstallURL = "https://dawn.sh/install-win"
+	dawnOthersInstallURL  = "https://dawn.sh/install"
+	dawnDocsURL           = "https://dawn.sh/docs"
+
+	dawnConfigurationFolder   = "dawn"
+	dawnConfigurationFilename = "dawn.yml"
+
+	dawnName    = "dawn"
+	dawnVersion = "development"
+
+	dawnDefaultImageName    = "wizcorp/dawn"
+	dawnDefaultImageVersion = "development"
+
+	dawnCommitHash  = "n/a"
+	dawnBuildTime   = "n/a"
+	dawnBuildServer = "n/a"
+)
 
 // In this directory, we will be storing local project data, such as
 // the shell history, ssh keys, and so on. This is also where any
 // global configuration for dawn should go in the future.
-var dawnAppDirs = appdir.New("dawn")
+var dawnAppDirs = appdir.New(dawnName)
 
 // Config is the final configuration which will be used
-// by Dawn do determine the project name, and which docker
+// do determine the project name, and which docker
 // image to use
 type Config struct {
 	ProjectName string
@@ -39,7 +51,7 @@ type Config struct {
 }
 
 // FileConfig is a struct where the content of
-// ./dawn/dawn.yml will be loaded locally
+// ./[dawnConfigurationFolder]/[dawnConfigurationFilename] will be loaded locally
 type FileConfig struct {
 	ProjectName  string           `yaml:"project_name"`
 	Image        string           `yaml:"image"`
@@ -47,7 +59,8 @@ type FileConfig struct {
 }
 
 // FileEnvironments is a list of environment-specific
-// configurations optionally listed in ./dawn/dawn.yml
+// configurations optionally listed in
+// ./[dawnConfigurationFolder]/[dawnConfigurationFilename]
 type FileEnvironments map[string]FileEnvironmentConfig
 
 // FileEnvironmentConfig is a set of custom configuration to
@@ -75,10 +88,10 @@ func readLine() string {
 
 func printHelp() {
 	fmt.Println()
-	fmt.Println("dawn starts a pre-configured docker container on your local machine,")
+	fmt.Printf("%s starts a pre-configured docker container on your local machine,\n", dawnName)
 	fmt.Println("from which you can set up and manage your deployments.")
 	fmt.Println()
-	fmt.Println("Usage: dawn [environment] [command]")
+	fmt.Printf("Usage: %s [environment] [command]\n", dawnName)
 	fmt.Println()
 	fmt.Println("    environment    The environment you wish to set up for")
 	fmt.Println("    command        Command you wish to run (or run bash if omitted)")
@@ -89,7 +102,7 @@ func printHelp() {
 	fmt.Println("    --version      Show version information")
 	fmt.Println("    --help         Show this screen")
 	fmt.Println()
-	fmt.Println("For more information: https://dawn.sh/docs")
+	fmt.Printf("For more information: %s\n", dawnDocsURL)
 	fmt.Println()
 }
 
@@ -159,16 +172,16 @@ func getLocalProjectEnvironmentDirectory(project string, environment string) (st
 	return ensureDirectoryExists(dir)
 }
 
-func findDawnFolder(path string)  (string, error) {
-	dawnPath := fmt.Sprintf("%s/%s", path, "dawn")
+func findDawnFolder(path string) (string, error) {
+	dawnPath := fmt.Sprintf("%s/%s", path, dawnConfigurationFolder)
 	src, err := os.Stat(dawnPath)
 
-	if (err != nil || !src.IsDir()) {
+	if err != nil || !src.IsDir() {
 		parent := filepath.Dir(path)
 
 		// If we reached the top
-		if (parent == path) {
-			return "", errors.New("Could not find dawn folder in folder tree")
+		if parent == path {
+			return "", errors.New("Could not find configuration folder in folder tree")
 		}
 
 		return findDawnFolder(parent)
@@ -189,16 +202,16 @@ func getDawnProjectRoot() string {
 }
 
 func getDawnFolderPath() string {
-	return fmt.Sprintf("%s/%s", getDawnProjectRoot(), "dawn")
+	return fmt.Sprintf("%s/%s", getDawnProjectRoot(), dawnConfigurationFolder)
 }
 
 func getConfigurationFilePath() string {
-	return fmt.Sprintf("%s/%s", getDawnFolderPath(), "dawn.yml")
+	return fmt.Sprintf("%s/%s", getDawnFolderPath(), dawnConfigurationFilename)
 }
 
 func getFullImageName(image string) string {
 	if strings.Index(image, ":") == -1 {
-		return fmt.Sprintf("dawn/dawn:%s", image)
+		return fmt.Sprintf("%s:%s", dawnDefaultImageName, image)
 	}
 
 	return image
@@ -214,19 +227,19 @@ func doesConfigurationFileExist() bool {
 }
 
 func createConfigurationFile(projectName string) error {
-	err := os.MkdirAll("./dawn", 0700)
+	err := os.MkdirAll(dawnConfigurationFolder, 0700)
 	if err != nil {
 		return err
 	}
 
-	content := fmt.Sprintf("project_name: %s\nimage: %s", projectName, dawnDefaultImage)
+	content := fmt.Sprintf("project_name: %s\nimage: %s", projectName, dawnDefaultImageVersion)
 	err = ioutil.WriteFile(getConfigurationFilePath(), []byte(content), 0644)
 
 	return err
 }
 
 func requestConfigurationFileCreation() bool {
-	fmt.Print("This project is not configured yet to use dawn. Would you like to configure it? [y/n]: ")
+	fmt.Printf("This project is not configured yet to use %s. Would you like to configure it? [y/n]: ", dawnName)
 	answer := readLine()
 	if answer != fmt.Sprintf("y") {
 		return false
@@ -294,14 +307,14 @@ func runUpdate() error {
 
 	switch runtime.GOOS {
 	case "windows":
-		url = dawnURL + "/install-windows"
+		url = dawnWindowsInstallURL
 		shell = "powershell"
 		arguments = []string{
 			"-Command",
 			fmt.Sprintf("Invoke-RestMethod %s/install-windows | powershell -command -", url),
 		}
 	default:
-		url = dawnURL + "/install"
+		url = dawnOthersInstallURL
 		shell = "bash"
 		arguments = []string{
 			"-c",
@@ -364,7 +377,7 @@ func main() {
 	case "--update":
 		err = runUpdate()
 	default:
-		// Make sure ./dawn and ./dawn/dawn.yml exist
+		// Make sure the configuration folder and file exists
 		if doesConfigurationFileExist() == false {
 			created := requestConfigurationFileCreation()
 			if !created {
@@ -385,7 +398,7 @@ func main() {
 			panic(err)
 		}
 
-		// Run the dawn container
+		// Run the container
 		err = runEnvironmentContainer(environment, configuration, command)
 	}
 

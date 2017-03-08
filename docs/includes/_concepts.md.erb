@@ -4,7 +4,7 @@
 
 ![Basic architecture](./images/architecture.png)
 
-The goal of Dawn is to maintain a minimum viable Docker Swarm
+The goal of <%= build_config['github']['name'] %> is to maintain a minimum viable Docker Swarm
 cluster; that is, an infrastructure where we can not only execute,
 but also log, quantify, route and store.
 
@@ -16,7 +16,7 @@ Of course, such a name hints at the fact that we have other
 infrastructural layers:
 
 ![Infrastructure layers](./images/infra-layers.png)
- 
+
 The goal of splitting the global infrastructure into those three layers is to
 ensure proper decoupling of requirements and separation of responsibilities:
 developers should never have to care about anything else than Docker,
@@ -27,14 +27,14 @@ on the cluster, and so on.
 
 | type    | role                                                                   |
 |---------|------------------------------------------------------------------------|
-| control | Manages the cluster                                                    | 
+| control | Manages the cluster                                                    |
 | edge    | Provides an entry point to services, routes traffic to them            |
-| worker  | Provide an execution space to services, runs them in Docker containers | 
+| worker  | Provide an execution space to services, runs them in Docker containers |
 | storage | Provides distributed storage, store data                               |
 
-Users may decide to run containers wherever they wish, through tagging; for instance, 
+Users may decide to run containers wherever they wish, through tagging; for instance,
 you will normally want to make the configuration of your storage nodes different
-from your worker nodes, and you may also want to run you databases containers directly 
+from your worker nodes, and you may also want to run you databases containers directly
 on the storage nodes.
 
 ## Services

@@ -15,6 +15,7 @@ docker run \
     --rm \
     -e HOME=/tmp \
     -u `id -u` \
+    -v "${PROJECT_DIR}:/app/project" \
     -v "${PROJECT_DIR}/${SRC}:/app/source" \
     -v "${PROJECT_DIR}/${DEST}:/app/build" \
     -it stelcheck/slate:latest \

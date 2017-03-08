@@ -1,0 +1,123 @@
+# Customising <%= build_config['github']['name'] %>
+
+## Before customising
+
+You should always consider your use-case before customising anything.
+In many cases, you should be able to simply add scripts and tools
+in your environment's folder; this has the advantage of both being
+very simple and - if you version (and you should!) your project,
+you also get versioning for those files.
+
+With that being said, customising <%= build_config['github']['name'] %> is,
+at every level, extremely easy.
+
+## Customising the Docker image
+
+In some cases, you may want to use an altered version
+of the Docker image provided out of the box.
+Such cases may include:
+
+    1. Adding, removing or updating Ansible roles
+    2. Adding or removing programs
+    3. Providing additional support services
+
+You have two options:
+
+    1. Create your own `Dockerfile`, using
+       `<%= build_config['image']['organization'] %>/<%= build_config['image']['name'] %>:[version]`
+       as a base
+    2. Fork <%= build_config['github']['name'] %>, and alter its `Dockerfile`
+
+Either approach is valid, but we strongly recommend to use the first one to avoid breaking
+things or creating discrepancies down the line.
+
+Once you have published your customized image, simply update
+`./<%= build_config['configuration']['folder'] %>/<%= build_config['configuration']['filename'] %>`
+in your projects to start using it.
+
+## Forking Dawn
+
+There are many cases where you might want to fork <%= build_config['github']['name'] %>:
+
+    1. You need to add commands and options to the binary
+    2. You need to maintain a fork privately for corporate use
+    3. You wish to use the project as a base but will fundamentaly change its
+       structure (e.g. use Kubernetes instead of Docker, etc).
+
+We welcome developers who wish to maintain a forked version of Dawn, and
+strive to make sure that doing so will be as easy as possible. Not only do we
+provide all the scripts and tools to make your own releases on your fork,
+but we also work hard to make sure renaming things (such as the name of the
+project, or the name of the binary) will be as quick and painless and possible.
+
+The rest of this document will walk you through the steps required for you
+to create and maintain your own fork of <%= build_config['github']['name'] %>.
+
+### Update README.md and CONTRIBUTING.md
+
+The first step will be to update the top-level Markdown file
+with the appropriate information. We recommend you keep using
+a similar format for clarity.
+
+### Update buildconfig.yml
+
+`buildconfig.yml` is a configuration file which will be
+used by the different tools and builders. By updating it,
+you will be able to rename the output binary, the location
+of your install scripts, the location of your documentation,
+and so on.
+
+One important thing: **Name your binary propely**. If you are going
+to maintain your own full-blown fork, please try to make sure to
+name your binary with a name which won't conflict with existing tools.
+
+### Update the documentation
+
+You will of course likely want to create your own
+documentation if you are to maintain a fork.
+
+This project already ships with [slate](https://github.com/lord/slate),
+which is a great tool for generating single-page documentation. Not only
+that, but the documentation is also hooked into the `buildconfig.yml` you
+have previously updated. This means that certain portions, such as Installation
+and help screen examples will already be updated at generation time.
+
+The following files are the one which you will most likely want to
+update first:
+
+    1. Replace `./docs/images/logo.png`
+    2. Customise `./docs/stylesheets/_variables.scss` (colors, etc)
+    3. Update `./docs/index.html.md`
+    4. Add/remove files under `./docs/includes` as you need (don't forget to add them to `./docs/index.html.md`).
+
+### Start coding
+
+And that's it! You now maintain a forked version of <%= build_config['github']['name'] %>!
+
+From there, you should be able to make any alteration you deem necessary.
+
+### Make a releases
+
+Making a release is super easy if your project is to be
+open-sourced on GitHub.
+
+First, you will need to make sure that you have set
+the `GITHUB_TOKEN` environment variable. This will be
+needed to push your builds to GitHub.
+
+```shell
+./scripts/release/release.sh
+```
+
+```powershell
+./scripts/release/release.ps1
+```
+
+Once you are set simply run these commands, and you
+should see your release process complete.
+
+### Let us know!
+
+We put much effort into making this project fork friendly, and
+would love to know both what you are doing with your fork, and
+how was your experience.

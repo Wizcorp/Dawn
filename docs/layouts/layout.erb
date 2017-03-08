@@ -13,12 +13,34 @@ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations
 under the License.
 %>
-<% language_tabs = current_page.data.language_tabs || [] %>
+<%
+require 'yaml'
+build_config = YAML::load_file("project/buildconfig.yml")
+org = build_config['github']['organization']
+name = build_config['github']['name']
+
+if (defined?(build_config['binary']['install_urls'])).nil?
+  build_config['binary']['install_urls'] = {}
+end
+
+if (defined?(build_config['binary']['install_urls']['windows'])).nil?
+  build_config['binary']['install_urls']['windows'] = "https://github.com/#{org}/#{name}/blob/develop/scripts/install/install.ps1"
+end
+
+if (defined?(build_config['binary']['install_urls']['others'])).nil?
+  build_config['binary']['install_urls']['others'] = "https://github.com/#{org}/#{name}/blob/develop/scripts/install/install.sh"
+end
+
+if (defined?(build_config['binary']['documentation_url'])).nil?
+  build_config['documentation_url'] = "https://#{org}.github.io/#{name}"
+end
+
+language_tabs = current_page.data.language_tabs || [] %>
 <!doctype html>
 <html>
   <head>
     <meta charset="utf-8">
-    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+    <meta content="IE=edge,chrßome=1" http-equiv="X-UA-Compatible">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <title><%= current_page.data.title || "API Documentation" %></title>
 
@@ -62,13 +84,23 @@ under the License.
       <% end %>
       <div id="toc">
       </div>
-      <% if current_page.data.toc_footers %>
-        <ul class="toc-footer">
+      <ul class="toc-footer">
+        <li>
+          <a href="<%= build_config['homepage'] %>">Home</a>
+        </li>
+        <li>
+          <a href="https://github.com/<%= build_config['github']['organization'] %>/<%= build_config['github']['name'] %>" target="_blank">GitHub</a>
+        </li>
+        <li>
+          <a href="https://hub.docker.com/r/<%= build_config['image']['organization'] %>/<%= build_config['image']['name'] %>" target="_blank">Docker Hub</a>
+        </li>
+        <% if current_page.data.toc_footers %>
+
           <% current_page.data.toc_footers.each do |footer| %>
             <li><%= footer %></li>
           <% end %>
-        </ul>
-      <% end %>
+        <% end %>
+      </ul>
     </div>
     <div class="page-wrapper">
       <div class="dark-box"></div>
@@ -76,7 +108,10 @@ under the License.
         <div class="title"><%= current_page.data.title %></div>
         <%= yield %>
         <% current_page.data.includes && current_page.data.includes.each do |include| %>
-          <%= partial "includes/#{include}" %>
+          <%= partial "includes/#{include}", locals: {
+            current_page: current_page,
+            build_config: build_config
+          } %>
         <% end %>
       </div>
       <div class="dark-box">
