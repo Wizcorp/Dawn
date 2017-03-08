@@ -10,7 +10,7 @@
 # for all other supported platforms
 images:
   virtualbox: "centos/7"
-  hyperv: "pascalhegy/centos-7.2-64-puppet-hyperv"
+  hyperv: "bluefedora/hyperv-alpha-centos7"
 
 user: vagrant
 
