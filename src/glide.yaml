@@ -1,4 +1,4 @@
-package: dawn/src
+package: cli/src
 homepage: https://dawn.sh
 license: MIT
 owners:

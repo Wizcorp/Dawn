@@ -19,28 +19,30 @@ import (
 // The following variables values should normally
 // be injected at compile-time. See make.go for more information
 var (
-	dawnWindowsInstallURL = "https://dawn.sh/install-win"
-	dawnOthersInstallURL  = "https://dawn.sh/install"
-	dawnDocsURL           = "https://dawn.sh/docs"
+	cliWindowsInstallURL = "https://dawn.sh/install-win"
+	cliOthersInstallURL  = "https://dawn.sh/install"
+	cliDocsURL           = "https://dawn.sh/docs"
 
-	dawnConfigurationFolder   = "dawn"
-	dawnConfigurationFilename = "dawn.yml"
+	cliConfigurationFolder   = "dawn"
+	cliConfigurationFilename = "dawn.yml"
 
-	dawnName    = "dawn"
-	dawnVersion = "development"
+	cliName    = "dawn"
+	cliVersion = "development"
 
-	dawnDefaultImageName    = "wizcorp/dawn"
-	dawnDefaultImageVersion = "development"
+	cliDefaultImageName    = "wizcorp/dawn"
+	cliDefaultImageVersion = "development"
+	cliShellUser           = "dawn"
+	cliRootFolder          = "/dawn"
 
-	dawnCommitHash  = "n/a"
-	dawnBuildTime   = "n/a"
-	dawnBuildServer = "n/a"
+	cliCommitHash  = "n/a"
+	cliBuildTime   = "n/a"
+	cliBuildServer = "n/a"
 )
 
 // In this directory, we will be storing local project data, such as
 // the shell history, ssh keys, and so on. This is also where any
-// global configuration for dawn should go in the future.
-var dawnAppDirs = appdir.New(dawnName)
+// global configuration should go in the future.
+var cliAppDirs = appdir.New(cliName)
 
 // Config is the final configuration which will be used
 // do determine the project name, and which docker
@@ -51,7 +53,7 @@ type Config struct {
 }
 
 // FileConfig is a struct where the content of
-// ./[dawnConfigurationFolder]/[dawnConfigurationFilename] will be loaded locally
+// ./[cliConfigurationFolder]/[cliConfigurationFilename] will be loaded locally
 type FileConfig struct {
 	ProjectName  string           `yaml:"project_name"`
 	Image        string           `yaml:"image"`
@@ -60,7 +62,7 @@ type FileConfig struct {
 
 // FileEnvironments is a list of environment-specific
 // configurations optionally listed in
-// ./[dawnConfigurationFolder]/[dawnConfigurationFilename]
+// ./[cliConfigurationFolder]/[cliConfigurationFilename]
 type FileEnvironments map[string]FileEnvironmentConfig
 
 // FileEnvironmentConfig is a set of custom configuration to
@@ -88,10 +90,10 @@ func readLine() string {
 
 func printHelp() {
 	fmt.Println()
-	fmt.Printf("%s starts a pre-configured docker container on your local machine,\n", dawnName)
+	fmt.Printf("%s starts a pre-configured docker container on your local machine,\n", cliName)
 	fmt.Println("from which you can set up and manage your deployments.")
 	fmt.Println()
-	fmt.Printf("Usage: %s [environment] [command]\n", dawnName)
+	fmt.Printf("Usage: %s [environment] [command]\n", cliName)
 	fmt.Println()
 	fmt.Println("    environment    The environment you wish to set up for")
 	fmt.Println("    command        Command you wish to run (or run bash if omitted)")
@@ -102,17 +104,17 @@ func printHelp() {
 	fmt.Println("    --version      Show version information")
 	fmt.Println("    --help         Show this screen")
 	fmt.Println()
-	fmt.Printf("For more information: %s\n", dawnDocsURL)
+	fmt.Printf("For more information: %s\n", cliDocsURL)
 	fmt.Println()
 }
 
 func printVersion() {
 	fmt.Printf("Platform:      %s\n", runtime.GOOS)
-	fmt.Printf("Version:       %s\n", dawnVersion)
-	fmt.Printf("Commit hash:   %s\n", dawnCommitHash)
+	fmt.Printf("Version:       %s\n", cliVersion)
+	fmt.Printf("Commit hash:   %s\n", cliCommitHash)
 	fmt.Printf("Built using:   %s\n", runtime.Version())
-	fmt.Printf("Build date:    %s\n", dawnBuildTime)
-	fmt.Printf("Build server:  %s\n", dawnBuildServer)
+	fmt.Printf("Build date:    %s\n", cliBuildTime)
+	fmt.Printf("Build server:  %s\n", cliBuildServer)
 }
 
 func runSubProcess(command string, arguments []string) error {
@@ -143,17 +145,17 @@ func getWorkingDirectory() string {
 	return wd
 }
 
-func getDawnLocalDirectory() string {
-	return dawnAppDirs.UserConfig()
+func getLocalDirectory() string {
+	return cliAppDirs.UserConfig()
 }
 
-func getDawnLocalProjectsDirectory() (string, error) {
-	dir := fmt.Sprintf("%s/projects", getDawnLocalDirectory())
+func getLocalProjectsDirectory() (string, error) {
+	dir := fmt.Sprintf("%s/projects", getLocalDirectory())
 	return ensureDirectoryExists(dir)
 }
 
 func getLocalProjectDirectory(project string) (string, error) {
-	projectsDir, err := getDawnLocalProjectsDirectory()
+	projectsDir, err := getLocalProjectsDirectory()
 	if err != nil {
 		return "", err
 	}
@@ -172,9 +174,9 @@ func getLocalProjectEnvironmentDirectory(project string, environment string) (st
 	return ensureDirectoryExists(dir)
 }
 
-func findDawnFolder(path string) (string, error) {
-	dawnPath := fmt.Sprintf("%s/%s", path, dawnConfigurationFolder)
-	src, err := os.Stat(dawnPath)
+func findConfigurationFolder(path string) (string, error) {
+	cfgPath := fmt.Sprintf("%s/%s", path, cliConfigurationFolder)
+	src, err := os.Stat(cfgPath)
 
 	if err != nil || !src.IsDir() {
 		parent := filepath.Dir(path)
@@ -184,15 +186,15 @@ func findDawnFolder(path string) (string, error) {
 			return "", errors.New("Could not find configuration folder in folder tree")
 		}
 
-		return findDawnFolder(parent)
+		return findConfigurationFolder(parent)
 	}
 
 	return path, nil
 }
 
-func getDawnProjectRoot() string {
+func getProjectRoot() string {
 	cwd := getWorkingDirectory()
-	path, err := findDawnFolder(cwd)
+	path, err := findConfigurationFolder(cwd)
 
 	if err != nil {
 		return cwd
@@ -201,17 +203,17 @@ func getDawnProjectRoot() string {
 	return path
 }
 
-func getDawnFolderPath() string {
-	return fmt.Sprintf("%s/%s", getDawnProjectRoot(), dawnConfigurationFolder)
+func getConfigurationFolderPath() string {
+	return fmt.Sprintf("%s/%s", getProjectRoot(), cliConfigurationFolder)
 }
 
 func getConfigurationFilePath() string {
-	return fmt.Sprintf("%s/%s", getDawnFolderPath(), dawnConfigurationFilename)
+	return fmt.Sprintf("%s/%s", getConfigurationFolderPath(), cliConfigurationFilename)
 }
 
 func getFullImageName(image string) string {
 	if strings.Index(image, ":") == -1 {
-		return fmt.Sprintf("%s:%s", dawnDefaultImageName, image)
+		return fmt.Sprintf("%s:%s", cliDefaultImageName, image)
 	}
 
 	return image
@@ -227,19 +229,19 @@ func doesConfigurationFileExist() bool {
 }
 
 func createConfigurationFile(projectName string) error {
-	err := os.MkdirAll(dawnConfigurationFolder, 0700)
+	err := os.MkdirAll(cliConfigurationFolder, 0700)
 	if err != nil {
 		return err
 	}
 
-	content := fmt.Sprintf("project_name: %s\nimage: %s", projectName, dawnDefaultImageVersion)
+	content := fmt.Sprintf("project_name: %s\nimage: %s", projectName, cliDefaultImageVersion)
 	err = ioutil.WriteFile(getConfigurationFilePath(), []byte(content), 0644)
 
 	return err
 }
 
 func requestConfigurationFileCreation() bool {
-	fmt.Printf("This project is not configured yet to use %s. Would you like to configure it? [y/n]: ", dawnName)
+	fmt.Printf("This project is not configured yet to use %s. Would you like to configure it? [y/n]: ", cliName)
 	answer := readLine()
 	if answer != fmt.Sprintf("y") {
 		return false
@@ -307,14 +309,14 @@ func runUpdate() error {
 
 	switch runtime.GOOS {
 	case "windows":
-		url = dawnWindowsInstallURL
+		url = cliWindowsInstallURL
 		shell = "powershell"
 		arguments = []string{
 			"-Command",
 			fmt.Sprintf("Invoke-RestMethod %s/install-windows | powershell -command -", url),
 		}
 	default:
-		url = dawnOthersInstallURL
+		url = cliOthersInstallURL
 		shell = "bash"
 		arguments = []string{
 			"-c",
@@ -335,24 +337,26 @@ func runEnvironmentContainer(environment string, configuration *Config, command 
 		"run",
 		"--rm",
 		"-it",
-		"-e", fmt.Sprintf("DAWN_ENVIRONMENT=%s", environment),
-		"-e", fmt.Sprintf("DAWN_PROJECT_NAME=%s", configuration.ProjectName),
-		"-v", fmt.Sprintf("%s:/dawn/project", getDawnProjectRoot()),
-		"-v", fmt.Sprintf("%s:/home/dawn", localEnvironmentDir),
+		"-e", fmt.Sprintf("PROJECT_ENVIRONMENT=%s", environment),
+		"-e", fmt.Sprintf("PROJECT_NAME=%s", configuration.ProjectName),
+		"-v", fmt.Sprintf("%s:%s/project", getProjectRoot(), cliRootFolder),
+		"-v", fmt.Sprintf("%s:/home/%s", localEnvironmentDir, cliShellUser),
 	}
 
 	// During development, it is possible to mount directly the local
 	// files which normally are already baked into the container
-	development := os.Getenv("DAWN_DEVELOPMENT")
+	development := os.Getenv("DEVELOPMENT_MODE")
 	if development != "" {
 		fmt.Println("************************************************************************")
 		fmt.Printf("WARNING: Running in develop mode! (using: %s)\n", development)
 		fmt.Println("************************************************************************")
 
 		arguments = append(arguments, "-v")
-		arguments = append(arguments, fmt.Sprintf("%s/docker-image/ansible:/dawn/ansible", development))
+		arguments = append(arguments, fmt.Sprintf("%s/docker-image/scripts:%s/scripts", development, cliRootFolder))
 		arguments = append(arguments, "-v")
-		arguments = append(arguments, fmt.Sprintf("%s/docker-image/templates:/dawn/templates", development))
+		arguments = append(arguments, fmt.Sprintf("%s/docker-image/ansible:%s/ansible", development, cliRootFolder))
+		arguments = append(arguments, "-v")
+		arguments = append(arguments, fmt.Sprintf("%s/docker-image/templates:%s/templates", development, cliRootFolder))
 	}
 
 	arguments = append(arguments, getFullImageName(configuration.Image))

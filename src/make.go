@@ -56,6 +56,8 @@ type ImageBuildConfig struct {
 	Organization string `yaml:"organization"`
 	Name         string `yaml:"name"`
 	Version      string `yaml:"version"`
+	RootFolder   string `yaml:"root_folder"`
+	ShellUser    string `yaml:"shell_user"`
 }
 
 type Step func()
@@ -63,16 +65,19 @@ type Step func()
 var (
 	target  string
 	version string
+	image   string
 )
 
 func main() {
 	targetPtr := flag.String("target", runtime.GOOS, "Operating system to build for. (windows, linux, darwin or all)")
 	versionPtr := flag.String("version", "development", "Version number to attach to this build)")
+	imagePtr := flag.String("image", "development", "Default image to use when creating new environments)")
 
 	flag.Parse()
 
 	target = *targetPtr
 	version = *versionPtr
+	image = *imagePtr
 
 	if target == "all" {
 		target = "darwin"
@@ -176,22 +181,24 @@ func build() {
 	commitHash := getCommitHash()
 
 	ldFlags := []string{
-		fmt.Sprintf("-X main.dawnName=%s", buildConfiguration.Binary.Name),
-		fmt.Sprintf("-X main.dawnVersion=%s", version),
+		fmt.Sprintf("-X main.cliName=%s", buildConfiguration.Binary.Name),
+		fmt.Sprintf("-X main.cliVersion=%s", version),
 
-		fmt.Sprintf("-X main.dawnConfigurationFolder=%s", buildConfiguration.Configuration.Folder),
-		fmt.Sprintf("-X main.dawnConfigurationFilename=%s", buildConfiguration.Configuration.Filename),
+		fmt.Sprintf("-X main.cliConfigurationFolder=%s", buildConfiguration.Configuration.Folder),
+		fmt.Sprintf("-X main.cliConfigurationFilename=%s", buildConfiguration.Configuration.Filename),
 
-		fmt.Sprintf("-X main.dawnWindowsInstallURL=%s", buildConfiguration.Binary.InstallURLs.Windows),
-		fmt.Sprintf("-X main.dawnOthersInstallURL=%s", buildConfiguration.Binary.InstallURLs.Others),
-		fmt.Sprintf("-X main.dawnDocsURL=%s", buildConfiguration.Binary.DocumentationURL),
+		fmt.Sprintf("-X main.cliWindowsInstallURL=%s", buildConfiguration.Binary.InstallURLs.Windows),
+		fmt.Sprintf("-X main.cliOthersInstallURL=%s", buildConfiguration.Binary.InstallURLs.Others),
+		fmt.Sprintf("-X main.cliDocsURL=%s", buildConfiguration.Binary.DocumentationURL),
 
-		fmt.Sprintf("-X main.dawnDefaultImageName=%s/%s", buildConfiguration.Image.Organization, buildConfiguration.Image.Name),
-		fmt.Sprintf("-X main.dawnDefaultImageVersion=%s", version),
+		fmt.Sprintf("-X main.cliDefaultImageName=%s/%s", buildConfiguration.Image.Organization, buildConfiguration.Image.Name),
+		fmt.Sprintf("-X main.cliDefaultImageVersion=%s", image),
+		fmt.Sprintf("-X main.cliRootFolder=%s", buildConfiguration.Image.RootFolder),
+		fmt.Sprintf("-X main.cliShellUser=%s", buildConfiguration.Image.ShellUser),
 
-		fmt.Sprintf("-X main.dawnCommitHash=%s", commitHash),
-		fmt.Sprintf("-X main.dawnBuildTime=%s", now.Format(time.RFC3339)),
-		fmt.Sprintf("-X main.dawnBuildServer=%s", hostname),
+		fmt.Sprintf("-X main.cliCommitHash=%s", commitHash),
+		fmt.Sprintf("-X main.cliBuildTime=%s", now.Format(time.RFC3339)),
+		fmt.Sprintf("-X main.cliBuildServer=%s", hostname),
 	}
 
 	os.MkdirAll(targetPath, 0700)
@@ -202,7 +209,7 @@ func build() {
 		strings.Join(ldFlags, " "),
 		"-o",
 		fmt.Sprintf("%s/%s", targetPath, bin),
-		"dawn.go",
+		"cli.go",
 	}
 
 	runSubProcess("go", args)

@@ -1,5 +1,14 @@
 FROM alpine:3.5
-MAINTAINER Marc Trudel <mtrudel@wizcorp.jp>
+
+# Arguments to inject at build time
+ARG name=dawn
+ARG root_folder=/dawn
+ARG shell_user=dawn
+ARG configuration_folder=dawn
+ARG configuration_filename=dawn.yml
+ARG ansible_version=2.2.1.0
+ARG terraform_version=0.8.8
+ARG docker_version=1.13.1
 
 # Update the package list
 RUN apk update && apk upgrade
@@ -7,6 +16,7 @@ RUN apk update && apk upgrade
 # Install general dependencies
 RUN apk add --no-cache \
     bash \
+    figlet \
     git \
     openssh \
     rsync \
@@ -19,21 +29,33 @@ RUN apk add --no-cache \
     unzip
 
 # Install Ansible and configuration
-RUN apk add ansible
+RUN apk add --no-cache \
+        gcc \
+        python2-dev \
+        musl-dev \
+        libffi-dev \
+        openssl-dev \
+    && pip install \
+        boto \
+        http://releases.ansible.com/ansible/ansible-${ansible_version}.tar.gz \
+    && apk del \
+        gcc \
+        python2-dev \
+        musl-dev \
+        libffi-dev \
+        openssl-dev
+
 ADD ./ansible.cfg /etc/ansible/
 
-# Install Ansible Python dependencies
-RUN pip install boto
-
 # Install Terraform
-RUN wget -q https://releases.hashicorp.com/terraform/0.8.5/terraform_0.8.5_linux_amd64.zip \
+RUN wget -q https://releases.hashicorp.com/terraform/${terraform_version}/terraform_${terraform_version}_linux_amd64.zip \
       -O /tmp/terraform.zip \
     && cd /usr/bin \
     && unzip -q /tmp/terraform.zip \
     && rm /tmp/terraform.zip
 
 # Install Docker binaries
-RUN wget -q https://get.docker.com/builds/Linux/x86_64/docker-1.13.1.tgz \
+RUN wget -q https://get.docker.com/builds/Linux/x86_64/docker-${docker_version}.tgz \
       -O /tmp/docker.tgz \
     && cd /tmp \
     && tar -zxf docker.tgz \
@@ -41,40 +63,49 @@ RUN wget -q https://get.docker.com/builds/Linux/x86_64/docker-1.13.1.tgz \
     && mv docker/* /usr/bin \
     && rmdir docker
 
-# Create the directory structure, install Ansible Galaxy roles
-RUN mkdir -p /dawn/project
-ADD ./ansible /dawn/ansible
+# Environment
+ENV NAME="${name}"
+ENV CONFIG_FOLDER="${configuration_folder}"
+ENV CONFIG_FILENAME="${configuration_filename}"
+ENV PROJECT_FILES_PATH="/${name}/project/${configuration_folder}"
+ENV PROJECT_CONFIG_FILE_PATH="${PROJECT_FILES_PATH}/${configuration_filename}"
 
-RUN cd /dawn/ansible \
+# Create the directory structure, install Ansible Galaxy roles
+RUN mkdir -p ${root_folder}/project
+ADD ./ansible ${root_folder}/ansible
+
+RUN cd ${root_folder}/ansible \
     && ansible-galaxy install -r requirements.yml
 
-ADD ./templates /dawn/templates
-ADD ./scripts /dawn/scripts
-ADD motd /etc/motd
+ADD ./templates ${root_folder}/templates
+ADD ./scripts ${root_folder}/scripts
 
-# Add user 'dawn', without password
-RUN adduser -D -s /bin/bash dawn
-RUN chown -fR dawn.dawn /dawn
-RUN echo "dawn ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+# Add user to sudoer
+ENV SHELL_USER=${shell_user}
+RUN adduser -D -s /bin/bash ${shell_user}
+RUN chown -fR ${shell_user}.${shell_user} ${root_folder}
+RUN echo "${shell_user} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 
 # Volumes. The first one is where the project files will be found;
 # The second one will be mounted from
 # %APP_DATA%/projects/[project_name]/[environment_name]
-VOLUME /dawn/project
-VOLUME /home/dawn
+VOLUME ${root_folder}/project
+VOLUME /home/${shell_user}
 
 # The following two volumes should only be mounted during
 # development
-VOLUME /dawn/ansible
-VOLUME /dawn/templates
+VOLUME ${root_folder}/ansible
+VOLUME ${root_folder}/templates
 
 # Entrypoint will help create new environments
 # as well as set up the local shell to connect
 # to said environment
-ENTRYPOINT ["/dawn/scripts/docker_entrypoint.sh"]
+ENV ROOT_FOLDER=${root_folder}
+ENV PATH="${PATH}:${ROOT_FOLDER}/scripts/"
+ENTRYPOINT ["docker_entrypoint.sh"]
 
 # Set working directory
-WORKDIR /dawn/project
+WORKDIR ${root_folder}
 
 # By default, we present the end-user with a shell
 CMD ["bash"]

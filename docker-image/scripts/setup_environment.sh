@@ -5,7 +5,7 @@
 # dynamically create or modify configuration files used
 # by our configuration and management tools.
 #
-SCRIPTS_PATH="/dawn/scripts/setup"
+SCRIPTS_PATH="${ROOT_FOLDER}/scripts/setup"
 
 for script in \
    $(find ${SCRIPTS_PATH} -maxdepth 1 \

@@ -1,5 +1,5 @@
 ---
-title: Dawn Documentation & User Guide
+title: Documentation & User Guide
 
 language_tabs:
   - shell

@@ -3,7 +3,7 @@
 # to define outputs and destination
 
 # Homepage for your project
-homepage: https://dawn.sh
+homepage: "https://dawn.sh"
 
 ### GitHub repository
 # The GitHub repository information will be used when building the
@@ -25,10 +25,10 @@ github:
 ###
 configuration:
   # The name of the folder to create and use
-  folder: 'dawn'
+  folder: "dawn"
 
   # The name of the main configuration file which will be put in this folder
-  filename: 'dawn.yml'
+  filename: "dawn.yml"
 
 ### Local binary
 # The local binary is built from the source found under ./src,
@@ -38,7 +38,7 @@ configuration:
 ###
 binary:
   # The name of the binary to output
-  name: dawn
+  name: "dawn"
 
   # The current version of the binary
   version: "0.0.1"
@@ -51,15 +51,15 @@ binary:
   # Note: the install scripts and release scripts expect custom URLs to redirect to the
   # default URLs mentioned above
   install_urls:
-    windows: https://dawn.sh/install-win
-    others: https://dawn.sh/install
+    windows: "https://dawn.sh/install-win"
+    others:  "https://dawn.sh/install"
 
   # (Optional) URL where the documentation can be found
   # Default: https://[github.organization].github.io/[github.name]
   #
   # Note: custom documentation URL must either redirect or point to
   # the GitHub repository.
-  documentation_url: https://dawn.sh/docs
+  documentation_url: "https://dawn.sh/docs"
 
 ### Docker image
 # The Docker image is where most of the tooling is installed; source
@@ -79,3 +79,15 @@ image:
 
   # Current image version
   version: "0.0.1"
+
+  # Root folder where most files will be uploaded or mounted
+  root_folder: /dawn
+
+  # User name which the shell will be opened as at container start
+  shell_user: dawn
+
+  # The version to use for each software installed in the image
+  software_versions:
+    ansible:   "2.2.1.0"
+    terraform: "0.8.8"
+    docker:    "1.13.1"

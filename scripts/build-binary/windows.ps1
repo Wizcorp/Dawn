@@ -1,25 +1,23 @@
 Param(
   [string]$target = "windows",
-  [string]$version = "development"
+  [string]$version = "development",
+  [string]$image = "development"
 )
 
 $SCRIPT_DIR = Split-Path $myInvocation.MyCommand.Path
 $PROJECT_DIR = split-path $SCRIPT_DIR -parent | split-path -parent
 
-docker build "${PROJECT_DIR}/docker-image" --tag "dawn/dawn"
-docker tag dawn/dawn dawn/dawn:${version}
-docker tag dawn/dawn dawn/dawn:latest
-
 docker run -it `
-    -v "${PROJECT_DIR}:/go/src/dawn" `
-    -w /go/src/dawn/src `
+    -v "${PROJECT_DIR}:/go/src/cli" `
+    -w /go/src/cli/src `
     myobplatform/go-glide:1.7-alpine `
     glide install
 
 docker run -it `
-    -v "${PROJECT_DIR}:/go/src/dawn" `
-    -w /go/src/dawn/src `
+    -v "${PROJECT_DIR}:/go/src/cli" `
+    -w /go/src/cli/src `
     myobplatform/go-glide:1.7-alpine `
     go run make.go `
         --target "${target}" `
-        --version "${version}"
+        --version "${version}" `
+        --image "${image}"

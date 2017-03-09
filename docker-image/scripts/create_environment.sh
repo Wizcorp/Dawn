@@ -11,7 +11,7 @@ create_environment=""
 while \
   [ "${create_environment}" != "y" ] && [ "${create_environment}" != "n" ]
 do
-  echo -n "The ${DAWN_ENVIRONMENT} environment does not exist. Would you like to create it? [y/n]: "
+  echo -n "The ${PROJECT_ENVIRONMENT} environment does not exist. Would you like to create it? [y/n]: "
   read create_environment
 done
 [ "${create_environment}" == "n" ] && exit 0
@@ -22,7 +22,7 @@ echo ""
 echo "You have the option to set up your new environment from a template:"
 echo ""
 
-pushd /dawn/templates/ > /dev/null
+pushd ${ROOT_FOLDER}/templates/ > /dev/null
 declare -A templates
 for template in \
    $(find ./ -type d -maxdepth 1 \
@@ -36,7 +36,7 @@ done
 echo ""
 popd > /dev/null
 
-template="sadfdsaf"
+template="not empty"
 while \
   [ "${template}" != "" ] && [ "${templates[${template}]}" == "" ]
 do
@@ -47,19 +47,19 @@ done
 # Create the environment folder, and
 # copy the template files to it if
 # a template was selected.
-mkdir -p ${DAWN_ENVIRONMENT_FILES_PATH}
+mkdir -p ${PROJECT_ENVIRONMENT_FILES_PATH}
 
 if
   [ "${template}" != "" ]
 then
-  pushd /dawn/templates > /dev/null
+  pushd ${ROOT_FOLDER}/templates > /dev/null
 
   # Sync files
   rsync -av "./${template}/" \
-    "${DAWN_ENVIRONMENT_FILES_PATH}/" &> /dev/null
+    "${PROJECT_ENVIRONMENT_FILES_PATH}/" &> /dev/null
 
   # Remove description file if present
-  rm ${DAWN_ENVIRONMENT_FILES_PATH}/description
+  rm ${PROJECT_ENVIRONMENT_FILES_PATH}/description
 
   popd > /dev/null
 fi
@@ -67,11 +67,11 @@ fi
 # Run the create.sh script copied over from
 # the template, if present. We remove the script
 # afterward since we should not need it in the project.
-TEMPLATE_CREATE_SCRIPT="${DAWN_ENVIRONMENT_FILES_PATH}/create.sh"
+TEMPLATE_CREATE_SCRIPT="${PROJECT_ENVIRONMENT_FILES_PATH}/create.sh"
 if
   [ -f "${TEMPLATE_CREATE_SCRIPT}" ]
 then
-  pushd "${DAWN_ENVIRONMENT_FILES_PATH}" > /dev/null
+  pushd "${PROJECT_ENVIRONMENT_FILES_PATH}" > /dev/null
   source create.sh
   rm create.sh
   popd > /dev/null

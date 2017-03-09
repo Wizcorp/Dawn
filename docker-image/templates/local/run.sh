@@ -6,7 +6,7 @@ then
 fi
 
 # Link inventory to global hosts file
-ln -s ${DAWN_ENVIRONMENT_FILES_PATH}/inventory /etc/ansible/hosts
+ln -s ${PROJECT_ENVIRONMENT_FILES_PATH}/inventory /etc/ansible/hosts
 
 # get hosts out of inventory
 hosts="$(cat inventory | grep ansible_ssh_host | cut -d" " -f1-2 | sed "s/ansible_ssh_host=//g")"
@@ -31,3 +31,4 @@ printf "%-15s %s\n" "  - DNSMasq DNS:" "${DAWN_CONTROL}:53"
 
 echo "* Load Balancing"
 printf "%-15s %s\n" "  - Traefik:" "http://${DAWN_EDGE}"
+echo ""

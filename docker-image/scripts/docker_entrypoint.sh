@@ -5,7 +5,7 @@
 # we:
 #
 #   1. Ensure that all required environments are present
-#   2. That the project contains a ./dawn folder
+#   2. That the project contains a configuration folder and configuration file
 #   3. Optionally invite the user to create an environment folder
 #      if it does not exist
 #   4. Set up additional environment variables and create some configuration
@@ -13,56 +13,53 @@
 #   5. Run the requested command, or open a shell if no command were given
 #
 
+set -e
+
 # The project name is mostly used for informational purposes,
 # but users may want to use this value to determine how
 # their tools (Ansible, Terraform, etc) should run.
 if
-  [ "${DAWN_PROJECT_NAME}" == "" ]
+  [ "${PROJECT_NAME}" == "" ]
 then
-  echo "The DAWN_PROJECT_NAME environment variable is not set; quitting."
+  echo "The PROJECT_NAME environment variable is not set; quitting."
   exit 1
 fi
 
 # We need to know which environment files to use;
-# If the DAWN_ENVIRONMENT shell environment variable
+# If the PROJECT_ENVIRONMENT shell environment variable
 # is not set, there is nothing else we can do.
 if
-  [ "${DAWN_ENVIRONMENT}" == "" ]
+  [ "${PROJECT_ENVIRONMENT}" == "" ]
 then
-  echo "The DAWN_ENVIRONMENT environment variable is not set; quitting."
+  echo "The PROJECT_ENVIRONMENT environment variable is not set; quitting."
   exit 1
 fi
 
 # Go to the scripts folder
-pushd /dawn/scripts/ > /dev/null
+pushd ./scripts/ > /dev/null
 
 # Store the command we have received, and create
 # a variable holding the path to the environment files
 # in the project
 export COMMAND="${@}"
-export DAWN_PROJECT_FILES_PATH="/dawn/project/dawn"
-export DAWN_PROJECT_CONFIG_FILE_PATH="${DAWN_PROJECT_FILES_PATH}/dawn.yml"
-export DAWN_ENVIRONMENT_FILES_PATH="${DAWN_PROJECT_FILES_PATH}/${DAWN_ENVIRONMENT}"
-export PS1="\e[1;31m$DAWN_PROJECT_NAME \e[1;32m($DAWN_ENVIRONMENT) \e[1;34m\w $\e[0m "
+export PROJECT_ENVIRONMENT_FILES_PATH="${PROJECT_FILES_PATH}/${PROJECT_ENVIRONMENT}"
+export PS1="\e[1;31m${PROJECT_NAME} \e[1;32m(${PROJECT_ENVIRONMENT}) \e[1;34m\w $\e[0m "
 
 # We make sure that the base directory structure is present,
 # and that a configuration file is indeed present.
 if
-  [ ! -f "${DAWN_PROJECT_CONFIG_FILE_PATH}" ]
+  [ ! -f "${PROJECT_CONFIG_FILE_PATH}" ]
 then
   echo "Your project does not appear to have been initialized;"
-  echo "There should be a ./dawn folder at the top-level of your project,"
-  echo "and a ./dawn/dawn.yml file needs to be present."
-  echo ""
-  echo "You may create these files manually, but you should consider"
-  echo "using the dawn binary for you platform instead".
+  echo "There should be a ./${CONFIG_FOLDER} folder at the top-level of your project,"
+  echo "and a ./${CONFIG_FOLDER}/${CONFIG_FILENAME} file needs to be present."
   exit 1
 fi
 
-# If ./dawn/${environment_name} does not exist,
+# If the environment folder does not exist,
 # we invite the user to create it
 if
-  [ ! -d "${DAWN_ENVIRONMENT_FILES_PATH}" ]
+  [ ! -d "${PROJECT_ENVIRONMENT_FILES_PATH}" ]
 then
   source ./create_environment.sh
 fi
@@ -84,10 +81,10 @@ popd > /dev/null
 #       mounted file system will result in "bad permission" error.
 #
 # Note that create.sh and run.sh do run as root; only the user's
-# shell is downgraded to the dawn user.
+# shell is downgraded to the shell user.
 #
 # Ref: https://github.com/docker/docker/issues/27685#issuecomment-256648694
 #
-pushd ${DAWN_ENVIRONMENT_FILES_PATH} > /dev/null
-sudo -H -E -u dawn ${COMMAND}
+pushd ${PROJECT_ENVIRONMENT_FILES_PATH} > /dev/null
+sudo -H -E -u ${SHELL_USER} ${COMMAND}
 popd > /dev/null

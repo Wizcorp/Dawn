@@ -25,7 +25,7 @@ for more details.
 Quick Start
 -----------
 
-The Dawn client consists of two components:
+The client consists of two components:
 
   - A small binary to run on your local machine
   - A local Docker container, containing playbooks
@@ -59,7 +59,7 @@ curl -fsSL https://dawn.sh/install | version=v0.0.1 sh
 ### Using Dawn
 
 For a more elaborate walkthrough video, see [this tutorial](link-to-asciivideo).
-You can also find the [documentation here](./docs-coming-soon).
+You can also find the [documentation here](https://dawn.sh/docs).
 
 What does it include?
 ---------------------
@@ -80,7 +80,7 @@ while metrics are collected with [Telegraf](https://github.com/influxdata/telegr
 before being sent to [Prometheus](https://prometheus.io/).
 
 For a more detailed view of what software Dawn will install for you, please
-see the [ansible folder](./ansible).
+see the [ansible folder](./docker-image/ansible).
 
 Contributors
 ------------
@@ -102,9 +102,4 @@ Made with <a href="http://logomakr.com" title="Logo Maker">Logo Maker</a>
 License
 -------
 
-Private.
-
-Copyrights
-----------
-
-@wizcorp 2017 - All rights reserved
+MIT
