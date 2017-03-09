@@ -4,7 +4,7 @@ $PROJECT_DIR = split-path $SCRIPT_DIR -parent | split-path -parent
 $env:Path += ";${PROJECT_DIR}\src\dist\windows"
 $env:DEVELOPMENT_MODE = "${PROJECT_DIR}"
 
-. "${PROJECT_DIR}\buildconfig.ps1"
+. "${PROJECT_DIR}\scripts\buildconfig.ps1"
 
 $name="$(getBuildConfig .github.name)"
 

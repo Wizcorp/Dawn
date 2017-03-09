@@ -3,8 +3,7 @@ $PROJECT_DIR = split-path $SCRIPT_DIR -parent | split-path -parent
 
 . "${PROJECT_DIR}/scripts/buildconfig.ps1"
 
-$organization="$(getBuildConfig .image.organization)"
-$name="$(getBuildConfig .image.name)"
+$binary_name="$(getBuildConfig .binary.name)"
 $root_folder="$(getBuildConfig .image.root_folder)"
 $shell_user="$(getBuildConfig .image.shell_user)"
 $configuration_folder="$(getBuildConfig .configuration.folder)"
@@ -13,12 +12,14 @@ $ansible_version="$(getBuildConfig .image.software_versions.ansible)"
 $terraform_version="$(getBuildConfig .image.software_versions.terraform)"
 $docker_version="$(getBuildConfig .image.software_versions.docker)"
 
-image_name="${organization}/${name}"
+$organization="$(getBuildConfig .image.organization)"
+$name="$(getBuildConfig .image.name)"
+$image_name="${organization}/${name}"
 
 docker build `
     "${PROJECT_DIR}/docker-image" `
     --tag "${image_name}" `
-    --build-arg name="${name}" `
+    --build-arg binary_name="${binary_name}" `
     --build-arg root_folder="${root_folder}" `
     --build-arg shell_user="${shell_user}" `
     --build-arg configuration_folder="${configuration_folder}" `
