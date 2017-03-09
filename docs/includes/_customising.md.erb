@@ -44,7 +44,7 @@ There are many cases where you might want to fork <%= build_config['github']['na
     3. You wish to use the project as a base but will fundamentaly change its
        structure (e.g. use Kubernetes instead of Docker, etc).
 
-We welcome developers who wish to maintain a forked version of
+We welcome developers who wish to maintain forks of
 <%= build_config['github']['name'] %>, and strive to make sure that doing
 so will be as easy as possible. Not only do we provide all the scripts and
 tools to make your own releases on your fork, but we also work hard to make
@@ -91,11 +91,53 @@ update first:
     3. Update `./docs/index.html.md`
     4. Add/remove files under `./docs/includes` as you need (don't forget to add them to `./docs/index.html.md`).
 
+### Review the Docker image content
+
+You will want to have a look at the content of the following files:
+
+### Dockerfile
+
+The `Dockerfile` is entirely parametrized, so all you will need to
+do is add or remove tools which are being installed at build time.
+
+### ./docker-image/templates
+
+Most templates should be using variables provided by the <%= build_config['github']['name'] %>
+default image; however, there are some cases where you will need to make some manual changes
+should you want to use the provided templates. A good example of this is the `Vagrantfile`
+of the local template; since we run vagrant externally, we cannot dynamically figure out the
+location of the configuration file.
+
+> You will need to change this to point to:
+> ${buildconfig.image.root_folder}/project/${buildconfig.configuration.folder}/...
+
+```ruby
+vagrant_machines_path = "/myrootfolder/project/myconfigfolder/#{environment_name}/.vagrant/machines"
+````
+
+There are other changes which will be needed; simply delete the templates you will
+not need, and `grep -ri <%= build_config['github']['name'] %>` the remainder to see
+what needs to be changed.
+
+### ./docker-image/ansible
+
+<%= build_config['github']['name'] %> ships with its own playbooks, `requirements.yml`
+and custom roles. You will at least want to make sure that the tag names used are consistent
+with the name of your new project if you are making a full-blown fork. You will also
+need to specify what
+
 ### Start coding
 
-And that's it! You now maintain a forked version of <%= build_config['github']['name'] %>!
+The CLI program will be generated according to your `buildconfig.yml` file;
+however, since you have made the decision of maintaining your own fork, it is
+very likely that you desire to make alteration to it.
 
-From there, you should be able to make any alteration you deem necessary.
+You will find the source under `./src/`; the entry point for the
+program can be found under `./src/cli.go`.
+
+Should you add source files, make sure to add them to the list of
+files to compile! This list can be found in `./src/make.go`, which
+will be called at build time.
 
 ### Make a releases
 

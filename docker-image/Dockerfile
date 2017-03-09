@@ -1,7 +1,7 @@
 FROM alpine:3.5
 
 # Arguments to inject at build time
-ARG name=dawn
+ARG binary_name=dawn
 ARG root_folder=/dawn
 ARG shell_user=dawn
 ARG configuration_folder=dawn
@@ -64,10 +64,10 @@ RUN wget -q https://get.docker.com/builds/Linux/x86_64/docker-${docker_version}.
     && rmdir docker
 
 # Environment
-ENV NAME="${name}"
+ENV BINARY_NAME="${binary_name}"
 ENV CONFIG_FOLDER="${configuration_folder}"
 ENV CONFIG_FILENAME="${configuration_filename}"
-ENV PROJECT_FILES_PATH="/${name}/project/${configuration_folder}"
+ENV PROJECT_FILES_PATH="${root_folder}/project/${configuration_folder}"
 ENV PROJECT_CONFIG_FILE_PATH="${PROJECT_FILES_PATH}/${configuration_filename}"
 
 # Create the directory structure, install Ansible Galaxy roles
