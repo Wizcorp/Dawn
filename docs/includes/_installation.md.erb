@@ -21,9 +21,9 @@
 > You will need to run this as administrator.
 
 ```shell
-~/ \# curl -fsSL <%= build_config['binary']['install_urls']['others'] %> | sh
+~/ # curl -fsSL <%= build_config['binary']['install_urls']['others'] %> | sh
 # Or, to install a specific version
-~/ \# curl -fsSL <%= build_config['binary']['install_urls']['others'] %> | version=v0.0.1 sh
+~/ # curl -fsSL <%= build_config['binary']['install_urls']['others'] %> | version=v0.0.1 sh
 ```
 
 ```powershell
@@ -49,7 +49,7 @@ install process should be quick.
 > You will need to run this as administrator.
 
 ```shell
-~/ \# <%= build_config['binary']['name'] %> --update
+~/ # <%= build_config['binary']['name'] %> --update
 ```
 
 ```powershell

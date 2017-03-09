@@ -19,19 +19,19 @@ build_config = YAML::load_file("project/buildconfig.yml")
 org = build_config['github']['organization']
 name = build_config['github']['name']
 
-if (defined?(build_config['binary']['install_urls'])).nil?
+unless build_config['binary']['install_urls']
   build_config['binary']['install_urls'] = {}
 end
 
-if (defined?(build_config['binary']['install_urls']['windows'])).nil?
+unless build_config['binary']['install_urls']['windows']
   build_config['binary']['install_urls']['windows'] = "https://github.com/#{org}/#{name}/blob/develop/scripts/install/install.ps1"
 end
 
-if (defined?(build_config['binary']['install_urls']['others'])).nil?
+unless build_config['binary']['install_urls']['others']
   build_config['binary']['install_urls']['others'] = "https://github.com/#{org}/#{name}/blob/develop/scripts/install/install.sh"
 end
 
-if (defined?(build_config['binary']['documentation_url'])).nil?
+unless build_config['binary']['documentation_url']
   build_config['documentation_url'] = "https://#{org}.github.io/#{name}"
 end
 
