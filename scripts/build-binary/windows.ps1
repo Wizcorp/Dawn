@@ -7,13 +7,17 @@ Param(
 $SCRIPT_DIR = Split-Path $myInvocation.MyCommand.Path
 $PROJECT_DIR = split-path $SCRIPT_DIR -parent | split-path -parent
 
-docker run -it `
+docker run `
+    -it `
+    --rm `
     -v "${PROJECT_DIR}:/go/src/cli" `
     -w /go/src/cli/src `
     myobplatform/go-glide:1.7-alpine `
     glide install
 
-docker run -it `
+docker run `
+    -it `
+    --rm `
     -v "${PROJECT_DIR}:/go/src/cli" `
     -w /go/src/cli/src `
     myobplatform/go-glide:1.7-alpine `

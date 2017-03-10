@@ -11,7 +11,9 @@ version="${1:-"development"}"
 target="${2:-${local_os}}"
 image="${3:-"development"}"
 
-docker run -it \
+docker run \
+    -it \
+    --rm \
     -e HOME=/tmp \
     -u `id -u` \
     -v "${PROJECT_DIR}:/go/src/cli" \
@@ -19,7 +21,9 @@ docker run -it \
     myobplatform/go-glide:1.7-alpine \
     glide install
 
-docker run -it \
+docker run \
+    -it \
+    --rm \
     -v "${PROJECT_DIR}:/go/src/cli" \
     -w /go/src/cli/src \
     myobplatform/go-glide:1.7-alpine \
