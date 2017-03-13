@@ -337,7 +337,7 @@
       retries: 5
       delay: 5
       register: grafana_datasources
-      until: grafana_datasources.json != None
+      until: grafana_datasources.json is defined
       tags:
         - docker
         - grafana
