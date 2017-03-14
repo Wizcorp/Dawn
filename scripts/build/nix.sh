@@ -14,6 +14,8 @@ docker tag dawn/dawn dawn/dawn:${version}
 docker tag dawn/dawn dawn/dawn:latest
 
 docker run -it \
+    -e HOME=/tmp \
+    -u `id -u` \
     -v "${PROJECT_DIR}:/go/src/dawn" \
     -w /go/src/dawn/src \
     myobplatform/go-glide:1.7-alpine \
