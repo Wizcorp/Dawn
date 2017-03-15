@@ -1,4 +1,4 @@
-#!/bin/bash -l
+#!/bin/bash -il
 
 set -e
 
@@ -11,6 +11,16 @@ local_os="$(uname -s | tr '[:upper:]' '[:lower:]')"
 ${SCRIPT_DIR}/../build/nix.sh
 export DAWN_DEVELOPMENT="${PROJECT_DIR}"
 export PATH="${PROJECT_DIR}/src/dist/${local_os}:${PATH}:${SCRIPT_DIR}"
-export PS1="${PS1:0:${#PS1}-2}[dawn development]${PS1:${#PS1}<2?0:-2}"
 
-exec bash
+# This will be required for users using
+# powerline. Powerline (or at least powerline-shell)
+# uses PROMPT_COMMAND and appears to disable
+if
+  [ "$PS1" == "" ]
+then
+  export PS1="\w > "
+fi
+
+export PS1="[Dawn development]${PS1}"
+
+exec bash --noprofile --norc
