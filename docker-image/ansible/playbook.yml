@@ -170,6 +170,9 @@
         - { name: "net.ipv4.tcp_keepalive_time", value: 600 }
         - { name: "net.ipv4.tcp_keepalive_intvl", value: 30 }
         - { name: "net.ipv4.tcp_keepalive_probes", value: 10 }
+        # we also need ip_forward to be set to true to allow containers to query
+        # services on the host's local network
+        - { name: "net.ipv4.ip_forward", value: 1 }
       tags:
         - sysctl
 
