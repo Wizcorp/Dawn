@@ -1,0 +1,177 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+require 'yaml'
+
+def isWindows()
+  return /cygwin|mswin|mingw|bccwin|wince|emx/ =~ RUBY_PLATFORM
+end
+
+# determine provider based on operating system;
+# on Windows, we need to use Hyper-V, but on
+# macOS and Linux we use VirtualBox
+def get_provider()
+  if isWindows()
+    return "hyperv"
+  end
+
+  return "virtualbox"
+end
+
+# Get the interface for a given provider
+def get_interface(configuration)
+  provider = get_provider()
+  return configuration['interfaces'][provider]
+end
+
+# generates the inventory file for our setup
+def generate_inventory(configuration, environment_name)
+  inventory_filename = File.expand_path('inventory', File.dirname(__FILE__))
+  inventory_file = File.new(inventory_filename, "w")
+  provider = get_provider()
+
+  groups = {}
+  vagrant_machines_path = "/dawn/project/dawn/#{environment_name}/.vagrant/machines"
+
+  # first write the instance informations
+  configuration["instances"].each do |instance_name, instance_info|
+    private_key = "#{vagrant_machines_path}/#{instance_name}/#{provider}/private_key"
+
+     ansible_vars = [
+      instance_name,
+      "ansible_ssh_host=#{instance_info["ip"]}",
+      "ansible_ssh_port=22",
+      "ansible_ssh_user=#{configuration.fetch("user", "vagrant")}",
+      "ansible_ssh_private_key_file='#{private_key}'",
+      "docker_labels='#{instance_info["labels"].to_json}'"
+    ]
+
+    inventory_file.puts ansible_vars.join(" ")
+
+    instance_info["groups"].each do |group, _|
+      groups.store(group, []) unless groups.has_key?(group)
+      groups[group].push instance_name
+    end
+  end
+
+  # write groups
+  groups.each do |group_name, instances|
+    inventory_file.puts "\n[#{group_name}]"
+    instances.each do |instance|
+      inventory_file.puts instance
+    end
+  end
+
+  # finally some useful variables related to vagrant
+  inventory_file.puts <<-vars
+
+[all:vars]
+private_interface=#{get_interface(configuration)}
+
+vars
+
+  inventory_file.close
+end
+
+Vagrant.configure("2") do |config|
+  # the current working directory name should be the same
+  # as the environment's name
+  environment_name = File.basename(Dir.getwd)
+
+  # load configuration
+  configuration = YAML::load_file(ENV['CONFIG_FILE'] || "instances.yml")
+
+  # retrieve the name of the provider to use
+  provider = get_provider()
+
+  # select the box image to use
+  config.vm.box = configuration['images'][provider]
+
+  # generate the inventory
+  generate_inventory(configuration, environment_name)
+
+  configuration['instances'].each do |instance_name, instance_info|
+    config.vm.define instance_name do |instance|
+      instance.vm.provider provider do |vb|
+        # specify the desired number of CPU units to allocate
+        vb.cpus = instance_info['cpus']
+
+        # customize the amount of memory on the VM:
+        vb.memory = instance_info['memory'].to_s
+
+        case provider
+        when "virtualbox"
+          # set up the vm name
+          vb.name = instance_name
+
+          # linked_clone helps making the creation of new
+          # virtual machines faster on VirtualBox
+          vb.linked_clone = true
+        when "hyperv"
+          # set up the vm name
+          vb.vmname = instance_name
+
+          # hyperv supports dynamic memory allocation, but we
+          # still need to tell how much startup memory to allocate
+          vb.memory = "512"
+          vb.maxmemory = instance_info['memory'].to_s
+        end
+      end
+
+      # we don't need this (also causes issues with centos 7 image)
+      instance.vm.synced_folder ".", "/vagrant", disabled: true
+      instance.vm.hostname = instance_name
+
+      # vagrant doesn't currently support private networking on Hyper-V;
+      # the workaround is to manually set up the networking
+      instance.vm.network :private_network, ip: instance_info['ip'], auto_config: !isWindows()
+      if provider == "hyperv"
+        instance.vm.provision "shell", inline: <<-SHELL
+          interface="#{get_interface(configuration)}"
+          file="/etc/sysconfig/network-scripts/ifcfg-$interface"
+          echo "Generating ${file}"
+
+          echo "NAME=\"$interface\"" > $file
+          echo "DEVICE=\"$interface\"" >> $file
+          echo "TYPE=\"Ethernet\"" >> $file
+          echo "BOOTPROTO=\"static\"" >> $file
+          echo "ONBOOT=\"yes\"" >> $file
+          echo "IPADDR=\"#{instance_info['ip']}\"" >> $file
+          echo "NETMASK=\"255.255.255.0\"" >> $file
+          echo "GATEWAY=\"172.24.0.1\"" >> $file
+          echo "DNS1=\"8.8.8.8\"" >> $file
+
+          echo ""
+          echo "Done. Content is as follow:"
+          echo ""
+          cat ${file}
+SHELL
+      end
+
+      # The base xenial box doesn't have python installed so we need to install it manually
+      # We also boost the max map count, though it's only used by elasticsearch
+      instance.vm.provision "shell", inline: <<-SHELL
+        # Vagrant >1.8.7,<=1.9.1 has a bug where private interfaces are not
+        # provisioned properly on centos boxes, manually restart the network
+        # to deal with those
+        #
+        # We also need to restart to make sure the interface will get
+        # reconfigured (see above)
+        nohup bash -c "sleep 3; systemctl restart network" &> /tmp/restart &
+SHELL
+
+      # only run once everything is up
+      if instance_name == configuration["instances"].keys.last
+        # output a message to guide the user as to what to do next
+        instance.vm.provision "shell", inline: <<-SHELL
+        echo "All machines are now up. You can provision them by running:"
+        echo ""
+        echo "  dawn #{environment_name}"
+        echo "  # Then, in the dawn shell"
+        echo "  ansible-playbook /dawn/ansible/playbook.yml"
+        echo ""
+SHELL
+      end
+    end
+  end
+end

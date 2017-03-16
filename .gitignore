@@ -1,5 +1,6 @@
 # Ansible
 *.log
+
 *.retry
 /ansible/inventory
 
@@ -11,3 +12,9 @@
 *~
 *.DS_Store
 ._*
+
+# Dawn folder
+/dawn
+
+# Build documentation
+/.docs

@@ -1,0 +1,8 @@
+hash: 0f9005c4e436d58ae812bb78b7c89f1d2c6eb771faa5a6c51f66136b9953b23b
+updated: 2017-03-07T18:06:40.2050582+09:00
+imports:
+- name: github.com/ProtonMail/go-appdir
+  version: 8d01ef4fc20182002039a9d8d7130b104975d130
+- name: gopkg.in/yaml.v2
+  version: a3f3340b5840cee44f372bddb5880fcbc419b46a
+testImports: []

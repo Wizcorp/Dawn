@@ -1,0 +1,7 @@
+package: dawn/src
+homepage: https://dawn.sh
+license: MIT
+owners:
+  - name: Marc Trudel
+    email: mtrudel@wizcorp.jp
+    homepage: http://www.wizcorp.jp

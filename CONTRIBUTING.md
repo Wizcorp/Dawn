@@ -1,50 +1,95 @@
-Contributing to Dawn
-====================
+Contributing
+============
 
 Before getting started
 ----------------------
 
-Make sure to read the [Architecture Overview](https://docs.google.com/document/d/1l5bsWv6ARzTVkm9x84ONRJS0tzwvQeuIdP3CStg3Mro/edit#) 
-document. If you wish to add or alter a feature, please create an issue to present your idea first; this should make it
+Make sure to read the
+[Architecture Overview](https://docs.google.com/document/d/1l5bsWv6ARzTVkm9x84ONRJS0tzwvQeuIdP3CStg3Mro/edit#)
+document. If you wish to add or alter a feature, please create an
+issue to present your idea first; this should make it
 easier for your contributions to get merged afterward.
 
 Requirements
 ------------
 
-**Note**: you will need at least 8GB of available memory to start all 5 VMs locally.
+**Note**: you will need at least 8GB of available memory (16GB recommended)
+to start all 5 VMs locally.
 
-|  Software  | Version |
-|------------|---------|
-| Virtualbox | 5.1.14+ |
-| Vagrant    | 1.9.1+  |
-| Ansible    | 2.2+    |
+|  Software  | Version | Note                    |
+|------------|---------|-------------------------|
+| Docker     | 1.13+   |                         |
+| Vagrant    | 1.9.1+  |                         |
+| Virtualbox | 5.1.14+ | Not required on Windows |
+
 
 Quick Start
 -----------
 
-Run vagrant up, wait for it to finish, once finished set your DNS to point to 10.0.0.50 and you should get access to:
+All scripts for building, developing and releasing Dawn's docker image and binary are
+under `./script`.
 
-* Docker Swarm:
-  - Leader-1: 10.0.0.50:2376
-  - Worker-1: 10.0.0.100:2376
-  - Worker-2: 10.0.0.101:2376
-  - Balancer: 10.0.0.200:2376
-* Monitoring:
-  - Kibana: http://10.0.0.20:5601/
-  - ElasticSearch: http://10.0.0.20:9200/
-  - Grafana: http://10.0.0.20:3000/ (admin:admin)
-* Service Discovery:
-  - Consul: http://10.0.0.20:8500/ui/
-  - Consul DNS: 10.0.0.20:8600
-  - DNSMasq DNS: 10.0.0.20:53
-* Load Balancing:
-  - Traefik: http://10.0.0.200
+### Development
 
-Docker Swarm
-------------
+#### macOS, Linux
 
-Leader-1 is acting as the manager, just run `export DOCKER_HOST=10.0.0.50:2376` and you should be able to start sending
-commands to the swarm manager.
+```bash
+./scripts/development/bash.sh
+```
 
-All logs are forwarded to kibana, just go to http://10.0.0.20:5601/ and use the default settings when asked on the first
-connection, logs should appear inside the top tab of Kibana.
+#### Windows
+
+```posh
+.\scripts\development\powershell.ps1
+```
+
+#### Details
+
+The development scripts will:
+
+  1. Make a local build of the docker image (`./docker-image`)
+  2. Make a local build of the local binary (`./src`)
+  3. Add `./src/dist/[platform]/` to your PATH (env:Path on Windows)
+  4. Make the binary mount `./docker-image/ansible` and `./docker-image/templates` at runtime 
+     (so you will not need to rebuild the Docker image every time you make a change to either 
+     folder's content)
+  5. Open a sub-shell
+
+Whenever you need to rebuild the project, simply type `rebuild`.
+
+Once you are in the sub-shell, you can run `dawn` anywhere. From there, you will normally want
+to set up a local environment; you will be using this environment to run the playbook against.
+Simply run `dawn local`, and select the local template to get started.
+
+### Building
+
+#### macOS, Linux
+
+```bash
+./scripts/build/nix.sh [version number, default: development] [darwin|windows|linux|all, default: local platform]
+```
+
+#### Windows
+
+```posh
+.\scripts\build\windows.ps1 [-version version number, default: development] [-target darwin|windows|linux|all, default: windows]
+```
+
+#### Details
+
+The build script will
+  
+  1. Build the docker image, and tag it with dawn:[version number] 
+  2. Build the local binary and assign it [version number] as the default 
+     image and the binary's own version (if target is `all`, binaries for all
+     supported platforms will be built)
+
+Releasing
+---------
+
+To make a release:
+
+```
+git tag v0.0.1
+./scripts/release/release.sh
+```
