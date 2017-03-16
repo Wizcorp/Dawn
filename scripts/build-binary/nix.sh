@@ -24,6 +24,8 @@ docker run \
 docker run \
     -it \
     --rm \
+    -e HOME=/tmp \
+    -u `id -u` \
     -v "${PROJECT_DIR}:/go/src/cli" \
     -w /go/src/cli/src \
     myobplatform/go-glide:1.7-alpine \
