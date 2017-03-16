@@ -41,6 +41,37 @@
       tags:
         - always
 
+### Python setup
+# We don't want all the pip installs and various dependencies to conflict with
+# normal yum packages, this solves the issue by creating an ansible virtualenv
+# and tells ansible to use it
+###
+- hosts: all
+  become: true
+  tasks:
+    - name: "Create deployment folder"
+      file: path=/opt/dawn state=directory mode=0755
+    - name: "Make sure virtualenv is available"
+      package:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - python-virtualenv
+        - openssl-devel
+    - name: "Install docker python library"
+      pip:
+        name: "{{ item }}"
+        state: latest
+        virtualenv: /opt/dawn/deploy
+        virtualenv_site_packages: yes
+      with_items:
+        - pip
+        - docker-py
+    - name: "Tell subsequent tasks to use this virtualenv"
+      set_fact:
+        ansible_virtualenv: /opt/dawn/deploy
+        ansible_python_interpreter: /opt/dawn/deploy/bin/python
+
 ##########################
 # PRIMARY INFRASTRUCTURE #
 ##########################
@@ -78,9 +109,23 @@
   become: true
   roles:
     - role: williamyeh.fluentd
+      tdagent_conf_template: "files/td-agent.conf"
       tdagent_plugins:
         - fluent-plugin-elasticsearch
-      tdagent_conf_template: "files/td-agent.conf"
+  tasks:
+    - name: "Transform syslog messages to json"
+      copy:
+        dest: /etc/rsyslog.conf
+        src: "{{ playbook_dir }}/files/rsyslog.conf"
+      register: rsyslog_conf
+    - name: "Restart rsyslog"
+      service:
+        name: "{{ item }}"
+        state: restarted
+      when: rsyslog_conf.changed
+      with_items:
+        - rsyslog
+        - td-agent
 
 ### Docker
 # Docker is installed on every node, default setup is to listen on both the
@@ -96,7 +141,7 @@
         - unix:///var/run/docker.sock
         - "{{ private_ipv4 }}:2376"
       docker_ip: "{{ private_ipv4 }}"
-      docker_log_driver: "fluentd"
+      docker_log_driver: "journald"
       docker_insecure_registries: "{{  group_ipv4.control | map('regex_replace', '$', ':5000') | list }}"
     - role: AerisCloud.consul-service
       consul_service_name: "docker"
@@ -125,10 +170,11 @@
         - { name: "net.ipv4.tcp_keepalive_time", value: 600 }
         - { name: "net.ipv4.tcp_keepalive_intvl", value: 30 }
         - { name: "net.ipv4.tcp_keepalive_probes", value: 10 }
+        # we also need ip_forward to be set to true to allow containers to query
+        # services on the host's local network
+        - { name: "net.ipv4.ip_forward", value: 1 }
       tags:
         - sysctl
-  vars:
-    docker_log_driver: "fluentd"
 
 ### Swarm
 # We first create the swarm cluster on the first control node, then have every
@@ -172,7 +218,7 @@
   become: true
   roles:
     - role: dj-wasabi.telegraf
-      telegraf_agent_version: 1.2.0
+      telegraf_agent_version: 1.2.1
       telegraf_agent_version_sub_l: ""
       telegraf_agent_output:
         - type: prometheus_client
@@ -232,23 +278,30 @@
     - role: AerisCloud.docker-manage
       docker_containers:
         # setup elastic search for log storage from remote fluentd instances
-        - name: elastic
-          image: elasticsearch
-          command: "-Etransport.host=0.0.0.0 -Ediscovery.zen.minimum_master_nodes=1 -Enode.name='{{ inventory_hostname }}'"
+        - name: elasticsearch
+          image: docker.elastic.co/elasticsearch/elasticsearch:5.2.1
           env:
             ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+            http.host: 0.0.0.0
+            transport.host: 0.0.0.0
+            discovery.zen.minimum_master_nodes: 1
+            node.name: "{{ inventory_hostname }}"
+            xpack.security.enabled: 0
           restart_policy: unless-stopped
           published_ports:
             - "9200:9200"
             - "9300:9300"
         # setup kibana for reading those logs
         - name: kibana
-          image: kibana
+          image: docker.elastic.co/kibana/kibana:5.2.1
+          env:
+            LOGGING_VERBOSE: "false"
+            LOGGING_QUIET: "true"
           restart_policy: unless-stopped
           published_ports:
             - "5601:5601"
           links:
-            - "elastic:elasticsearch"
+            - elasticsearch
         # prometheus is a time series database, provided config will scrape
         # anything tagged as monitor in consul
         - name: prometheus
@@ -284,7 +337,10 @@
         user: admin
         password: admin
         force_basic_auth: yes
+      retries: 5
+      delay: 5
       register: grafana_datasources
+      until: grafana_datasources.json is defined
       tags:
         - docker
         - grafana
