@@ -1,0 +1,142 @@
+### Monitoring nodes
+# Monitoring nodes are running:
+#  * elasticsearch+kibana to aggregate, store and visualize logs from the nodes
+#    in the cluster. By default the source of logs comes from fluentd on each
+#    host.
+#  * prometheus+grafana to aggregate, store and visualize live metrics from hosts
+#    and containers. Source of metrics are automatically picked up from any
+#    service in consul that is announced with the tag "monitor"
+###
+
+# monitoring nodes need some adjustements so that elasticsearch doesn't scream
+# at us, see: https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html
+- hosts: monitor
+  become: true
+  tasks:
+    - name: "Set vm.max_map_count for elasticsearch"
+      sysctl:
+        name: vm.max_map_count
+        value: 262144
+        state: present
+      tags:
+        - sysctl
+        - monitoring
+
+# start containers, all those containers are set to "restart_policy: unless-stopped"
+# so that the user can stop those containers if they do not need/want them
+- hosts: monitor
+  become: true
+  roles:
+    - role: AerisCloud.docker-manage
+      docker_containers:
+        # setup elastic search for log storage from remote fluentd instances
+        - name: elasticsearch
+          image: docker.elastic.co/elasticsearch/elasticsearch:5.2.1
+          env:
+            ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+            http.host: 0.0.0.0
+            transport.host: 0.0.0.0
+            discovery.zen.minimum_master_nodes: 1
+            node.name: "{{ inventory_hostname }}"
+            xpack.security.enabled: 0
+          restart_policy: unless-stopped
+          published_ports:
+            - "9200:9200"
+            - "9300:9300"
+        # setup kibana for reading those logs
+        - name: kibana
+          image: docker.elastic.co/kibana/kibana:5.2.1
+          env:
+            LOGGING_VERBOSE: "false"
+            LOGGING_QUIET: "true"
+          restart_policy: unless-stopped
+          published_ports:
+            - "5601:5601"
+          links:
+            - elasticsearch
+        # prometheus is a time series database, provided config will scrape
+        # anything tagged as monitor in consul
+        - name: prometheus
+          image: "prom/prometheus"
+          restart_policy: unless-stopped
+          volumes:
+            - "/etc/prometheus.yml:/etc/prometheus/prometheus.yml"
+          sync_templates:
+            - src: "{{ playbook_dir }}/files/prometheus.yml"
+              dest: /etc/prometheus.yml
+              mode: 0644
+        # graphana to read the logs from above
+        - name: grafana
+          image: grafana/grafana
+          restart_policy: unless-stopped
+          links:
+            - prometheus
+          published_ports:
+            - "3000:3000"
+  # the following tasks will automatically provision grafana with the prometheus
+  # source as well as a custom dashboard
+  tasks:
+    - name: "Build grafana URL"
+      set_fact:
+        grafana_url: "http://{{ group_ipv4.monitor[0] }}:3000"
+      tags:
+        - docker
+        - grafana
+    - name: "Check if prometheus source exists"
+      uri:
+        url: "{{ grafana_url}}/api/datasources"
+        return_content: yes
+        user: admin
+        password: admin
+        force_basic_auth: yes
+      retries: 5
+      delay: 5
+      register: grafana_datasources
+      until: grafana_datasources.json is defined
+      tags:
+        - docker
+        - grafana
+    - name: "Setup prometheus source on grafana"
+      uri:
+        url: "{{ grafana_url}}/api/datasources"
+        method: POST
+        user: admin
+        password: admin
+        body:
+          name: prometheus
+          type: prometheus
+          url: http://prometheus:9090
+          access: proxy
+          basicAuth: false
+        force_basic_auth: yes
+        status_code: 200
+        body_format: json
+      when: "{{ 'prometheus' not in grafana_datasources.json|map(attribute='name') }}"
+      tags:
+      - docker
+      - grafana
+    - name: "Check if a dashboard exists"
+      uri:
+        url: "{{ grafana_url}}/api/search?query=Hardware"
+        return_content: yes
+        user: admin
+        password: admin
+        force_basic_auth: yes
+      register: grafana_dashboards
+      tags:
+        - docker
+        - grafana
+    - name: "Register hardware dashboard"
+      uri:
+        url: "{{ grafana_url}}/api/dashboards/db"
+        method: POST
+        user: admin
+        password: admin
+        body: "{\"dashboard\":{{ lookup('file','files/dashboard.json') }},\"overwrite\":false}"
+        force_basic_auth: yes
+        status_code: 200
+        body_format: json
+      when: "{{ grafana_dashboards.json|length == 0 }}"
+      tags:
+      - docker
+      - grafana

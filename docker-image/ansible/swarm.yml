@@ -1,0 +1,57 @@
+### Swarm
+# We first create the swarm cluster on the first control node, then have every
+# other nodes join this node in the swarm.
+# Finally we also advertise the swarm on consul
+###
+- hosts: control
+  become: true
+  roles:
+    - role: AerisCloud.swarm
+      swarm_leader: true
+      swarm_listen_addr: 0.0.0.0
+      swarm_advertise_addr: "{{ private_ipv4 }}"
+      when: groups['control'][0] == inventory_hostname
+
+# Run swarm again on all the nodes to have them join and setup the consul service
+- hosts: swarm
+  become: true
+  roles:
+    - role: AerisCloud.swarm
+      swarm_leader: "{{ groups['control'][0] == inventory_hostname }}"
+      swarm_manager: "{{ (inventory_hostname in groups['control'] and groups['control'][0] != inventory_hostname) or inventory_hostname in groups['edge'] }}"
+      swarm_worker: "{{ inventory_hostname not in groups['control'] and inventory_hostname not in groups['edge'] }}"
+      swarm_listen_addr: 0.0.0.0
+      swarm_advertise_addr: "{{ private_ipv4 }}"
+      swarm_remote_addrs: "{{  group_ipv4.control | list }}"
+    - role: AerisCloud.consul-service
+      consul_service_name: "swarm"
+      consul_service_port: 2377
+      consul_service_checks:
+      - type: http
+        http: "http://{{ private_ipv4 }}:2376/_ping"
+  # This task is related to how overlay networks behave. The way overlay works
+  # is that it will mark your packet at the mangle stage with the service id you
+  # are trying to reach, IPVS then catches those marked packets and route them
+  # dynamically to the right target. The issue is that ipvs will stop tracking
+  # an idle connection after 900 seconds, after that any packet on this
+  # connection will not be routed properly and try to access the original virtual
+  # IP associated with the task, resulting in failure since that IP doesn't exists.
+  # By setting the tcp_keepalive below 900 we make sure that the connection will
+  # never expire in ipvs.
+  #
+  # The values below come from: https://community.emc.com/blogs/cairo_BRS/2014/03/23/networker-best-practice-and-performance-tuning-on-os-level-windows-and-linux
+  tasks:
+    - name: "Set sysctl values for tcp_keepalive (necessary for overlay)"
+      sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+      with_items:
+        - { name: "net.ipv4.tcp_keepalive_time", value: 600 }
+        - { name: "net.ipv4.tcp_keepalive_intvl", value: 30 }
+        - { name: "net.ipv4.tcp_keepalive_probes", value: 10 }
+        # we also need ip_forward to be set to true to allow containers to query
+        # services on the host's local network
+        - { name: "net.ipv4.ip_forward", value: 1 }
+      tags:
+        - sysctl

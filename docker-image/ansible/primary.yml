@@ -1,0 +1,126 @@
+##########################
+# PRIMARY INFRASTRUCTURE #
+##########################
+
+### Consul
+# Consul is installed on all the nodes and is a cornerstone of this infra and is
+# used to advertise every services in the cluster.
+#
+# Most components will use consul as a configuration source (both services and
+# the kv store) when possible/supported, see prometheus as an exemple of service
+# using consul for configuration.
+#
+# Consul is installed on every node, but only control nodes gets the consul UI.
+###
+- hosts: consul
+  become: true
+  roles:
+  - role: AerisCloud.consul
+    consul_retry_join: "{{ group_ipv4.consul | list }}"
+    consul_bind_address: 0.0.0.0
+    consul_client_address: "{{ private_ipv4 }}"
+    consul_advertise_address: "{{ private_ipv4 }}"
+    consul_domain: dawn
+    consul_datacenter: in
+    consul_ui_enabled: "{{ inventory_hostname in groups['control'] }}"
+
+### Fluentd
+# Fluentd is installed on all the nodes and is used to collect logs from local
+# containers and services, those logs are then forwarded to a configurable
+# target which is by default elasticsearch on the monitoring nodes.
+#
+# TODO: setup rsyslog to forward logs into fluentd too
+###
+- hosts: all
+  become: true
+  roles:
+    - role: williamyeh.fluentd
+      tdagent_conf_template: "files/td-agent.conf"
+      tdagent_plugins:
+        - fluent-plugin-elasticsearch
+  tasks:
+    - name: "Transform syslog messages to json"
+      copy:
+        dest: /etc/rsyslog.conf
+        src: "{{ playbook_dir }}/files/rsyslog.conf"
+      register: rsyslog_conf
+    - name: "Restart rsyslog"
+      service:
+        name: "{{ item }}"
+        state: restarted
+      when: rsyslog_conf.changed
+      with_items:
+        - rsyslog
+        - td-agent
+
+### Docker
+# Docker is installed on every node, default setup is to listen on both the
+# docker socket (for running docker directly via SSH) but also via HTTP on the
+# default port (2376). We also register the insecure registry that will be
+# started on the first control node. Finally we advertise the daemon consul
+###
+- hosts: docker
+  become: true
+  roles:
+    - role: AerisCloud.docker
+      docker_hosts:
+        - unix:///var/run/docker.sock
+        - "{{ private_ipv4 }}:2376"
+      docker_ip: "{{ private_ipv4 }}"
+      docker_log_driver: "journald"
+      docker_insecure_registries: "{{  group_ipv4.control | map('regex_replace', '$', ':5000') | list }}"
+    - role: AerisCloud.consul-service
+      consul_service_name: "docker"
+      consul_service_port: 2376
+      consul_service_checks:
+      - type: http
+        http: "http://{{ private_ipv4 }}:2376/_ping"
+
+### Telegraf
+# Telegraf is our monitoring agent, by default it is set to monitor the local
+# machine (cpu/memory/disk/etc...) as well as the local docker daemon, it is
+# also advertised on consul so that prometheus can detect it and start polling
+# from it as soon as it is available.
+###
+- hosts: all
+  become: true
+  roles:
+    - role: dj-wasabi.telegraf
+      telegraf_agent_version: 1.2.1
+      telegraf_agent_version_sub_l: ""
+      telegraf_agent_output:
+        - type: prometheus_client
+          config:
+            - listen = "0.0.0.0:9126"
+      telegraf_plugins_extra:
+        - plugin: docker
+          config:
+            - endpoint = "unix:///var/run/docker.sock"
+            - container_names = []
+    - role: AerisCloud.consul-service
+      consul_service_name: "telegraf"
+      consul_service_port: 9126
+      consul_service_tags:
+        - monitor
+  tasks:
+    - name: Give the Telegraf user access to docker
+      user:
+        name: telegraf
+        groups: docker
+      tags:
+        - telegraf
+
+### Docker registry
+# The first control node has a registry running on it, it is used by the swarm
+# when deploying custom built images accross the cluster
+###
+- hosts: control
+  become: true
+  roles:
+    - role: AerisCloud.docker-manage
+      docker_containers:
+        - name: registry
+          image: registry:2
+          restart_policy: always
+          published_ports:
+            - "5000:5000"
