@@ -43,7 +43,7 @@ export COMMAND="${@}"
 export DAWN_PROJECT_FILES_PATH="/dawn/project/dawn"
 export DAWN_PROJECT_CONFIG_FILE_PATH="${DAWN_PROJECT_FILES_PATH}/dawn.yml"
 export DAWN_ENVIRONMENT_FILES_PATH="${DAWN_PROJECT_FILES_PATH}/${DAWN_ENVIRONMENT}"
-export PS1="${DAWN_PROJECT_NAME} (${DAWN_ENVIRONMENT}):\w\\$ "
+export PS1="\e[1;31m$DAWN_PROJECT_NAME \e[1;32m($DAWN_ENVIRONMENT) \e[1;34m\w $\e[0m "
 
 # We make sure that the base directory structure is present,
 # and that a configuration file is indeed present.
@@ -89,5 +89,5 @@ popd > /dev/null
 # Ref: https://github.com/docker/docker/issues/27685#issuecomment-256648694
 #
 pushd ${DAWN_ENVIRONMENT_FILES_PATH} > /dev/null
-sudo -u dawn ${COMMAND}
+sudo -H -E -u dawn ${COMMAND}
 popd > /dev/null
