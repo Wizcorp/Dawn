@@ -21,11 +21,11 @@ export PATH="${PROJECT_DIR}/src/dist/${local_os}:${PATH}:${SCRIPT_DIR}/commands"
 # powerline. Powerline (or at least powerline-shell)
 # uses PROMPT_COMMAND and appears to disable
 if
-  [ "$PS1" == "" ]
+  [ "${PS1}" == "" ]
 then
   export PS1="\w > "
 fi
 
-export PS1="[Dawn development]${PS1}"
+export PS1="[${name} development]${PS1}"
 
 exec bash --noprofile --norc
