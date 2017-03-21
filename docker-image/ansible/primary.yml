@@ -20,8 +20,6 @@
     consul_bind_address: 0.0.0.0
     consul_client_address: "{{ private_ipv4 }}"
     consul_advertise_address: "{{ private_ipv4 }}"
-    consul_domain: dawn
-    consul_datacenter: in
     consul_ui_enabled: "{{ inventory_hostname in groups['control'] }}"
 
 ### Fluentd
@@ -62,6 +60,13 @@
 - hosts: docker
   become: true
   roles:
+    - role: AerisCloud.dnsmasq-template
+      dnsmasq_servers:
+        - "{{ default_dns }}"
+        - "/{{ consul_datacenter }}.{{ consul_domain }}/{{ group_ipv4.control[0] }}#8600"
+      dnsmasq_addresses:
+        - "/{{ consul_domain }}/{{ group_ipv4.edge[0] }}"
+        - "/dockerhost/{{ private_ipv4 }}"
     - role: AerisCloud.docker
       docker_hosts:
         - unix:///var/run/docker.sock

@@ -38,6 +38,8 @@
           consul: "{{ groups['consul'] | map('extract', hostvars, ['private_ipv4']) | list }}"
           control: "{{ groups['control'] | map('extract', hostvars, ['private_ipv4']) | list }}"
           monitor: "{{ groups['monitor'] | map('extract', hostvars, ['private_ipv4']) | list }}"
+          edge: "{{ groups['edge'] | map('extract', hostvars, ['private_ipv4']) | list }}"
+          worker: "{{ groups['worker'] | map('extract', hostvars, ['private_ipv4']) | list }}"
       tags:
         - always
 

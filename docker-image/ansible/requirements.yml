@@ -16,6 +16,8 @@
   version: v1.1.0
 - name: AerisCloud.docker-manage
   version: master
+- name: AerisCloud.dnsmasq-template
+  version: master
 - name: AerisCloud.rsyslog
   version: master
 - name: AerisCloud.swarm
