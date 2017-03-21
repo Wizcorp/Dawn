@@ -58,7 +58,6 @@ resource "aws_subnet" "default" {
   cidr_block        = "${var.cidr_block}"
 
   tags {
-    dawn        = true
     project     = "${var.project_name}"
     environment = "${var.project_environment}"
   }
@@ -69,7 +68,6 @@ resource "aws_internet_gateway" "default" {
   vpc_id = "${data.aws_vpc.default.id}"
 
   tags {
-    dawn        = true
     project     = "${var.project_name}"
     environment = "${var.project_environment}"
   }
@@ -125,7 +123,6 @@ resource "aws_security_group" "default" {
   }
 
   tags {
-    dawn        = true
     project     = "${var.project_name}"
     environment = "${var.project_environment}"
   }
@@ -166,7 +163,6 @@ resource "aws_security_group" "edge" {
   }
 
   tags {
-    dawn        = true
     project     = "${var.project_name}"
     environment = "${var.project_environment}"
   }
@@ -186,7 +182,6 @@ resource "aws_instance" "edge" {
 
   tags {
     Name        = "${var.project_name}.${var.project_environment}.edge-${count.index + 1}"
-    dawn        = true
     project     = "${var.project_name}"
     environment = "${var.project_environment}"
     role        = "edge"
@@ -212,7 +207,6 @@ resource "aws_instance" "control" {
 
   tags {
     Name         = "${var.project_name}.${var.project_environment}.control-${count.index + 1}"
-    dawn         = true
     project      = "${var.project_name}"
     environment  = "${var.project_environment}"
     roles        = "control"
@@ -234,7 +228,6 @@ resource "aws_instance" "worker" {
 
   tags {
     Name         = "${var.project_name}.${var.project_environment}.worker-${count.index + 1}"
-    dawn         = true
     project      = "${var.project_name}"
     environment  = "${var.project_environment}"
     role         = "worker"
@@ -256,7 +249,6 @@ resource "aws_instance" "storage" {
 
   tags {
     Name         = "${var.project_name}.${var.project_environment}.storage-${count.index + 1}"
-    dawn         = true
     project      = "${var.project_name}"
     environment  = "${var.project_environment}"
     role         = "storage"

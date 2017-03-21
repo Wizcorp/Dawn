@@ -1,6 +1,6 @@
 export TF_VAR_project_name="${PROJECT_NAME}"
 export TF_VAR_project_environment="${PROJECT_ENVIRONMENT}"
-export AWS_CREDENTIALS_FILE="/home/dawn/.aws_credentials"
+export AWS_CREDENTIALS_FILE="/home/${SHELL_USER}/.aws_credentials"
 
 if
     [ ! -f "${AWS_CREDENTIALS_FILE}" ]
@@ -43,14 +43,14 @@ echo ""
 
 # Warn user if deploy key is not found
 if
-    [ ! -f /home/dawn/.ssh/deploy ]
+    [ ! -f /home/${SHELL_USER_HOMEDIR}/.ssh/deploy ]
 then
-    echo "** Warning ** private deploy key not found (/home/dawn/.ssh/deploy)"
+    echo "** Warning ** private deploy key not found (/home/${SHELL_USER_HOMEDIR}/.ssh/deploy)"
     echo "** Warning ** While you may still be able to start or stop new machines"
     echo "** Warning ** using Terraform, you will not be able to provision them"
     echo "** Warning ** using Ansible. Request the private key, and put it here:"
     echo "** Warning **"
-    echo "** Warning ** /home/dawn/.ssh/deploy"
+    echo "** Warning ** /home/${SHELL_USER_HOMEDIR}/.ssh/deploy"
     echo "** Warning **"
     echo ""
 fi
