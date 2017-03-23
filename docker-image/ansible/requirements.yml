@@ -13,7 +13,7 @@
 - name: AerisCloud.consul-service
   version: master
 - name: AerisCloud.docker
-  version: v1.1.0
+  version: v1.1.1
 - name: AerisCloud.docker-manage
   version: master
 - name: AerisCloud.dnsmasq-template

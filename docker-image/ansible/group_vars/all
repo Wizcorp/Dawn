@@ -1,3 +1,4 @@
-default_dns: 8.8.8.8
+# This is the default internal domain, if you want to change those values either
+# do it in your inventory [all:vars] section or use --extra-vars
 consul_domain: dawn
 consul_datacenter: in

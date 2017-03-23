@@ -62,12 +62,12 @@
   roles:
     - role: AerisCloud.dnsmasq-template
       dnsmasq_servers:
-        - "{{ default_dns }}"
         - "/{{ consul_datacenter }}.{{ consul_domain }}/{{ group_ipv4.control[0] }}#8600"
       dnsmasq_addresses:
         - "/{{ consul_domain }}/{{ group_ipv4.edge[0] }}"
         - "/dockerhost/{{ private_ipv4 }}"
     - role: AerisCloud.docker
+      docker_dns: [ "{{ private_ipv4 }}" ]
       docker_hosts:
         - unix:///var/run/docker.sock
         - "{{ private_ipv4 }}:2376"
