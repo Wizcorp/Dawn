@@ -1,3 +1,26 @@
 # Deploying your apps
 
-Coming soon.
+## Cloud stack files
+
+## Deploy to the cluster
+
+## Monitoring your deployment
+
+## Update an existing application
+
+## Extra features and goodies
+
+Dawn comes with some extra functionalities to help you interact with your cluster
+
+### Internal DNS
+
+Every container has direct access to the consul DNS feature, this allows a
+container to access any of the primary service through the internal `in.dawn`
+domain, for example if you want to leverage the provided consul for service
+discovery or kv storage, you can simply point your application to `consul.service.in.dawn`
+to connect to a random consul node in the cluster.
+
+For more information about the Consul DNS, see the [DNS Interface Documentation](https://www.consul.io/docs/agent/dns.html).
+
+Another useful DNS entry that is made available is the `dockerhost` entry which
+points to IP of the machine currently running your container.
