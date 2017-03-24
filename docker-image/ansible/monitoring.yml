@@ -69,6 +69,9 @@
         - name: grafana
           image: grafana/grafana
           restart_policy: unless-stopped
+          env:
+            GF_SECURITY_ADMIN_USER: "{{ monitoring_user }}"
+            GF_SECURITY_ADMIN_PASSWORD: "{{ monitoring_password }}"
           links:
             - prometheus
           published_ports:
@@ -76,7 +79,7 @@
   # the following tasks will automatically provision grafana with the prometheus
   # source as well as a custom dashboard
   tasks:
-    - name: "Build grafana URL"
+    - name: "Build internal grafana URL"
       set_fact:
         grafana_url: "http://{{ group_ipv4.monitor[0] }}:3000"
       tags:
@@ -86,8 +89,8 @@
       uri:
         url: "{{ grafana_url}}/api/datasources"
         return_content: yes
-        user: admin
-        password: admin
+        user: "{{ monitoring_user }}"
+        password: "{{ monitoring_password }}"
         force_basic_auth: yes
       retries: 5
       delay: 5
@@ -100,8 +103,8 @@
       uri:
         url: "{{ grafana_url}}/api/datasources"
         method: POST
-        user: admin
-        password: admin
+        user: "{{ monitoring_user }}"
+        password: "{{ monitoring_password }}"
         body:
           name: prometheus
           type: prometheus
@@ -119,8 +122,8 @@
       uri:
         url: "{{ grafana_url}}/api/search?query=Hardware"
         return_content: yes
-        user: admin
-        password: admin
+        user: "{{ monitoring_user }}"
+        password: "{{ monitoring_password }}"
         force_basic_auth: yes
       register: grafana_dashboards
       tags:
@@ -130,8 +133,8 @@
       uri:
         url: "{{ grafana_url}}/api/dashboards/db"
         method: POST
-        user: admin
-        password: admin
+        user: "{{ monitoring_user }}"
+        password: "{{ monitoring_password }}"
         body: "{\"dashboard\":{{ lookup('file','files/dashboard.json') }},\"overwrite\":false}"
         force_basic_auth: yes
         status_code: 200
@@ -140,3 +143,30 @@
       tags:
       - docker
       - grafana
+    # Finally expose the containers via consul, see https://docs.traefik.io/user-guide/kv-config/#key-value-storage-structure
+    # for more information on how this works
+    - name: "Expose monitoring via traefik"
+      consul_kv:
+        host: "{{ group_ipv4.control[0] }}"
+        key: "{{ item.key }}"
+        value: "{{ item.value }}"
+      run_once: true
+      with_items:
+        # kibana
+        - key: "traefik/backends/kibana/servers/monitoring/url"
+          value: "http://{{ group_ipv4.monitor[0] }}:5601"
+        - key: "traefik/backends/kibana/servers/monitoring/weight"
+          value: "1"
+        - key: "traefik/frontends/kibana/backend"
+          value: "kibana"
+        - key: "traefik/frontends/kibana/routes/kibana/rule"
+          value: "Host:kibana.{{ consul_domain }}"
+        # grafana
+        - key: "traefik/backends/grafana/servers/monitoring/url"
+          value: "http://{{ group_ipv4.monitor[0] }}:3000"
+        - key: "traefik/backends/grafana/servers/monitoring/weight"
+          value: "1"
+        - key: "traefik/frontends/grafana/backend"
+          value: "grafana"
+        - key: "traefik/frontends/grafana/routes/grafana/rule"
+          value: "Host:grafana.{{ consul_domain }}"

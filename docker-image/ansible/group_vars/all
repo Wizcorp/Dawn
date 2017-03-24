@@ -2,3 +2,13 @@
 # do it in your inventory [all:vars] section or use --extra-vars
 consul_domain: dawn
 consul_datacenter: in
+
+# Traefik setup
+traefik_version: v1.2.0
+traefik_image: "traefik:{{ traefik_version }}"
+traefik_stack: traefik
+traefik_file: /opt/dawn/traefik.yml
+
+# Monitoring configuration
+monitoring_user: admin
+monitoring_password: admin

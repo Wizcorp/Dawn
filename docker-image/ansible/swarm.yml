@@ -55,3 +55,18 @@
         - { name: "net.ipv4.ip_forward", value: 1 }
       tags:
         - sysctl
+
+### Traefik
+# Starts traefik in swarm mode
+###
+- hosts: control
+  become: true
+  tasks:
+    - name: "Upload traefik stack file"
+      template:
+        dest: "{{ traefik_file }}"
+        src: "files/traefik.swarm.yml.j2"
+    - name: "Start traefik on the cluster"
+      run_once: true
+      shell: "docker stack deploy -c '{{ traefik_file }}' {{ traefik_stack }}"
+

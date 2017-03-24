@@ -1,0 +1,20 @@
+version: "3"
+networks:
+  net:
+    driver: overlay
+services:
+  lb:
+    image: {{ traefik_image }}
+    command: --web --docker --docker.swarmmode --docker.domain={{ consul_domain }} --docker.watch --consul.endpoint=consul.service.{{ consul_datacenter }}.{{ consul_domain }}:8500
+    ports:
+      - 80:80
+      - 8080:8080
+    networks:
+      - net
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - engine.labels.dawn.node.type == edge
