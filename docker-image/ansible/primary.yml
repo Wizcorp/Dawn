@@ -15,12 +15,165 @@
 - hosts: consul
   become: true
   roles:
-  - role: AerisCloud.consul
-    consul_retry_join: "{{ group_ipv4.consul | list }}"
-    consul_bind_address: 0.0.0.0
-    consul_client_address: "{{ private_ipv4 }}"
-    consul_advertise_address: "{{ private_ipv4 }}"
-    consul_ui_enabled: "{{ inventory_hostname in groups['control'] }}"
+    - role: AerisCloud.consul
+      consul_retry_join: "{{ group_ipv4.consul | list }}"
+      consul_bind_address: 0.0.0.0
+      consul_client_address: "{{ private_ipv4 }}"
+      consul_advertise_address: "{{ private_ipv4 }}"
+      consul_ui_enabled: "{{ inventory_hostname in groups['control'] }}"
+
+### Vault
+# Vault is necessary for many of the jobs that come after this
+###
+- hosts: control
+  become: true
+  roles:
+    - role: AerisCloud.vault
+      vault_config: "{{ playbook_dir }}/files/vault.hcl.j2"
+  environment:
+    VAULT_ADDR: "http://{{ private_ipv4 }}:8200"
+  tasks:
+    - name: "Check vault status"
+      hashivault_status:
+      ignore_errors: yes
+      register: vault_status
+      tags: [ 'vault' ]
+    - name: "Initialize vault"
+      hashivault_init:
+      register: 'vault_init'
+      run_once: true
+      when: 'vault_status.failed|default(false)|bool and "server is not yet initialized" in vault_status.msg|default("")'
+      tags: [ 'vault' ]
+    - name: "Save vault keys and root token"
+      copy:
+        content: "{{ vault_init|to_nice_json }}"
+        dest: "/home/dawn/.vault.json"
+      delegate_to: localhost
+      when: vault_init and vault_init.changed|bool
+      tags: [ 'vault' ]
+    - name: "Read vault configuration"
+      include_vars:
+        file: "/home/dawn/.vault.json"
+        name: vault_vars
+      tags: [ 'always' ]
+    - name: "Unseal vault"
+      hashivault_unseal:
+        keys: "{{ vault_vars['keys']|join(' ') }}"
+      run_once: true
+      when: vault_init.changed|default(false)|bool or vault_status.status.sealed|default(false)|bool
+      tags: [ 'vault' ]
+
+    # The first step to using the PKI backend is to mount it.
+    - name: "Check PKI backend status"
+      hashivault_secret_list:
+        token: "{{ vault_vars.root_token }}"
+      register: vault_mount_list
+      changed_when: false
+      tags: [ 'vault' ]
+    - name: "Enable the Docker PKI backend"
+      hashivault_secret_enable:
+        token: "{{ vault_vars.root_token }}"
+        name: docker/pki
+        backend: pki
+        config:
+          max-lease-ttl: "87600h"
+      run_once: true
+      when: vault_mount_list.backends['docker/pki/'] is not defined
+      tags: [ 'vault' ]
+
+    # Vault must be configured with a CA certificate and associated private key.
+    # We'll take advantage of the backend's self-signed root generation support.
+    #
+    # We cannot read the CA when using Docker as a backend so instead we'll
+    # check if we properly set the URLs before
+    - name: "Check for Docker CA"
+      hashivault_read:
+        token: "{{ vault_vars.root_token }}"
+        secret: /docker/pki/config/urls
+        key: issuing_certificates
+      ignore_errors: true
+      changed_when: false
+      register: vault_root_cert_status
+      tags: [ 'vault' ]
+
+    - name: "Create Docker CA"
+      hashivault_write:
+        token: "{{ vault_vars.root_token }}"
+        secret: /docker/pki/root/generate/internal
+        data:
+          common_name: "{{ consul_domain }}"
+          ttl: "87600h"
+      when: vault_root_cert_status and vault_root_cert_status.failed|default(false)|bool
+      tags: [ 'vault' ]
+
+    # Generated certificates can have the CRL location and the location of the
+    # issuing certificate encoded.
+    - name: "Check for Docker CA urls"
+      hashivault_read:
+        token: "{{ vault_vars.root_token }}"
+        secret: /docker/pki/config/urls
+        key: issuing_certificates
+      ignore_errors: true
+      changed_when: false
+      register: vault_ca_urls_status
+      tags: [ 'vault' ]
+
+    - name: "Set CA urls"
+      hashivault_write:
+        token: "{{ vault_vars.root_token }}"
+        secret: /docker/pki/config/urls
+        data:
+          issuing_certificates: "http://{{ inventory_hostname }}.node.{{ consul_datacenter }}.{{ consul_domain }}/v1/pki/ca"
+          crl_distribution_points: "http://{{ inventory_hostname }}.node.{{ consul_datacenter }}.{{ consul_domain }}/v1/pki/crl"
+      when: vault_ca_urls_status and vault_ca_urls_status.failed|default(false)|bool
+      tags: [ 'vault' ]
+
+    # The next step is to configure a role. A role is a logical name that maps
+    # to a policy used to generate those credentials.
+
+    # First a role for server certificates, those are valid for a long time
+    - name: "Check for Docker server role"
+      hashivault_read:
+        token: "{{ vault_vars.root_token }}"
+        secret: "/docker/pki/roles/server.{{ consul_domain }}"
+        key: allowed_domains
+      ignore_errors: true
+      changed_when: false
+      register: vault_server_role_status
+      tags: [ 'vault' ]
+
+    - name: "Create Docker server role"
+      hashivault_write:
+        token: "{{ vault_vars.root_token }}"
+        secret: "/docker/pki/roles/server.{{ consul_domain }}"
+        data:
+          allowed_domains: "{{ consul_domain }}"
+          allow_subdomains: true
+          max_ttl: "87600h"
+      when: vault_server_role_status and vault_server_role_status.failed|default(false)|bool
+      tags: [ 'vault' ]
+
+    # Then a role for client certificates, only valid for 72h
+    - name: "Check for Docker client role"
+      hashivault_read:
+        token: "{{ vault_vars.root_token }}"
+        secret: "/docker/pki/roles/client.{{ consul_domain }}"
+        key: allowed_domains
+      ignore_errors: true
+      changed_when: false
+      register: vault_client_role_status
+      tags: [ 'vault' ]
+    - name: "Create Docker client role"
+      hashivault_write:
+        token: "{{ vault_vars.root_token }}"
+        secret: "/docker/pki/roles/client.{{ consul_domain }}"
+        data:
+          allowed_domains: "{{ consul_domain }}"
+          allow_subdomains: true
+          max_ttl: "72h"
+      when: vault_client_role_status and vault_client_role_status.failed|default(false)|bool
+      tags: [ 'vault' ]
+
 
 ### Fluentd
 # Fluentd is installed on all the nodes and is used to collect logs from local
@@ -59,6 +212,57 @@
 ###
 - hosts: docker
   become: true
+  environment:
+    VAULT_ADDR: "http://{{ group_ipv4.control[0] }}:8200"
+  pre_tasks:
+    # Read the vault configuration that should have been created above
+    - name: "Read vault configuration"
+      include_vars:
+        file: "/home/dawn/.vault.json"
+        name: vault_vars
+      tags: [ "docker", "vault" ]
+
+    # We're gonna need this
+    - name: "Make sure /etc/docker/certs exists"
+      file:
+        path: /etc/docker/certs
+        state: directory
+        mode: 0755
+      tags: [ "docker", "vault" ]
+
+    - name: "Check certificates status"
+      stat: path=/etc/docker/certs/server.crt
+      register: docker_server_stat
+      tags: [ "docker", "vault" ]
+
+    # Generate the server certificates
+    - name: "Generate server certificates"
+      hashivault_write:
+        token: "{{ vault_vars.root_token }}"
+        secret: "/docker/pki/issue/server.{{ consul_domain }}"
+        data:
+          common_name: "{{ inventory_hostname }}.node.{{ consul_datacenter }}.{{ consul_domain }}"
+          alt_names: "docker.service.{{ consul_datacenter }}.{{ consul_domain }}"
+          ip_sans: "{{ private_ipv4 }}"
+      register: docker_server_certs
+      when: docker_server_stat.stat.exists|bool == False or docker_server_cert_update|default(False)|bool
+      tags: [ "docker", "vault" ]
+
+    # Write the generated certificates
+    - name: "Write certificates"
+      copy:
+        content: "{{ docker_server_certs.data.data[item.key] }}"
+        dest: "/etc/docker/certs/{{ item.file }}"
+        mode: 0600
+      when: docker_server_certs.data.data is defined
+      with_items:
+        - key: certificate
+          file: server.crt
+        - key: issuing_ca
+          file: ca.crt
+        - key: private_key
+          file: server.key
+      tags: [ "docker", "vault" ]
   roles:
     - role: AerisCloud.dnsmasq-template
       dnsmasq_servers:
@@ -76,12 +280,18 @@
       docker_ip: "{{ private_ipv4 }}"
       docker_log_driver: "journald"
       docker_insecure_registries: "{{  group_ipv4.control | map('regex_replace', '$', ':5000') | list }}"
+      docker_tls:
+        enabled: true
+        verify: true
+        cacert: /etc/docker/certs/ca.crt
+        cert: /etc/docker/certs/server.crt
+        key: /etc/docker/certs/server.key
     - role: AerisCloud.consul-service
       consul_service_name: "docker"
       consul_service_port: 2376
       consul_service_checks:
-      - type: http
-        http: "http://{{ private_ipv4 }}:2376/_ping"
+      - type: tcp
+        tcp: "{{ private_ipv4 }}:2376"
 
 ### Telegraf
 # Telegraf is our monitoring agent, by default it is set to monitor the local

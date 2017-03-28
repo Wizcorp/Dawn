@@ -1,0 +1,9 @@
+listener "tcp" {
+	address     = "{{ private_ipv4 }}:8200"
+	tls_disable = 1
+}
+
+storage "consul" {
+	address = "{{ private_ipv4 }}:8500"
+	path    = "vault"
+}

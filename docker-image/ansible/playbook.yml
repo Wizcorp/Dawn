@@ -53,6 +53,7 @@
   tasks:
     - name: "Create deployment folder"
       file: path=/opt/dawn state=directory mode=0755
+      tags: [ 'always' ]
     - name: "Make sure virtualenv is available"
       package:
         name: "{{ item }}"
@@ -60,6 +61,7 @@
       with_items:
         - python-virtualenv
         - openssl-devel
+      tags: [ 'always' ]
     - name: "Install docker python library"
       pip:
         name: "{{ item }}"
@@ -70,10 +72,13 @@
         - pip
         - python-consul
         - docker-py
+        - hvac
+      tags: [ 'always' ]
     - name: "Tell subsequent tasks to use this virtualenv"
       set_fact:
         ansible_virtualenv: /opt/dawn/deploy
         ansible_python_interpreter: /opt/dawn/deploy/bin/python
+      tags: [ 'always' ]
 
 # Setup the primary infrastructure
 - include: primary.yml

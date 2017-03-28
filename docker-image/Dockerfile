@@ -8,6 +8,7 @@ ARG configuration_folder=dawn
 ARG configuration_filename=dawn.yml
 ARG ansible_version=2.2.1.0
 ARG terraform_version=0.8.8
+ARG vault_version=0.7.0
 ARG docker_version=1.13.1
 
 # Update the package list
@@ -26,7 +27,8 @@ RUN apk add --no-cache \
     sudo \
     python2 \
     py-pip \
-    unzip
+    unzip \
+    jq
 
 # Install Ansible and configuration
 RUN apk add --no-cache \
@@ -38,6 +40,7 @@ RUN apk add --no-cache \
     && pip install \
         boto \
         http://releases.ansible.com/ansible/ansible-${ansible_version}.tar.gz \
+        ansible-modules-hashivault \
     && apk del \
         gcc \
         python2-dev \
@@ -53,6 +56,13 @@ RUN wget -q https://releases.hashicorp.com/terraform/${terraform_version}/terraf
     && cd /usr/bin \
     && unzip -q /tmp/terraform.zip \
     && rm /tmp/terraform.zip
+
+# Install Vault
+RUN wget -q https://releases.hashicorp.com/vault/${vault_version}/vault_${vault_version}_linux_amd64.zip \
+      -O /tmp/vault.zip \
+    && cd /usr/bin \
+    && unzip -q /tmp/vault.zip \
+    && rm /tmp/vault.zip
 
 # Install Docker binaries
 RUN wget -q https://get.docker.com/builds/Linux/x86_64/docker-${docker_version}.tgz \

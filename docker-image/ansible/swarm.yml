@@ -28,8 +28,8 @@
       consul_service_port: 2377
       consul_service_tags: "{{ group_names | intersect(['worker', 'control', 'edge']) | default(['worker']) }}"
       consul_service_checks:
-      - type: http
-        http: "http://{{ private_ipv4 }}:2376/_ping"
+      - type: tcp
+        tcp: "{{ private_ipv4 }}:2376"
   # This task is related to how overlay networks behave. The way overlay works
   # is that it will mark your packet at the mangle stage with the service id you
   # are trying to reach, IPVS then catches those marked packets and route them
