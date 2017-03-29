@@ -22,7 +22,7 @@ scrape_configs:
 
     # The location of our consul source
     consul_sd_configs:
-      - server: 'consul.service.{{ consul_datacenter }}.{{ consul_domain }}:8500'
+      - server: 'consul.service.{{ local_domain_full }}:8500'
 
     # Only keep services that have the monitor label
     relabel_configs:

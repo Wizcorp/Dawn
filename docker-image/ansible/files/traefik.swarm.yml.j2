@@ -5,7 +5,7 @@ networks:
 services:
   lb:
     image: {{ traefik_image }}
-    command: --web --docker --docker.swarmmode --docker.domain={{ consul_domain }} --docker.watch --consul.endpoint=consul.service.{{ consul_datacenter }}.{{ consul_domain }}:8500
+    command: --web --docker --docker.swarmmode --docker.domain={{ traefik_domain }} --docker.watch --consul.endpoint=consul.service.{{ local_domain_full }}:8500
     ports:
       - 80:80
       - 8080:8080

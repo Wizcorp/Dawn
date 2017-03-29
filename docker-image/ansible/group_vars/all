@@ -1,13 +1,21 @@
 # This is the default internal domain, if you want to change those values either
-# do it in your inventory [all:vars] section or use --extra-vars
-consul_domain: dawn
-consul_datacenter: in
+# do it in your inventory [all:vars] section or use --extra-vars, it is used by
+# docker containers and various elements of dawn to find which machines is where
+# via consul
+local_domain_name: dawn
+local_domain_dc: in
+local_domain_full: "{{ local_domain_dc }}.{{ local_domain_name }}"
+
+# Consul configuration
+consul_domain: "{{ local_domain_name }}"
+consul_datacenter: "{{ local_domain_dc }}"
 
 # Traefik setup
 traefik_version: v1.2.0
 traefik_image: "traefik:{{ traefik_version }}"
 traefik_stack: traefik
 traefik_file: /opt/dawn/traefik.yml
+traefik_domain: "{{ local_domain_name }}"
 
 # Monitoring configuration
 monitoring_user: admin
