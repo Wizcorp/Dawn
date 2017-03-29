@@ -10,17 +10,23 @@
 
 ## Extra features and goodies
 
-Dawn comes with some extra functionalities to help you interact with your cluster
-
 ### Internal DNS
 
 Every container has direct access to the consul DNS feature, this allows a
-container to access any of the primary service through the internal `in.dawn`
-domain, for example if you want to leverage the provided consul for service
-discovery or kv storage, you can simply point your application to `consul.service.in.dawn`
-to connect to a random consul node in the cluster.
+container to access any of the primary service through the internal
+`<local_dc>.<local_domain>` domain, for example if you want to leverage the
+provided consul for service discovery or kv storage, you can simply point your
+application to `consul.service.<local_dc>.<local_domain>` to connect to a random
+consul node in the cluster. The search domain is automatically set to the proper
+domain so even `consul.service` alone should work.
 
 For more information about the Consul DNS, see the [DNS Interface Documentation](https://www.consul.io/docs/agent/dns.html).
 
 Another useful DNS entry that is made available is the `dockerhost` entry which
-points to IP of the machine currently running your container.
+points to IP of the machine currently running your container and could be used
+to declare a service on the local consul agent or find out the IP of the host
+machine for service discovery when using `docker run` instead of `docker service`.
+
+If you need to talk to the swarm, it is recommended to instead use the
+`control.swarm.service.<local_dc>.<local_domain>` domain instead since it will
+point you to one of the manage nodes.
