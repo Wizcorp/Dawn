@@ -17,8 +17,7 @@ container to access any of the primary service through the internal
 `<local_dc>.<local_domain>` domain, for example if you want to leverage the
 provided consul for service discovery or kv storage, you can simply point your
 application to `consul.service.<local_dc>.<local_domain>` to connect to a random
-consul node in the cluster. The search domain is automatically set to the proper
-domain so even `consul.service` alone should work.
+consul node in the cluster.
 
 For more information about the Consul DNS, see the [DNS Interface Documentation](https://www.consul.io/docs/agent/dns.html).
 

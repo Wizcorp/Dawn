@@ -68,7 +68,8 @@
         - "/dockerhost/{{ private_ipv4 }}"
     - role: AerisCloud.docker
       docker_dns: [ "{{ private_ipv4 }}" ]
-      docker_dns_search: [ "{{ local_domain_full }}", "{{ local_domain_name }}" ]
+      # I'd love to enable this but it breaks swarm's DNS resolution
+      #docker_dns_search: [ "{{ local_domain_full }}", "{{ local_domain_name }}" ]
       docker_hosts:
         - unix:///var/run/docker.sock
         - "{{ private_ipv4 }}:2376"
