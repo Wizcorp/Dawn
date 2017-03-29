@@ -11,17 +11,17 @@
 - name: AerisCloud.consul
   version: v1.0.0
 - name: AerisCloud.consul-service
-  version: master
+  version: v1.0.0
 - name: AerisCloud.docker
   version: v1.1.1
 - name: AerisCloud.docker-manage
-  version: master
+  version: v1.0.0
 - name: AerisCloud.dnsmasq-template
-  version: master
+  version: v1.0.0
 - name: AerisCloud.rsyslog
-  version: master
+  version: v1.1.0
 - name: AerisCloud.swarm
-  version: master
+  version: v0.0.1
 
 # external roles
 - name: williamyeh.fluentd
