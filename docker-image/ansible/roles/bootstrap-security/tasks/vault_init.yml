@@ -1,0 +1,31 @@
+# Initialize vault
+- name: "Initialize vault"
+  when: >
+    vault_status.failed|default(false)|bool
+    and ("server is not yet initialized" in vault_status.msg|default("")
+    or "Failed to establish a new connection" in vault_status.msg|default(""))
+  hashivault_init:
+  register: 'vault_init'
+
+# Save the root and unseal keys locally
+- name: "Save vault keys and root token"
+  when: vault_init and vault_init.changed|bool
+  copy:
+    content: "{{ vault_init|to_nice_json }}"
+    dest: "{{ vault_local_root_config }}"
+  delegate_to: localhost
+
+# Then load them as facts
+- name: "Read vault configuration"
+  include_vars:
+    file: "{{ vault_local_root_config }}"
+    name: vault_vars
+
+# Unseal the vault
+- name: "Unseal vault"
+  when: >
+    vault_init.changed|default(false)|bool
+    or (vault_status.status.sealed is defined
+      and vault_status.status.sealed|default(false)|bool)
+  hashivault_unseal:
+    keys: "{{ vault_vars['keys']|join(' ') }}"

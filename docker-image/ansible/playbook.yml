@@ -5,86 +5,17 @@
 # this files all variables passed to those roles as well as a couple minor tasks
 # for the monitoring tasks
 
-#########
-# SETUP #
-#########
+# Query servers and setup custom facts
+- include: playbooks/setup.yml
 
-### Force fact gathering
-# We iterate on every machines in the "all" group and make sure we at least get
-# the IPv4 of each system, this allows us to run --limit plays while still
-# providing templates with up-to-date informations about other nodes in the inv.
-###
-- hosts: all
-  gather_facts: true
-  tasks:
-    # This works around a bug in ansible 2.2.x where delegate_facts doesn't work
-    # when using with_items, so instead we do the loop above the setup call.
-    # This allows us to do --limit=something without all hell breaking loose
-    - name: "Gather IP informations"
-      include: gather_facts.yml gather_facts_host="{{ item }}"
-      with_items: "{{ groups['all'] }}"
-      tags:
-        - always
-
-### Caching
-# Here we cache some unreadable blobs of filters into custom facts to make the
-# rest of this playbook easier to read
-###
-- hosts: all
-  tasks:
-    - name: "Set IP facts"
-      set_fact:
-        group_ipv4:
-          consul: "{{ groups['consul'] | map('extract', hostvars, ['private_ipv4']) | list }}"
-          control: "{{ groups['control'] | map('extract', hostvars, ['private_ipv4']) | list }}"
-          monitor: "{{ groups['monitor'] | map('extract', hostvars, ['private_ipv4']) | list }}"
-          edge: "{{ groups['edge'] | map('extract', hostvars, ['private_ipv4']) | list }}"
-          worker: "{{ groups['worker'] | map('extract', hostvars, ['private_ipv4']) | list }}"
-      tags:
-        - always
-
-### Python setup
-# We don't want all the pip installs and various dependencies to conflict with
-# normal yum packages, this solves the issue by creating an ansible virtualenv
-# and tells ansible to use it
-###
-- hosts: all
-  become: true
-  tasks:
-    - name: "Create deployment folder"
-      file: path=/opt/dawn state=directory mode=0755
-      tags: [ 'always' ]
-    - name: "Make sure virtualenv is available"
-      package:
-        name: "{{ item }}"
-        state: present
-      with_items:
-        - python-virtualenv
-        - openssl-devel
-      tags: [ 'always' ]
-    - name: "Install docker python library"
-      pip:
-        name: "{{ item }}"
-        state: latest
-        virtualenv: /opt/dawn/deploy
-        virtualenv_site_packages: yes
-      with_items:
-        - pip
-        - python-consul
-        - docker-py
-        - hvac
-      tags: [ 'always' ]
-    - name: "Tell subsequent tasks to use this virtualenv"
-      set_fact:
-        ansible_virtualenv: /opt/dawn/deploy
-        ansible_python_interpreter: /opt/dawn/deploy/bin/python
-      tags: [ 'always' ]
+# Try to bootstrap
+- include: playbooks/bootstrap.yml
 
 # Setup the primary infrastructure
-- include: primary.yml
+- include: playbooks/primary.yml
 
 # Setup monitoring
-- include: monitoring.yml
+#- include: monitoring.yml
 
 # Finally start swarm mode
-- include: swarm.yml
+#- include: swarm.yml

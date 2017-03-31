@@ -6,9 +6,29 @@ local_domain_name: dawn
 local_domain_dc: in
 local_domain_full: "{{ local_domain_dc }}.{{ local_domain_name }}"
 
+# Vault configuration
+vault_addr: "http://{{ group_ipv4.control[0] }}:8200"
+vault_groups: vault,consul
+vault_local_root_config: "/home/dawn/.vault.root.conf"
+vault_local_ansible_config: "/home/dawn/.vault.ansible.conf"
+vault_config: "{{ playbook_dir }}/../files/vault/vault.hcl.j2"
+vault_key_file: /etc/ssl/certs/vault/server.key.pem
+vault_cert_file: /etc/ssl/certs/vault/server.cert.pem
+vault_ca_file: /etc/ssl/certs/vault/server.ca.pem
+vault_client_key_file: /etc/ssl/certs/vault/client.key.pem
+vault_client_cert_file: /etc/ssl/certs/vault/client.cert.pem
+vault_client_ca_file: /etc/ssl/certs/vault/client.ca.pem
+
 # Consul configuration
 consul_domain: "{{ local_domain_name }}"
 consul_datacenter: "{{ local_domain_dc }}"
+consul_template: "{{ playbook_dir }}/../files/consul/consul.conf.j2"
+consul_key_file: /etc/ssl/certs/consul/server.key.pem
+consul_cert_file: /etc/ssl/certs/consul/server.cert.pem
+consul_ca_file: /etc/ssl/certs/consul/server.ca.pem
+consul_client_key_file: /etc/ssl/certs/consul/client.key.pem
+consul_client_cert_file: /etc/ssl/certs/consul/client.cert.pem
+consul_client_ca_file: /etc/ssl/certs/consul/client.ca.pem
 
 # Traefik setup
 traefik_version: v1.2.0

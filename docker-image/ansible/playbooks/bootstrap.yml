@@ -1,0 +1,27 @@
+# The role of this playbook is the initial bootstrap of the whole architecture,
+# it runs only on the first control machine to setup the main vault and consul
+
+- hosts: control[0]
+  become: true
+  vars:
+    # setup consul in localhost mode with no TLS
+    consul_template: "{{ playbook_dir }}/../files/consul/bootstrap.conf.j2"
+
+    # same for vault, use a special bootstrap config
+    vault_config: "{{ playbook_dir }}/../files/vault/bootstrap.hcl.j2"
+    vault_addr: "http://127.0.0.1:8200"
+  environment:
+    VAULT_ADDR: "{{ vault_addr }}"
+  tasks:
+    - name: "Check for vault credentials"
+      stat:
+        path: "{{ vault_local_ansible_config }}"
+      register: vault_config_stat
+      delegate_to: localhost
+    - name: "Run security bootstrap"
+      when: >
+        vault_config_stat.stat.exists|bool == False
+        or vault_force_bootstrap|default(false)|bool
+      include_role:
+        name: bootstrap-security
+  tags: [ 'bootstrap' ]

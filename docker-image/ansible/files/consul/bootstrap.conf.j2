@@ -1,0 +1,18 @@
+{
+  "data_dir": "/var/lib/consul",
+  "log_level": "INFO",
+  "client_addr": "{{ private_ipv4 }}",
+  "advertise_addr": "{{ private_ipv4 }}",
+  "bind_addr": "{{ private_ipv4 }}",
+  "datacenter": "{{ consul_datacenter }}",
+  "domain": "{{ consul_domain }}",
+  "disable_remote_exec": true,
+  "server": true,
+  "addresses": {
+    "http": "127.0.0.1"
+  },
+  "bootstrap_expect": 1,
+  "performance": {
+    "raft_multiplier": 1
+  }
+}

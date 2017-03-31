@@ -1,0 +1,91 @@
+- name: "Check TLS certificates status"
+  stat:
+    path: "{{ vault_cert_file }}"
+  register: vault_certs_stat
+
+- name: "Create the vault group"
+  group:
+    name: vault
+    system: yes
+
+- name: "Create the vault user"
+  user:
+    name: vault
+    group: vault
+    createhome: no
+    system: yes
+
+- name: "Generate server TLS certificates"
+  when: >
+    vault_token is defined
+    and (vault_certs_stat.stat.exists|bool == False
+      or cert_rotate_vault_server|default(false)|bool
+      or cert_rotate_vault|default(false)|bool
+      or cert_rotate_all|default(false)|bool)
+  include_role:
+    name: generate-tls
+  vars:
+    pki:
+      # vault backend
+      backend: vault
+      role: server
+      group: vault
+      # targets
+      files:
+        cert: "{{ vault_cert_file }}"
+        key: "{{ vault_key_file }}"
+        ca: "{{ vault_ca_file }}"
+      # TLS request data
+      request_data:
+        common_name: "{{ inventory_hostname }}.node.{{ consul_datacenter }}.{{ consul_domain }}"
+        ip_sans: "{{ private_ipv4 }}"
+
+- name: "Generate client TLS certificates"
+  when: >
+    vault_token is defined
+    and (vault_certs_stat.stat.exists|bool == False
+      or cert_rotate_vault_client|default(false)|bool
+      or cert_rotate_vault|default(false)|bool
+      or cert_rotate_all|default(false)|bool)
+  include_role:
+    name: generate-tls
+  vars:
+    pki:
+      # vault backend
+      backend: vault
+      role: client
+      group: vault
+      # targets
+      files:
+        cert: "{{ vault_client_cert_file }}"
+        key: "{{ vault_client_key_file }}"
+        ca: "{{ vault_client_ca_file }}"
+      # TLS request data
+      request_data:
+        common_name: "client.vault.{{ consul_domain }}"
+
+- name: "Install vault in TLS mode"
+  include_role:
+    name: AerisCloud.vault
+
+- name: "Make sure to flush all handlers right now"
+  meta: flush_handlers
+
+# Check if we did any operation that might have sealed the vault
+- name: "Check vault status"
+  hashivault_status:
+  ignore_errors: yes
+  register: vault_status
+  run_once: true
+
+- name: "Wait for user to unseal vault"
+  when: >
+    vault_status.status.sealed is defined
+    and vault_status.status.sealed|default(false)|bool
+  pause:
+    prompt: |
+      Vault was sealed due to an operation during the provisioning process,
+      please connect to any of the control nodes and unseal the Vault before
+      continuing the provisioning process.
+
+      Press ENTER when you are ready to continue

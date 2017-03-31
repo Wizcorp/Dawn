@@ -1,0 +1,52 @@
+# Make sure vault is not already setup!
+- name: "Check vault status"
+  hashivault_status:
+  ignore_errors: yes
+  register: vault_status
+
+- name: "Cancel bootstrap"
+  when: >
+    vault_force_bootstrap|default(false)|bool == False
+    and vault_status.failed|default(false)|bool == False
+    and "server is not yet initialized" not in vault_status.msg|default("")
+  fail:
+    msg: "The system was already bootstrapped, aborting!"
+
+# Setup consul
+- name: "Setup consul in local mode"
+  include_role:
+    name: AerisCloud.consul
+
+# Setup vault
+- name: "Setup vault in local mode"
+  include_role:
+    name: AerisCloud.vault
+
+- include: vault_init.yml vault_status="{{ vault_status }}"
+- include: root_ca.yml
+
+# generate the CAs we know we will need for the primary infra
+- include: intermediate_ca.yml backend_name=consul server_ttl=17520h client_ttl=8760h
+- include: intermediate_ca.yml backend_name=vault  server_ttl=17520h client_ttl=8760h
+- include: intermediate_ca.yml backend_name=docker server_ttl=17520h client_ttl=8760h
+
+# finally generate an app role for ansible
+- include: approle.yml
+
+- name: "Security bootstrap confirmation prompt"
+  pause:
+    prompt: |
+
+      Security bootstrap is finished and 2 files have been generated/saved on disk:
+      * {{ vault_local_root_config }}
+      * {{ vault_local_ansible_config }}
+
+      The first file is your root credentials and unseal keys and will be needed for
+      manual root operations and unsealing the vault on restarts. It is not necessary
+      to have it to run the normal playbooks but should be safely stored/backup.
+
+      The second file is your ansible credentials and will need to be present any time
+      you run the normal provisionning playbooks to config TLS keys for both consul and
+      docker.
+
+      Press ENTER to continue the provisining process.

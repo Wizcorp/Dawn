@@ -6,10 +6,10 @@ ARG root_folder=/dawn
 ARG shell_user=dawn
 ARG configuration_folder=dawn
 ARG configuration_filename=dawn.yml
-ARG ansible_version=2.2.1.0
-ARG terraform_version=0.8.8
+ARG ansible_version=2.2.2.0
+ARG terraform_version=0.9.2
 ARG vault_version=0.7.0
-ARG docker_version=1.13.1
+ARG docker_version=17.03.1
 
 # Update the package list
 RUN apk update && apk upgrade
@@ -79,6 +79,7 @@ ENV CONFIG_FOLDER="${configuration_folder}"
 ENV CONFIG_FILENAME="${configuration_filename}"
 ENV PROJECT_FILES_PATH="${root_folder}/project/${configuration_folder}"
 ENV PROJECT_CONFIG_FILE_PATH="${PROJECT_FILES_PATH}/${configuration_filename}"
+ENV ANSIBLE_ROLES_PATH="/etc/ansible/roles:${root_folder}/ansible/roles"
 
 # Create the directory structure, install Ansible Galaxy roles
 RUN mkdir -p ${root_folder}/project

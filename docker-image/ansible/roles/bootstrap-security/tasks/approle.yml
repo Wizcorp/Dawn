@@ -1,0 +1,70 @@
+# Create ansible role for vault
+- name: "Check if approle is enabled"
+  hashivault_auth_list:
+    token: "{{ vault_vars.root_token }}"
+  changed_when: false
+  register: vault_auth_list
+
+- name: "Enable AppRole auth"
+  when: vault_auth_list.backends['approle/'] is not defined
+  hashivault_auth_enable:
+    token: "{{ vault_vars.root_token }}"
+    name: approle
+
+- name: "Check for enabled roles"
+  hashivault_list:
+    token: "{{ vault_vars.root_token }}"
+    secret: /auth/approle/role
+  ignore_errors: true
+  register: vault_auth_roles
+
+# The ansible policy is a root policy, make sure that only ansible gets access to it!
+- name: "Check for existing policies"
+  hashivault_policy_list:
+    token: "{{ vault_vars.root_token }}"
+  register: vault_policy_list
+
+- name: "Create ansible policy"
+  when: "'ansible' not in vault_policy_list.policies|default([])"
+  hashivault_policy_set:
+    token: "{{ vault_vars.root_token }}"
+    name: ansible
+    rules: "{{ lookup('file', playbook_dir + '/../files/vault/policies/ansible.hcl') }}"
+
+# Finally create our ansible role
+- name: "Create Ansible role"
+  when: "'ansible' not in vault_auth_roles.secrets|default([])"
+  hashivault_write:
+    token: "{{ vault_vars.root_token }}"
+    secret: /auth/approle/role/ansible
+    data:
+      token_ttl: 7200
+      token_max_ttl: 7200
+      secret_id_ttl: 1314000
+      secret_id_num_uses: 0
+      policies: default,ansible
+
+- name: "Read ansible role data"
+  hashivault_read:
+    token: "{{ vault_vars.root_token }}"
+    secret: /auth/approle/role/ansible/role-id
+    key: role_id
+  register: vault_ansible_role
+
+# Create a new secret for the ansible user
+- name: "Create ansible secret"
+  hashivault_write:
+    token: "{{ vault_vars.root_token }}"
+    secret: /auth/approle/role/ansible/secret-id
+  register: vault_ansible_secret
+
+- name: "Save role/secret pair to local file"
+  copy:
+    content: |
+      {
+        "role_id": {{ vault_ansible_role.value|to_json }},
+        "secret_id": {{ vault_ansible_secret.data.data.secret_id|to_json }},
+        "secret_id_accessor": {{ vault_ansible_secret.data.data.secret_id_accessor|to_json }}
+      }
+    dest: "{{ vault_local_ansible_config }}"
+  delegate_to: localhost

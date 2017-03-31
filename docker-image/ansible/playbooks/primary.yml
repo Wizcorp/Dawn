@@ -1,0 +1,54 @@
+##########################
+# PRIMARY INFRASTRUCTURE #
+##########################
+
+# Authenticate to vault
+- hosts: all
+  tasks:
+    - name: "Load vault configuration"
+      include_vars:
+        file: "{{ vault_local_ansible_config }}"
+        name: vault_vars
+
+    - name: "Authenticate to vault"
+      when: >
+        vault_token is not defined
+        and vault_skip_auth|default(False)|bool == False
+      uri:
+        url: "http://127.0.0.1:8200/v1/auth/approle/login"
+        method: POST
+        body_format: json
+        body: >
+          {"role_id":{{ vault_vars.role_id|to_json }},"secret_id":{{ vault_vars.secret_id|to_json }}}
+      register: vault_auth
+      delegate_to: "{{ groups['control'][0] }}"
+
+    - name: "Set vault token"
+      when: vault_auth.json is defined
+      set_fact:
+        vault_token: "{{ vault_auth.json.auth.client_token }}"
+
+### Consul
+# Consul is installed on all the nodes and is a cornerstone of this infra and is
+# used to advertise every services in the cluster.
+#
+# Most components will use consul as a configuration source (both services and
+# the kv store) when possible/supported, see prometheus as an exemple of service
+# using consul for configuration.
+#
+# Consul is installed on every node, but only control nodes gets the consul UI.
+###
+- hosts: consul
+  become: true
+  roles:
+    - consul
+
+### Vault
+# Vaulot is the key component of our security framework, it is tasked with delivering
+# TLS certificates for both servers and clients
+###
+- hosts: control
+  become: true
+  roles:
+    - vault
+    

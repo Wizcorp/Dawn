@@ -1,0 +1,39 @@
+# We're gonna need this
+- name: "Make sure the directories for each file exists"
+  file:
+    path: "{{ item|dirname }}"
+    state: directory
+    mode: 0755
+  with_items:
+    - "{{ pki.files.cert }}"
+    - "{{ pki.files.key }}"
+    - "{{ pki.files.ca }}"
+
+# Generate the server certificates
+- name: "Generate certificates"
+  uri:
+    HEADER_X-Vault-Token: "{{ vault_token }}"
+    url: "http://127.0.0.1:8200/v1/{{ pki.backend }}/pki/issue/{{ pki.role }}"
+    method: POST
+    body_format: json
+    body: "{{ pki.request_data|to_json }}"
+  delegate_to: "{{ groups['control'][0] }}"
+  register: certificates
+
+# Write the generated certificates
+- name: "Write certificates"
+  copy:
+    content: "{{ certificates.json.data[item.key] }}"
+    dest: "{{ item.file }}"
+    mode: 0660
+    owner: "{{ pki.owner|default('root') }}"
+    group: "{{ pki.group|default('root') }}"
+  when: certificates.json.data is defined
+  with_items:
+    - key: certificate
+      file: "{{ pki.files.cert }}"
+    - key: private_key
+      file: "{{ pki.files.key }}"
+    - key: issuing_ca
+      file: "{{ pki.files.ca }}"
+

@@ -1,0 +1,69 @@
+- name: "Check TLS certificates status"
+  stat:
+    path: "{{ consul_cert_file }}"
+  register: consul_certs_stat
+
+- name: "Create the consul group"
+  group:
+    name: consul
+    system: yes
+
+- name: "Create the consul user"
+  user:
+    name: consul
+    group: consul
+    createhome: no
+    system: yes
+
+- name: "Generate server TLS certificates"
+  when: >
+    vault_token is defined
+    and (consul_certs_stat.stat.exists|bool == False
+      or cert_rotate_consul_server|default(false)|bool
+      or cert_rotate_consul|default(false)|bool
+      or cert_rotate_all|default(false)|bool)
+  include_role:
+    name: generate-tls
+  vars:
+    pki:
+      # vault backend
+      backend: consul
+      role: server
+      group: consul
+      # targets
+      files:
+        cert: "{{ consul_cert_file }}"
+        key: "{{ consul_key_file }}"
+        ca: "{{ consul_ca_file }}"
+      # TLS request data
+      request_data:
+        common_name: "{{ inventory_hostname }}.node.{{ consul_datacenter }}.{{ consul_domain }}"
+        ip_sans: "{{ private_ipv4 }}"
+
+- name: "Generate client TLS certificates"
+  when: >
+    vault_token is defined
+    and (consul_certs_stat.stat.exists|bool == False
+      or cert_rotate_consul_client|default(false)|bool
+      or cert_rotate_consul|default(false)|bool
+      or cert_rotate_all|default(false)|bool)
+  include_role:
+    name: generate-tls
+  vars:
+    pki:
+      # vault backend
+      backend: consul
+      role: client
+      group: consul
+      # targets
+      files:
+        cert: "{{ consul_client_cert_file }}"
+        key: "{{ consul_client_key_file }}"
+        ca: "{{ consul_client_ca_file }}"
+      # TLS request data
+      request_data:
+        common_name: "client.consul.dawn"
+
+- name: "Install consul in TLS mode"
+  include_role:
+    name: AerisCloud.consul

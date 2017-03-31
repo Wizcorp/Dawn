@@ -222,47 +222,6 @@
         name: vault_vars
       tags: [ "docker", "vault" ]
 
-    # We're gonna need this
-    - name: "Make sure /etc/docker/certs exists"
-      file:
-        path: /etc/docker/certs
-        state: directory
-        mode: 0755
-      tags: [ "docker", "vault" ]
-
-    - name: "Check certificates status"
-      stat: path=/etc/docker/certs/server.crt
-      register: docker_server_stat
-      tags: [ "docker", "vault" ]
-
-    # Generate the server certificates
-    - name: "Generate server certificates"
-      hashivault_write:
-        token: "{{ vault_vars.root_token }}"
-        secret: "/docker/pki/issue/server.{{ consul_domain }}"
-        data:
-          common_name: "{{ inventory_hostname }}.node.{{ consul_datacenter }}.{{ consul_domain }}"
-          alt_names: "docker.service.{{ consul_datacenter }}.{{ consul_domain }}"
-          ip_sans: "{{ private_ipv4 }}"
-      register: docker_server_certs
-      when: docker_server_stat.stat.exists|bool == False or docker_server_cert_update|default(False)|bool
-      tags: [ "docker", "vault" ]
-
-    # Write the generated certificates
-    - name: "Write certificates"
-      copy:
-        content: "{{ docker_server_certs.data.data[item.key] }}"
-        dest: "/etc/docker/certs/{{ item.file }}"
-        mode: 0600
-      when: docker_server_certs.data.data is defined
-      with_items:
-        - key: certificate
-          file: server.crt
-        - key: issuing_ca
-          file: ca.crt
-        - key: private_key
-          file: server.key
-      tags: [ "docker", "vault" ]
   roles:
     - role: AerisCloud.dnsmasq-template
       dnsmasq_servers:

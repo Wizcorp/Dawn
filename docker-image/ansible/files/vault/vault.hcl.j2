@@ -1,0 +1,15 @@
+listener "tcp" {
+	address     = "127.0.0.1:8200"
+	tls_disable = 1
+}
+
+listener "tcp" {
+	address                            = "{{ private_ipv4 }}:8200"
+	tls_cert_file                      = "{{ vault_cert_file }}"
+	tls_key_file                       = "{{ vault_key_file }}"
+}
+
+storage "consul" {
+	address = "http://127.0.0.1:8500"
+	path    = "vault"
+}
