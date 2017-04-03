@@ -23,6 +23,11 @@ scrape_configs:
     # The location of our consul source
     consul_sd_configs:
       - server: 'consul.service.{{ local_domain_full }}:8500'
+        scheme: https
+        tls_config:
+          ca_file: /etc/ssl/certs/consul/ca.pem
+          cert_file: /etc/ssl/certs/consul/cert.pem
+          key_file: /etc/ssl/certs/consul/key.pem
 
     # Only keep services that have the monitor label
     relabel_configs:

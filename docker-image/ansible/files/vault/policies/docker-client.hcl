@@ -4,7 +4,7 @@ path "auth/token/revoke-self" {
 }
 
 # Allow the token to create a new docker client cert
-path "docker/pki/issue/client.dawn" {
+path "docker/pki/issue/client" {
     policy = "write"
     capabilities = ["create"]
 }

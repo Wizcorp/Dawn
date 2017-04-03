@@ -1,0 +1,24 @@
+---
+# defaults file for AerisCloud.swarm
+
+# this is the url to the docker instance we want to manipulate, default to the unix socket
+swarm_docker_url: ""
+
+# whether we should create a cluster on this node?
+swarm_leader: false
+
+# use to join a cluster as a manager
+swarm_manager: false
+
+# use to join a cluster as a worker
+swarm_worker: false
+
+# when joining a cluster, this should contain a list of nodes with docker available through HTTP (port defaults to 2376
+# if not specified)
+swarm_remote_addrs: []
+
+# on which (address|interface)[:port] the swarm should be listening
+swarm_listen_addr: 0.0.0.0
+
+# advertise address, docker will try to find a decent default
+swarm_advertise_addr: ""

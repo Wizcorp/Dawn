@@ -1,0 +1,7 @@
+---
+# tasks file for AerisCloud.swarm
+- include: swarm_init.yml
+  when: swarm_leader|bool
+
+- include: swarm_join.yml
+  when: swarm_leader|bool == False

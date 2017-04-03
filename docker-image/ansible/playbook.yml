@@ -9,13 +9,16 @@
 - include: playbooks/setup.yml
 
 # Try to bootstrap
-- include: playbooks/bootstrap.yml
+#- include: playbooks/bootstrap.yml
 
 # Setup the primary infrastructure
-- include: playbooks/primary.yml
+#- include: playbooks/primary.yml
 
 # Setup monitoring
-#- include: monitoring.yml
+#- include: playbooks/monitoring.yml
 
 # Finally start swarm mode
-#- include: swarm.yml
+- include: playbooks/swarm.yml
+
+# Fetch client certificates
+#- include: playbooks/client_certs.yml

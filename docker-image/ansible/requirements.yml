@@ -21,8 +21,6 @@
   version: v1.0.0
 - name: AerisCloud.rsyslog
   version: v1.1.0
-- name: AerisCloud.swarm
-  version: v0.0.1
 - name: AerisCloud.vault
   version: v1.0.1
 

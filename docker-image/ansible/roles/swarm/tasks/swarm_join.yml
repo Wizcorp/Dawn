@@ -1,0 +1,27 @@
+- name: "Fetch join token"
+  swarm:
+    action: token
+  delegate_to: "{{ groups['control'][0] }}"
+  register: swarm_init
+
+- name: "Have managers join the swarm"
+  when: >
+    swarm_manager|bool
+    and swarm_init.result.Manager is defined
+  swarm:
+    action: join
+    listen_addr: "{{ swarm_listen_addr }}"
+    advertise_addr: "{{ swarm_advertise_addr }}"
+    remote_addrs: "{{  group_ipv4.control | map('regex_replace', '$', ':2377') | list }}"
+    join_token: "{{ swarm_init.result.Manager }}"
+
+- name: "Have workers join the swarm"
+  when: >
+    swarm_worker|bool
+    and swarm_init.result.Worker is defined
+  swarm:
+    action: join
+    listen_addr: "{{ swarm_listen_addr }}"
+    advertise_addr: "{{ swarm_advertise_addr }}"
+    remote_addrs: "{{  group_ipv4.control | map('regex_replace', '$', ':2377') | list }}"
+    join_token: "{{ swarm_init.result.Worker }}"

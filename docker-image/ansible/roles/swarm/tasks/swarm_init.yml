@@ -1,0 +1,7 @@
+- name: "Initialize swarm"
+  swarm:
+    action: init
+    listen_addr: "{{swarm_listen_addr}}"
+    advertise_addr: "{{swarm_advertise_addr}}"
+  register: swarm_init
+

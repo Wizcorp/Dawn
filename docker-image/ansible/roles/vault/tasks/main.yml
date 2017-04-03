@@ -73,6 +73,8 @@
 
 # Check if we did any operation that might have sealed the vault
 - name: "Check vault status"
+  environment:
+    VAULT_ADDR: "http://127.0.0.1:8200"
   hashivault_status:
   ignore_errors: yes
   register: vault_status

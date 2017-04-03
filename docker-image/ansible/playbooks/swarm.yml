@@ -3,33 +3,22 @@
 # other nodes join this node in the swarm.
 # Finally we also advertise the swarm on consul
 ###
-- hosts: control
-  become: true
-  roles:
-    - role: AerisCloud.swarm
-      swarm_leader: true
-      swarm_listen_addr: 0.0.0.0
-      swarm_advertise_addr: "{{ private_ipv4 }}"
-      when: groups['control'][0] == inventory_hostname
-
-# Run swarm again on all the nodes to have them join and setup the consul service
 - hosts: swarm
   become: true
   roles:
-    - role: AerisCloud.swarm
+    - role: swarm
       swarm_leader: "{{ groups['control'][0] == inventory_hostname }}"
       swarm_manager: "{{ (inventory_hostname in groups['control'] and groups['control'][0] != inventory_hostname) or inventory_hostname in groups['edge'] }}"
       swarm_worker: "{{ inventory_hostname not in groups['control'] and inventory_hostname not in groups['edge'] }}"
       swarm_listen_addr: 0.0.0.0
       swarm_advertise_addr: "{{ private_ipv4 }}"
-      swarm_remote_addrs: "{{  group_ipv4.control | list }}"
     - role: AerisCloud.consul-service
       consul_service_name: "swarm"
       consul_service_port: 2377
       consul_service_tags: "{{ group_names | intersect(['worker', 'control', 'edge']) | default(['worker']) }}"
       consul_service_checks:
-      - type: tcp
-        tcp: "{{ private_ipv4 }}:2376"
+        - type: tcp
+          tcp: "{{ private_ipv4 }}:2376"
   # This task is related to how overlay networks behave. The way overlay works
   # is that it will mark your packet at the mangle stage with the service id you
   # are trying to reach, IPVS then catches those marked packets and route them
@@ -66,7 +55,7 @@
     - name: "Upload traefik stack file"
       template:
         dest: "{{ traefik_file }}"
-        src: "files/traefik.swarm.yml.j2"
+        src: "{{ playbook_dir }}/../files/swarm/traefik.yml.j2"
     - name: "Start traefik on the cluster"
       run_once: true
       shell: "docker stack deploy -c '{{ traefik_file }}' {{ traefik_stack }}"

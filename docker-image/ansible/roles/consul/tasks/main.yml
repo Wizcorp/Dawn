@@ -21,6 +21,7 @@
     and (consul_certs_stat.stat.exists|bool == False
       or cert_rotate_consul_server|default(false)|bool
       or cert_rotate_consul|default(false)|bool
+      or cert_rotate_server|default(false)|bool
       or cert_rotate_all|default(false)|bool)
   include_role:
     name: generate-tls
@@ -38,7 +39,10 @@
       # TLS request data
       request_data:
         common_name: "{{ inventory_hostname }}.node.{{ consul_datacenter }}.{{ consul_domain }}"
+        alt_names: "consul.service.{{ consul_datacenter }}.{{ consul_domain }}"
         ip_sans: "{{ private_ipv4 }}"
+      notify:
+        - Restart consul
 
 - name: "Generate client TLS certificates"
   when: >

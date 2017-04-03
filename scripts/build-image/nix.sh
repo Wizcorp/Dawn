@@ -14,6 +14,7 @@ configuration_folder="$(getBuildConfig .configuration.folder)"
 configuration_filename="$(getBuildConfig .configuration.filename)"
 ansible_version="$(getBuildConfig .image.software_versions.ansible)"
 terraform_version="$(getBuildConfig .image.software_versions.terraform)"
+vault_version="$(getBuildConfig .image.software_versions.vault)"
 docker_version="$(getBuildConfig .image.software_versions.docker)"
 
 organization="$(getBuildConfig .image.organization)"
@@ -30,6 +31,7 @@ docker build \
     --build-arg configuration_filename="${configuration_filename}" \
     --build-arg ansible_version="${ansible_version}" \
     --build-arg terraform_version="${terraform_version}" \
+    --build-arg vault_version="${vault_version}" \
     --build-arg docker_version="${docker_version}"
 
 

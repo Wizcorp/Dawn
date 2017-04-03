@@ -57,12 +57,15 @@
         # prometheus is a time series database, provided config will scrape
         # anything tagged as monitor in consul
         - name: prometheus
-          image: "prom/prometheus"
+          image: "prom/prometheus:master"
           restart_policy: unless-stopped
           volumes:
             - "/etc/prometheus.yml:/etc/prometheus/prometheus.yml"
+            - "{{ consul_client_ca_file }}:/etc/ssl/certs/consul/ca.pem:ro"
+            - "{{ consul_client_cert_file }}:/etc/ssl/certs/consul/cert.pem:ro"
+            - "{{ consul_client_key_file }}:/etc/ssl/certs/consul/key.pem:ro"
           sync_templates:
-            - src: "{{ playbook_dir }}/files/prometheus.yml"
+            - src: "{{ playbook_dir }}/../files/monitoring/prometheus.yml"
               dest: /etc/prometheus.yml
               mode: 0644
         # graphana to read the logs from above
@@ -135,7 +138,7 @@
         method: POST
         user: "{{ monitoring_user }}"
         password: "{{ monitoring_password }}"
-        body: "{\"dashboard\":{{ lookup('file','files/dashboard.json') }},\"overwrite\":false}"
+        body: "{\"dashboard\":{{ lookup('file','../files/monitoring/grafana.json') }},\"overwrite\":false}"
         force_basic_auth: yes
         status_code: 200
         body_format: json
@@ -147,7 +150,7 @@
     # for more information on how this works
     - name: "Expose monitoring via traefik"
       consul_kv:
-        host: "{{ group_ipv4.control[0] }}"
+        host: "127.0.0.1"
         key: "{{ item.key }}"
         value: "{{ item.value }}"
       run_once: true

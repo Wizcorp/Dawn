@@ -5,7 +5,16 @@ networks:
 services:
   lb:
     image: {{ traefik_image }}
-    command: --web --docker --docker.swarmmode --docker.domain={{ traefik_domain }} --docker.watch --consul.endpoint=consul.service.{{ local_domain_full }}:8500
+    command: >
+      --web
+      --docker
+      --docker.swarmmode
+      --docker.domain={{ traefik_domain }}
+      --docker.watch
+      --consul.endpoint=consul.service.{{ local_domain_full }}:8500
+      --consul.tls.ca=/etc/ssl/certs/consul/ca.pem
+      --consul.tls.cert=/etc/ssl/certs/consul/cert.pem
+      --consul.tls.key=/etc/ssl/certs/consul/key.pem
     ports:
       - 80:80
       - 8080:8080
@@ -13,6 +22,9 @@ services:
       - net
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - "{{ consul_client_ca_file }}:/etc/ssl/certs/consul/ca.pem:ro"
+      - "{{ consul_client_cert_file }}:/etc/ssl/certs/consul/cert.pem:ro"
+      - "{{ consul_client_key_file }}:/etc/ssl/certs/consul/key.pem:ro"
     deploy:
       mode: global
       placement:

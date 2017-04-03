@@ -1,0 +1,109 @@
+- name: "Check TLS certificates status"
+  stat:
+    path: "{{ docker_cert_file }}"
+  register: docker_certs_stat
+
+- name: "Create the docker group"
+  group:
+    name: docker
+    system: yes
+
+- name: "Create the docker user"
+  user:
+    name: docker
+    group: docker
+    createhome: no
+    system: yes
+
+- name: "Generate server TLS certificates"
+  when: >
+    vault_token is defined
+    and (docker_certs_stat.stat.exists|bool == False
+      or cert_rotate_docker_server|default(false)|bool
+      or cert_rotate_docker|default(false)|bool
+      or cert_rotate_server|default(false)|bool
+      or cert_rotate_all|default(false)|bool)
+  include_role:
+    name: generate-tls
+  notify:
+    - Restart docker
+  vars:
+    pki:
+      # docker backend
+      backend: docker
+      role: server
+      group: docker
+      # targets
+      files:
+        cert: "{{ docker_cert_file }}"
+        key: "{{ docker_key_file }}"
+        ca: "{{ docker_ca_file }}"
+      # TLS request data
+      request_data:
+        common_name: "{{ inventory_hostname }}.node.{{ consul_datacenter }}.{{ consul_domain }}"
+        alt_names: "docker.service.{{ consul_datacenter }}.{{ consul_domain }},swarm.service.{{ consul_datacenter }}.{{ consul_domain }},*.swarm.service.{{ consul_datacenter }}.{{ consul_domain }}"
+        ip_sans: "{{ private_ipv4 }}"
+
+- name: "Generate client TLS certificates"
+  when: >
+    vault_token is defined
+    and (docker_certs_stat.stat.exists|bool == False
+      or cert_rotate_docker_client|default(false)|bool
+      or cert_rotate_docker|default(false)|bool
+      or cert_rotate_all|default(false)|bool)
+  include_role:
+    name: generate-tls
+  vars:
+    pki:
+      # vault backend
+      backend: docker
+      role: client
+      group: docker
+      # targets
+      files:
+        cert: "{{ docker_client_cert_file }}"
+        key: "{{ docker_client_key_file }}"
+        ca: "{{ docker_client_ca_file }}"
+      # TLS request data
+      request_data:
+        common_name: "client.docker.{{ consul_domain }}"
+
+- name: "Install and configure dnsmasq"
+  include_role:
+    name: AerisCloud.dnsmasq-template
+  vars:
+    dnsmasq_servers:
+      - "/{{ local_domain_full }}/{{ group_ipv4.control[0] }}#8600"
+    dnsmasq_addresses:
+      - "/{{ local_domain_name }}/{{ group_ipv4.edge[0] }}"
+      - "/dockerhost/{{ private_ipv4 }}"
+
+- name: "Install and configure docker"
+  include_role:
+    name: AerisCloud.docker
+  vars:
+    docker_dns: [ "{{ private_ipv4 }}" ]
+    docker_hosts:
+      - unix:///var/run/docker.sock
+      - "{{ docker_ip }}:2376"
+    docker_log_driver: "journald"
+    docker_insecure_registries: "{{  group_ipv4.control | map('regex_replace', '$', ':5000') | list }}"
+    docker_tls:
+      enabled: true
+      verify: true
+      cacert: "{{ docker_ca_file }}"
+      cert: "{{ docker_cert_file }}"
+      key: "{{ docker_key_file }}"
+
+- name: "Setup docker service discovery"
+  include_role:
+    name: AerisCloud.consul-service
+  vars:
+    consul_service_name: "docker"
+    consul_service_port: 2376
+    consul_service_checks:
+    - type: tcp
+      tcp: "{{ docker_ip }}:2376"
+
+- name: "Make sure to flush all handlers right now"
+  meta: flush_handlers

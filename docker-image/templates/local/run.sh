@@ -1,3 +1,5 @@
+export TERM=xterm-256color
+
 if
     [ ! -f ./inventory ]
 then
@@ -15,12 +17,25 @@ hosts="$(cat inventory | grep ansible_ssh_host | cut -d" " -f1-2 | sed "s/ansibl
 export EDGE_NODE="$(echo ${hosts} | grep edge | head -n1 | cut -d " " -f2)"
 export CONTROL_NODE="$(echo ${hosts} | grep control | head -n1 | cut -d " " -f2)"
 
-# set VAULT
+# set VAULT environment variables, make sure to use tmp tokens in priority
 if
-    [ -f /home/dawn/.vault.json ]
+    [ -f /home/dawn/.vault.ansible.conf ]
 then
-    export VAULT_ADDR="http://${CONTROL_NODE}:8200"
-    export VAULT_TOKEN="$( jq -r '.root_token' /home/dawn/.vault.json )"
+    export VAULT_CACERT="/home/dawn/certs/vault/client.ca.pem"
+    export VAULT_CLIENT_CERT="/home/dawn/certs/vault/client.cert.pem"
+    export VAULT_CLIENT_KEY="/home/dawn/certs/vault/client.key.pem"
+
+    export VAULT_ADDR="https://${CONTROL_NODE}:8200"
+    export VAULT_TOKEN="$( curl --cacert "${VAULT_CACERT}" -XPOST -sS "${VAULT_ADDR}/v1/auth/approle/login" -d "$( cat /home/dawn/.vault.ansible.conf )" | jq -r .auth.client_token )"
+elif
+    [ -f /home/dawn/.vault.root.conf ]
+then
+    export VAULT_CACERT="/home/dawn/certs/vault/client.ca.pem"
+    export VAULT_CLIENT_CERT="/home/dawn/certs/vault/client.cert.pem"
+    export VAULT_CLIENT_KEY="/home/dawn/certs/vault/client.key.pem"
+
+    export VAULT_ADDR="https://${CONTROL_NODE}:8200"
+    export VAULT_TOKEN="$( jq -r '.root_token' /home/dawn/.vault.root.conf )"
 fi
 
 # set DOCKER_HOST
@@ -31,18 +46,22 @@ if
 then
     export DOCKER_HOST="tcp://${CONTROL_NODE}:2376"
     export DOCKER_TLS_VERIFY=1
+    export DOCKER_CERT_PATH="/home/dawn/certs/docker"
 
     # Get a new certificate set from vault for this connection
-    mkdir /home/dawn/.docker >/dev/null 2>&1 || true
+    mkdir /home/dawn/certs/docker >/dev/null 2>&1 || true
+    VAULT_TMP_FILE="$( mktemp )"
 
     if
         vault write --format=json \
-            docker/pki/issue/client.dawn \
-            common_name=local.client.dawn > /home/dawn/.docker/vault.json
+            docker/pki/issue/client \
+            common_name=local.client.dawn > "${VAULT_TMP_FILE}"
     then
-        jq -r .data.certificate /home/dawn/.docker/vault.json > /home/dawn/.docker/cert.pem
-        jq -r .data.issuing_ca /home/dawn/.docker/vault.json  > /home/dawn/.docker/ca.pem
-        jq -r .data.private_key /home/dawn/.docker/vault.json > /home/dawn/.docker/key.pem
+        jq -r .data.certificate "${VAULT_TMP_FILE}" > "${DOCKER_CERT_PATH}/cert.pem"
+        jq -r .data.issuing_ca "${VAULT_TMP_FILE}"  > "${DOCKER_CERT_PATH}/ca.pem"
+        jq -r .data.private_key "${VAULT_TMP_FILE}" > "${DOCKER_CERT_PATH}/key.pem"
+
+        rm "${VAULT_TMP_FILE}"
     fi
 fi
 
@@ -60,12 +79,12 @@ printf "%-15s %s\n" "  - DNSMasq DNS:" "${CONTROL_NODE}:53"
 
 echo "* Load Balancing"
 printf "%-15s %s\n" "  - Traefik:" "http://${EDGE_NODE}"
-echo ""
 
 if
     [ ! -z "${VAULT_TOKEN}" ]
 then
     echo "* Security"
     printf "%-15s %s\n" "  - Vault:" "${VAULT_ADDR}"
-    echo ""
 fi
+
+echo ""

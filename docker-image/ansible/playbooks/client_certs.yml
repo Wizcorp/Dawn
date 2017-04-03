@@ -1,0 +1,55 @@
+- hosts: localhost
+  tasks:
+    - name: "Load vault configuration"
+      include_vars:
+        file: "{{ vault_local_ansible_config }}"
+        name: vault_vars
+
+    - name: "Authenticate to vault"
+      when: >
+        vault_token is not defined
+        and vault_skip_auth|default(False)|bool == False
+      uri:
+        url: "http://127.0.0.1:8200/v1/auth/approle/login"
+        method: POST
+        body_format: json
+        body: >
+          {"role_id":{{ vault_vars.role_id|to_json }},"secret_id":{{ vault_vars.secret_id|to_json }}}
+      register: vault_auth
+      delegate_to: "{{ groups['control'][0] }}"
+
+    - name: "Set vault token"
+      when: vault_auth.json is defined
+      set_fact:
+        vault_token: "{{ vault_auth.json.auth.client_token }}"
+
+    - name: "Check local vault TLS certificates status"
+      stat:
+        path: "{{ local_vault_client_cert_file }}"
+      register: vault_certs_stat
+
+    # That should be all we need, since we can generate certificates for the user
+    # from vault when running the dawn command
+    - name: "Generate vault client TLS certificates"
+      when: >
+        vault_token is defined
+        and (vault_certs_stat.stat.exists|bool == False
+          or cert_rotate_local_vault_client|default(false)|bool
+          or cert_rotate_local_vault|default(false)|bool
+          or cert_rotate_all|default(false)|bool)
+      include_role:
+        name: generate-tls
+      vars:
+        pki:
+          delegate_to: localhost
+          # vault backend
+          backend: vault
+          role: client
+          # targets
+          files:
+            cert: "{{ local_vault_client_cert_file }}"
+            key: "{{ local_vault_client_key_file }}"
+            ca: "{{ local_vault_client_ca_file }}"
+          # TLS request data
+          request_data:
+            common_name: "client.vault.{{ consul_domain }}"
