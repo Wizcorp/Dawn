@@ -16,7 +16,7 @@
     path: "{{ item|dirname }}"
     state: directory
     mode: 0755
-  delegate_to: "{{ pki.delegate }}"
+  delegate_to: "{{ pki.delegate_to }}"
   with_items:
     - "{{ pki.files.cert }}"
     - "{{ pki.files.key }}"
@@ -31,6 +31,7 @@
     body_format: json
     body: "{{ pki.request_data|to_json }}"
   delegate_to: "{{ groups['control'][0] }}"
+  until: certificates.json.data is defined
   register: certificates
 
 # Write the generated certificates
@@ -64,7 +65,7 @@
     owner: "{{ pki.owner|default(omit) }}"
     group: "{{ pki.group|default(omit) }}"
   notify: "{{ pki.notify|default(omit) }}"
-  delegate_to: "{{ pki.delegate }}"
+  delegate_to: "{{ pki.delegate_to }}"
   with_items:
     - key: certificate
       file: "{{ pki.files.cert }}"

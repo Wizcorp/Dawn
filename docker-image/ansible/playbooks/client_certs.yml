@@ -1,28 +1,14 @@
+################
+# CLIENT CERTS #
+################
+
+# This playbooks generates client certificates for vault, so that we can connect
+# securely to it and generate client certificates for the other tools
+
 - hosts: localhost
+  roles:
+    - vault-auth
   tasks:
-    - name: "Load vault configuration"
-      include_vars:
-        file: "{{ vault_local_ansible_config }}"
-        name: vault_vars
-
-    - name: "Authenticate to vault"
-      when: >
-        vault_token is not defined
-        and vault_skip_auth|default(False)|bool == False
-      uri:
-        url: "http://127.0.0.1:8200/v1/auth/approle/login"
-        method: POST
-        body_format: json
-        body: >
-          {"role_id":{{ vault_vars.role_id|to_json }},"secret_id":{{ vault_vars.secret_id|to_json }}}
-      register: vault_auth
-      delegate_to: "{{ groups['control'][0] }}"
-
-    - name: "Set vault token"
-      when: vault_auth.json is defined
-      set_fact:
-        vault_token: "{{ vault_auth.json.auth.client_token }}"
-
     - name: "Check local vault TLS certificates status"
       stat:
         path: "{{ local_vault_client_cert_file }}"

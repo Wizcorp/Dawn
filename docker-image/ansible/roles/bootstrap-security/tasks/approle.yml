@@ -38,10 +38,10 @@
     token: "{{ vault_vars.root_token }}"
     secret: /auth/approle/role/ansible
     data:
-      token_ttl: 7200
-      token_max_ttl: 7200
-      secret_id_ttl: 1314000
-      secret_id_num_uses: 0
+      token_ttl: "{{ vault_ansible_token_ttl }}"
+      token_max_ttl: "{{ vault_ansible_token_max_ttl }}"
+      secret_id_ttl: "{{ vault_ansible_secret_id_ttl }}"
+      secret_id_num_uses: "{{ vault_ansible_secret_id_num_uses }}"
       policies: default,ansible
 
 - name: "Read ansible role data"

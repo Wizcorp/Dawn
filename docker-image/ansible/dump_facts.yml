@@ -1,0 +1,5 @@
+- hosts: control[0]
+  gather_facts: false
+  tasks:
+    - debug: var=hostvars
+      delegate_to: localhost

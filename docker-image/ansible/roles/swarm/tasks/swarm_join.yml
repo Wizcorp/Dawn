@@ -1,3 +1,5 @@
+# If control[0] is not available, this role will most likely fail, make sure
+# that control[0] is always setup properly
 - name: "Fetch join token"
   swarm:
     action: token

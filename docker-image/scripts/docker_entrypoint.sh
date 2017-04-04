@@ -43,7 +43,6 @@ pushd ./scripts/ > /dev/null
 # in the project
 export COMMAND="${@}"
 export PROJECT_ENVIRONMENT_FILES_PATH="${PROJECT_FILES_PATH}/${PROJECT_ENVIRONMENT}"
-export PS1="\e[1;31m${PROJECT_NAME} \e[1;32m(${PROJECT_ENVIRONMENT}) \e[1;34m\w $\e[0m "
 
 # We make sure that the base directory structure is present,
 # and that a configuration file is indeed present.
@@ -64,11 +63,6 @@ then
   source ./create_environment.sh
 fi
 
-# Once all of this has been done, we set up
-# the local environment (environment variables,
-# dynamically generated files, etc) and run
-# the requested command
-source ./setup_environment.sh
 popd > /dev/null
 
 # We finally downgrade the user and run the
@@ -86,5 +80,10 @@ popd > /dev/null
 # Ref: https://github.com/docker/docker/issues/27685#issuecomment-256648694
 #
 pushd ${PROJECT_ENVIRONMENT_FILES_PATH} > /dev/null
-sudo -H -E -u ${SHELL_USER} ${COMMAND}
+
+# We install the latest bash profile in the user home so that each user gets the
+# same behaviour
+cp "${ROOT_FOLDER}/scripts/user_bash_profile.sh" "/home/${SHELL_USER}/.bash_profile"
+
+sudo -H -E -u ${SHELL_USER} bash --login -c "${COMMAND}"
 popd > /dev/null

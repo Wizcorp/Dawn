@@ -96,6 +96,32 @@ Here is a map of what services are installed on each nodes:
     </tbody>
 </table>
 
+## Security Model
+
+<%= build_config['github']['name'] %> makes no assumptions in regards to the nature
+of the hosts it will be deployed on. While in the case of templates for popular
+hosting services (AWS, etc), it is possible to segregate network layers, in other
+cases this is simply not possible (baremetal servers would be a good example).
+
+The base security model assumes that:
+
+  1. All critical services require authentication
+  2. All critical services require encryption
+
+This is currently achieved by using Hashicorp's Vault tool and generating
+self-signed certificates for Docker, Vault and Consul and making sure that any
+network communication goes through those certificates.
+
+While Consul and Docker will enforce valid client certificates, Vault does not
+since it has it's own auth mechanisms, this allows you to recover a new set of
+certificates should you lose them.
+
+You will definitely want to become familiar with the inner workings of Vault,
+since Dawn heavily depends on it.
+
+See the official [documentation](https://www.vaultproject.io/docs/index.html)
+for more details.
+
 ## Local Binary & Local Containers
 
 Coming soon.

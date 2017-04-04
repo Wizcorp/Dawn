@@ -1,0 +1,84 @@
+- name: "Load vault configuration"
+  include_vars:
+    file: "{{ vault_local_ansible_config }}"
+    name: vault_vars
+
+- name: "Check vault seals status"
+  when: >
+      vault_token is not defined
+      and vault_skip_auth|default(False)|bool == False
+  uri:
+    url: "http://127.0.0.1:8200/v1/sys/seal-status"
+  register: vault_seal_status
+  delegate_to: "{{ groups['control'][0] }}"
+
+# Try to unseal the vault automatically
+- name: "Check if we have access to the root configuration"
+  when: >
+    vault_seal_status.json.sealed is defined
+    and vault_seal_status.json.sealed|default(false)|bool
+  stat:
+    path: "{{ vault_local_root_config }}"
+  delegate_to: localhost
+  register: vault_root_config
+
+- name: "Read vault configuration"
+  when: >
+    vault_root_config.stat.exists is defined
+    and vault_root_config.stat.exists|bool
+  include_vars:
+    file: "{{ vault_local_root_config }}"
+    name: vault_root_vars
+
+# Unseal the vault
+- name: "Unseal vault"
+  when: >
+    vault_seal_status.json.sealed is defined
+    and vault_seal_status.json.sealed|default(false)|bool
+    and vault_root_vars['keys'] is defined
+  hashivault_unseal:
+    url: http://127.0.0.1:8200
+    keys: "{{ vault_root_vars['keys']|join(' ') }}"
+  delegate_to: "{{ groups['control'][0] }}"
+
+- name: "Check for successful unseal attempt"
+  when: >
+    vault_seal_status.json.sealed is defined
+    and vault_seal_status.json.sealed|default(false)|bool
+    and vault_root_vars['keys'] is defined
+  uri:
+    url: "http://127.0.0.1:8200/v1/sys/seal-status"
+  register: vault_seal_status
+  delegate_to: "{{ groups['control'][0] }}"
+
+# Otherwise ask for the user to intervene
+- name: "Wait for user to unseal vault"
+  when: >
+    vault_seal_status.json.sealed is defined
+    and vault_seal_status.json.sealed|default(false)|bool
+  pause:
+    prompt: |
+      Vault was sealed due to an operation during the provisioning process or
+      because the machine was restarted, please connect to one of the control
+      nodes and unseal the Vault before continuing the provisioning process.
+
+      Press ENTER when you are ready to continue
+
+# Finally we can authenticate to vault
+- name: "Authenticate to vault"
+  when: >
+    vault_token is not defined
+    and vault_skip_auth|default(False)|bool == False
+  uri:
+    url: "http://127.0.0.1:8200/v1/auth/approle/login"
+    method: POST
+    body_format: json
+    body: >
+      {"role_id":{{ vault_vars.role_id|to_json }},"secret_id":{{ vault_vars.secret_id|to_json }}}
+  register: vault_auth
+  delegate_to: "{{ groups['control'][0] }}"
+
+- name: "Set vault token"
+  when: vault_auth.json is defined
+  set_fact:
+    vault_token: "{{ vault_auth.json.auth.client_token }}"

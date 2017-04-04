@@ -8,17 +8,17 @@
 # Query servers and setup custom facts
 - include: playbooks/setup.yml
 
-# Try to bootstrap
-#- include: playbooks/bootstrap.yml
+# Bootstrap the system if necessary
+- include: playbooks/bootstrap.yml
 
 # Setup the primary infrastructure
-#- include: playbooks/primary.yml
+- include: playbooks/primary.yml
 
 # Setup monitoring
-#- include: playbooks/monitoring.yml
+- include: playbooks/monitoring.yml
 
-# Finally start swarm mode
+# Start/setup swarm mode
 - include: playbooks/swarm.yml
 
 # Fetch client certificates
-#- include: playbooks/client_certs.yml
+- include: playbooks/client_certs.yml

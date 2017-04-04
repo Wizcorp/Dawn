@@ -18,7 +18,8 @@
     HEADER_X-Vault-Token: "{{ vault_vars.root_token }}"
     url: "{{ vault_addr }}/v1/sys/mounts/pki/tune"
     method: POST
-    body: '{"max_lease_ttl":"87600h"}'
+    body_format: json
+    body: "{\"max_lease_ttl\":\"{{ vault_root_ca_ttl }}\"}"
     status_code: 204
 
 # Generate our root CA, valid for 10 years
@@ -38,7 +39,7 @@
     secret: /pki/root/generate/internal
     data:
       common_name: "{{ local_domain_name }}"
-      ttl: "87600h"
+      ttl: "{{ vault_root_ca_ttl }}"
 
 - name: "Set CA urls"
   when: vault_root_cert_status and vault_root_cert_status.failed|default(false)|bool

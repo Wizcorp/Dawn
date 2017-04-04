@@ -90,7 +90,6 @@ RUN cd ${root_folder}/ansible \
 
 ADD ./templates ${root_folder}/templates
 ADD ./scripts ${root_folder}/scripts
-COPY ./scripts/profile.d/* /etc/profile.d/
 
 # Add user to sudoer
 ENV SHELL_USER=${shell_user}

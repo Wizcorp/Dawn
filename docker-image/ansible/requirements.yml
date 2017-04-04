@@ -24,7 +24,6 @@
 - name: AerisCloud.vault
   version: v1.0.1
 
-
 # external roles
 - name: williamyeh.fluentd
   version: 1.4.1

@@ -18,7 +18,8 @@
     HEADER_X-Vault-Token: "{{ vault_vars.root_token }}"
     url: "{{ vault_addr }}/v1/sys/mounts/{{ backend_name }}/pki/tune"
     method: POST
-    body: '{"max_lease_ttl":"17520h"}'
+    body_format: json
+    body: "{\"max_lease_ttl\":\"{{ vault_intermediate_ca_ttl }}\"}"
     status_code: 204
 
 # Generate an intermediate CA
@@ -38,7 +39,7 @@
     secret: "/{{ backend_name }}/pki/intermediate/generate/internal"
     data:
       common_name: "{{ local_domain_name }}"
-      ttl: "17520h"
+      ttl: "{{ vault_intermediate_ca_ttl }}"
   register: vault_intermediate_ca
 
 - name: "Sign the intermediate CA using our root CA"
@@ -49,7 +50,7 @@
     data:
       csr: "{{ vault_intermediate_ca.data.data.csr }}"
       common_name: "{{ local_domain_name }}"
-      ttl: "17520h"
+      ttl: "{{ vault_intermediate_ca_ttl }}"
   register: vault_intermediate_ca_signed
 
 - name: "Import signed intermediate CA"

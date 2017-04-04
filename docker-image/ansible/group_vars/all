@@ -19,6 +19,21 @@ vault_client_key_file: /etc/ssl/certs/vault/client.key.pem
 vault_client_cert_file: /etc/ssl/certs/vault/client.cert.pem
 vault_client_ca_file: /etc/ssl/certs/vault/client.ca.pem
 
+# Vault TTL configuration, root CA is valid 10 years, intermediate is valid for
+# 2 years, make sure to rotate your certificates before they expire
+vault_root_ca_ttl: 87600h
+vault_intermediate_ca_ttl: 17520h
+vault_server_max_ttl: 17520h
+vault_client_max_ttl: 8760h
+vault_consul_server_max_ttl: 17520h
+vault_consul_client_max_ttl: 8760h
+vault_docker_server_max_ttl: 17520h
+vault_docker_client_max_ttl: 8760h
+vault_ansible_token_ttl: 7200
+vault_ansible_token_max_ttl: 7200
+vault_ansible_secret_id_ttl: 1314000
+vault_ansible_secret_id_num_uses: 0
+
 # Consul configuration
 consul_domain: "{{ local_domain_name }}"
 consul_datacenter: "{{ local_domain_dc }}"

@@ -26,9 +26,9 @@
 - include: root_ca.yml
 
 # generate the CAs we know we will need for the primary infra
-- include: intermediate_ca.yml backend_name=consul server_ttl=17520h client_ttl=8760h
-- include: intermediate_ca.yml backend_name=vault  server_ttl=17520h client_ttl=8760h
-- include: intermediate_ca.yml backend_name=docker server_ttl=17520h client_ttl=8760h
+- include: intermediate_ca.yml backend_name=vault  server_ttl="{{ vault_server_max_ttl }}" client_ttl="{{ vault_client_max_ttl }}"
+- include: intermediate_ca.yml backend_name=consul server_ttl="{{ vault_consul_server_max_ttl }}" client_ttl="{{ vault_consul_client_max_ttl }}"
+- include: intermediate_ca.yml backend_name=docker server_ttl="{{ vault_docker_server_max_ttl }}" client_ttl="{{ vault_docker_client_max_ttl }}"
 
 # finally generate an app role for ansible
 - include: approle.yml

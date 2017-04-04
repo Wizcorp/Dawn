@@ -1,5 +1,9 @@
+#############
+# BOOTSTRAP #
+#############
+
 # The role of this playbook is the initial bootstrap of the whole architecture,
-# it runs only on the first control machine to setup the main vault and consul
+# it runs only on the first control machine to setup the main vault and consul.
 
 - hosts: control[0]
   become: true
