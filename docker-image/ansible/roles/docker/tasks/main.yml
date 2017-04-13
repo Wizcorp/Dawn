@@ -17,12 +17,11 @@
 
 - name: "Generate server TLS certificates"
   when: >
-    vault_token is defined
-    and (docker_certs_stat.stat.exists|bool == False
-      or cert_rotate_docker_server|default(false)|bool
-      or cert_rotate_docker|default(false)|bool
-      or cert_rotate_server|default(false)|bool
-      or cert_rotate_all|default(false)|bool)
+    docker_certs_stat.stat.exists|bool == False
+    or cert_rotate_docker_server|default(false)|bool
+    or cert_rotate_docker|default(false)|bool
+    or cert_rotate_server|default(false)|bool
+    or cert_rotate_all|default(false)|bool
   include_role:
     name: generate-tls
   notify:
@@ -46,11 +45,10 @@
 
 - name: "Generate client TLS certificates"
   when: >
-    vault_token is defined
-    and (docker_certs_stat.stat.exists|bool == False
-      or cert_rotate_docker_client|default(false)|bool
-      or cert_rotate_docker|default(false)|bool
-      or cert_rotate_all|default(false)|bool)
+    docker_certs_stat.stat.exists|bool == False
+    or cert_rotate_docker_client|default(false)|bool
+    or cert_rotate_docker|default(false)|bool
+    or cert_rotate_all|default(false)|bool
   include_role:
     name: generate-tls
   vars:

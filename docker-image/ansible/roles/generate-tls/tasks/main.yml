@@ -1,4 +1,20 @@
-# We're gonna need this
+# Check if we did any operation that might have sealed the vault
+- name: "Check vault status"
+  environment:
+    VAULT_ADDR: "http://127.0.0.1:8200"
+  hashivault_status:
+  ignore_errors: yes
+  register: vault_status
+  run_once: true
+
+- name: "Unseal and Auth with vault"
+  when: >
+    vault_token is not defined
+    or (vault_status.status.sealed is defined
+      and vault_status.status.sealed|default(false)|bool)
+  include_role:
+    name: vault-auth
+
 - name: "Make sure the directories for each file exists (no delegate)"
   when: pki.delegate_to is not defined
   file:

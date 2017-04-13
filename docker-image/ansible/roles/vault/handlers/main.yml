@@ -2,7 +2,7 @@
 - name: "Reload systemd"
   command: systemctl daemon-reload
 
-- name: "Restart consul"
+- name: "Restart vault"
   service:
-    name: consul
+    name: vault
     state: restarted

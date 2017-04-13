@@ -17,11 +17,10 @@
 
 - name: "Generate server TLS certificates"
   when: >
-    vault_token is defined
-    and (vault_certs_stat.stat.exists|bool == False
-      or cert_rotate_vault_server|default(false)|bool
-      or cert_rotate_vault|default(false)|bool
-      or cert_rotate_all|default(false)|bool)
+    vault_certs_stat.stat.exists|bool == False
+    or cert_rotate_vault_server|default(false)|bool
+    or cert_rotate_vault|default(false)|bool
+    or cert_rotate_all|default(false)|bool
   include_role:
     name: generate-tls
   vars:
@@ -39,14 +38,15 @@
       request_data:
         common_name: "{{ inventory_hostname }}.node.{{ consul_datacenter }}.{{ consul_domain }}"
         ip_sans: "{{ private_ipv4 }}"
+      notify:
+        - Restart vault
 
 - name: "Generate client TLS certificates"
   when: >
-    vault_token is defined
-    and (vault_certs_stat.stat.exists|bool == False
-      or cert_rotate_vault_client|default(false)|bool
-      or cert_rotate_vault|default(false)|bool
-      or cert_rotate_all|default(false)|bool)
+    vault_certs_stat.stat.exists|bool == False
+    or cert_rotate_vault_client|default(false)|bool
+    or cert_rotate_vault|default(false)|bool
+    or cert_rotate_all|default(false)|bool
   include_role:
     name: generate-tls
   vars:
@@ -70,24 +70,3 @@
 
 - name: "Make sure to flush all handlers right now"
   meta: flush_handlers
-
-# Check if we did any operation that might have sealed the vault
-- name: "Check vault status"
-  environment:
-    VAULT_ADDR: "http://127.0.0.1:8200"
-  hashivault_status:
-  ignore_errors: yes
-  register: vault_status
-  run_once: true
-
-- name: "Wait for user to unseal vault"
-  when: >
-    vault_status.status.sealed is defined
-    and vault_status.status.sealed|default(false)|bool
-  pause:
-    prompt: |
-      Vault was sealed due to an operation during the provisioning process,
-      please connect to any of the control nodes and unseal the Vault before
-      continuing the provisioning process.
-
-      Press ENTER when you are ready to continue

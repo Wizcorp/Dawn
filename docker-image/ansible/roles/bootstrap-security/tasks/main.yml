@@ -33,6 +33,11 @@
 # finally generate an app role for ansible
 - include: approle.yml
 
+- name: "Save bootstrap status"
+  copy:
+    content: "success"
+    dest: "/opt/dawn/bootstrap-status"
+
 - name: "Security bootstrap confirmation prompt"
   pause:
     prompt: |

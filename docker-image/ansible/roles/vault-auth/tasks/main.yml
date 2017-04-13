@@ -5,11 +5,13 @@
 
 - name: "Check vault seals status"
   when: >
-      vault_token is not defined
-      and vault_skip_auth|default(False)|bool == False
+      vault_skip_auth|default(False)|bool == False
   uri:
     url: "http://127.0.0.1:8200/v1/sys/seal-status"
   register: vault_seal_status
+  until: vault_seal_status.json.sealed is defined
+  retries: 5
+  delay: 10
   delegate_to: "{{ groups['control'][0] }}"
 
 # Try to unseal the vault automatically
@@ -76,6 +78,7 @@
     body: >
       {"role_id":{{ vault_vars.role_id|to_json }},"secret_id":{{ vault_vars.secret_id|to_json }}}
   register: vault_auth
+  until: vault_auth.json is defined
   delegate_to: "{{ groups['control'][0] }}"
 
 - name: "Set vault token"

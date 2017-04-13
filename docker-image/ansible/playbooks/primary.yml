@@ -2,11 +2,6 @@
 # PRIMARY INFRASTRUCTURE #
 ##########################
 
-# Authenticate to vault
-- hosts: all
-  roles:
-    - vault-auth
-
 ### Consul
 # Consul is installed on all the nodes and is a cornerstone of this infra and is
 # used to advertise every services in the cluster.

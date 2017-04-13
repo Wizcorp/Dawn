@@ -17,12 +17,11 @@
 
 - name: "Generate server TLS certificates"
   when: >
-    vault_token is defined
-    and (consul_certs_stat.stat.exists|bool == False
-      or cert_rotate_consul_server|default(false)|bool
-      or cert_rotate_consul|default(false)|bool
-      or cert_rotate_server|default(false)|bool
-      or cert_rotate_all|default(false)|bool)
+    consul_certs_stat.stat.exists|bool == False
+    or cert_rotate_consul_server|default(false)|bool
+    or cert_rotate_consul|default(false)|bool
+    or cert_rotate_server|default(false)|bool
+    or cert_rotate_all|default(false)|bool
   include_role:
     name: generate-tls
   vars:
@@ -46,11 +45,10 @@
 
 - name: "Generate client TLS certificates"
   when: >
-    vault_token is defined
-    and (consul_certs_stat.stat.exists|bool == False
-      or cert_rotate_consul_client|default(false)|bool
-      or cert_rotate_consul|default(false)|bool
-      or cert_rotate_all|default(false)|bool)
+    consul_certs_stat.stat.exists|bool == False
+    or cert_rotate_consul_client|default(false)|bool
+    or cert_rotate_consul|default(false)|bool
+    or cert_rotate_all|default(false)|bool
   include_role:
     name: generate-tls
   vars:

@@ -4,6 +4,7 @@
   swarm:
     action: token
   delegate_to: "{{ groups['control'][0] }}"
+  until: swarm_init.result.Manager is defined
   register: swarm_init
 
 - name: "Have managers join the swarm"
