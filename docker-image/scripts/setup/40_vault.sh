@@ -21,7 +21,7 @@ then
     VAULT_AUTH_DATA="$( jq -cM .data "${HOME}/.vault.conf" )"
 
     export VAULT_ADDR="https://${CONTROL_NODE}:8200"
-    export VAULT_TOKEN="$( curl --cacert "${VAULT_CACERT}" -XPOST -sS "${VAULT_ADDR}/v1/auth/${VAULT_AUTH_BACKEND}/login" -d "${VAULT_AUTH_DATA}" | jq -r .auth.client_token )"
+    export VAULT_TOKEN="$( curl --connect-timeout 3 --cacert "${VAULT_CACERT}" -XPOST -sS "${VAULT_ADDR}/v1/auth/${VAULT_AUTH_BACKEND}/login" -d "${VAULT_AUTH_DATA}" | jq -r .auth.client_token )"
 elif
     [ -f "${HOME}/.vault.ansible.conf" ]
 then
@@ -30,7 +30,7 @@ then
     export VAULT_CLIENT_KEY="${VAULT_CERT_PATH}/client.key.pem"
 
     export VAULT_ADDR="https://${CONTROL_NODE}:8200"
-    export VAULT_TOKEN="$( curl --cacert "${VAULT_CACERT}" -XPOST -sS "${VAULT_ADDR}/v1/auth/approle/login" -d "$( cat ${HOME}/.vault.ansible.conf )" | jq -r .auth.client_token )"
+    export VAULT_TOKEN="$( curl --connect-timeout 3 --cacert "${VAULT_CACERT}" -XPOST -sS "${VAULT_ADDR}/v1/auth/approle/login" -d "$( cat ${HOME}/.vault.ansible.conf )" | jq -r .auth.client_token )"
 elif
     [ -f "${HOME}/.vault.root.conf" ]
 then

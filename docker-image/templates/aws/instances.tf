@@ -18,9 +18,9 @@ resource "aws_instance" "edge" {
     Name        = "${var.project_name}.${var.project_environment}.edge-${count.index + 1}"
     project     = "${var.project_name}"
     environment = "${var.project_environment}"
-    role        = "edge"
-    sshUser     = "ec2-user"
-	dockerType  = "edge"
+    roles       = "edge"
+    sshUser     = "${var.nodes["edge_ami_user"]}"
+    dockerType  = "edge"
   }
 }
 
@@ -51,9 +51,9 @@ resource "aws_instance" "control" {
     project      = "${var.project_name}"
     environment  = "${var.project_environment}"
     roles        = "control,monitor"
-    sshUser      = "ec2-user"
+    sshUser      = "${var.nodes["control_ami_user"]}"
     sshExtraArgs = "ssh -W %h:%p ${aws_eip.edge.public_ip}"
-	dockerType   = "control"
+    dockerType   = "control"
   }
 }
 
@@ -76,10 +76,10 @@ resource "aws_instance" "worker" {
     Name         = "${var.project_name}.${var.project_environment}.worker-${count.index + 1}"
     project      = "${var.project_name}"
     environment  = "${var.project_environment}"
-    role         = "worker"
-    sshUser      = "ec2-user"
+    roles        = "worker"
+    sshUser      = "${var.nodes["worker_ami_user"]}"
     sshExtraArgs = "ssh -W %h:%p ${aws_eip.edge.public_ip}"
-	dockerType   = "worker"
+    dockerType   = "worker"
   }
 }
 
@@ -102,9 +102,9 @@ resource "aws_instance" "storage" {
     Name         = "${var.project_name}.${var.project_environment}.storage-${count.index + 1}"
     project      = "${var.project_name}"
     environment  = "${var.project_environment}"
-    role         = "storage"
-    sshUser      = "ec2-user"
-    sshExtraArgs = "ssh -W %h:%p ${aws_eip.edge.public_ip}"
-	dockerType   = "worker"
+    roles        = "storage"
+    sshUser      = "${var.nodes["storage_ami_user"]}"
+    sshExtraArgs = "-o ProxyCommand='ssh -l ${var.nodes["edge_ami_user"]} -i ~/.ssh/deploy -W %h:%p -q ${aws_eip.edge.public_ip}'"
+    dockerType   = "worker"
   }
 }

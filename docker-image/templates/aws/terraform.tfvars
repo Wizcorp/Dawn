@@ -15,18 +15,22 @@ cidr_blocks = {
 nodes = {
   edge_count         = 1
   edge_ami           = "ami-af4333cf"
+  edge_ami_user      = "centos"
   edge_instance_type = "t2.small"
 
   control_count         = 1
   control_ami           = "ami-af4333cf"
+  control_ami_user      = "centos"
   control_instance_type = "t2.medium"
 
   worker_count         = 2
   worker_ami           = "ami-af4333cf"
+  worker_ami_user      = "centos"
   worker_instance_type = "t2.medium"
 
   storage_count         = 0
   storage_ami           = "ami-af4333cf"
+  storage_ami_user      = "centos"
   storage_instance_type = "r3.large"
 }
 
