@@ -1,7 +1,5 @@
 SHELL_USER_HOMEDIR="/home/${SHELL_USER}"
 
-rm -f ${SHELL_USER_HOMEDIR}/.aws_credentials
-
 echo ""
 echo -n "Creating deploy key... "
 mkdir -p ${SHELL_USER_HOMEDIR}/.ssh/
@@ -22,4 +20,6 @@ echo "** Note ** sure to share it securely!"
 echo "** Note ** "
 echo "** Note ** ${SHELL_USER_HOMEDIR}/.ssh/deploy"
 echo "** Note ** "
+echo "** Note ** Make sure to setup your AWS credentials for Terraform, see:"
+echo "** Note ** https://www.terraform.io/docs/providers/aws/index.html#authentication"
 echo ""
