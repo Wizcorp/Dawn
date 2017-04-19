@@ -37,21 +37,4 @@
   copy:
     content: "success"
     dest: "/opt/dawn/bootstrap-status"
-
-- name: "Security bootstrap confirmation prompt"
-  pause:
-    prompt: |
-
-      Security bootstrap is finished and 2 files have been generated/saved on disk:
-      * {{ vault_local_root_config }}
-      * {{ vault_local_ansible_config }}
-
-      The first file is your root credentials and unseal keys and will be needed for
-      manual root operations and unsealing the vault on restarts. It is not necessary
-      to have it to run the normal playbooks but should be safely stored/backup.
-
-      The second file is your ansible credentials and will need to be present any time
-      you run the normal provisionning playbooks to config TLS keys for both consul and
-      docker.
-
-      Press ENTER to continue the provisining process.
+  register: bootstrap_success
