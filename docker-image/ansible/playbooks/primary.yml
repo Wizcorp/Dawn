@@ -112,3 +112,19 @@
           restart_policy: always
           published_ports:
             - "5000:5000"
+
+### CA Certificates
+# Make sure that every nodes have all intermediate CAs installed in their trust
+# database, this allows us to have containers talk to vault/consul/etc...
+# without complaining about self-signed stuff
+###
+- hosts: all
+  become: true
+  roles:
+    - vault-auth
+    - role: register-ca
+      backend: consul
+    - role: register-ca
+      backend: docker
+    - role: register-ca
+      backend: vault

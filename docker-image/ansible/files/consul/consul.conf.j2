@@ -1,7 +1,7 @@
 {
   "data_dir": "/var/lib/consul",
   "log_level": "INFO",
-  "ui": {{ (inventory_hostname in groups["control"])|bool|to_json }},
+  "ui": {{ (inventory_hostname in groups["edge"])|bool|to_json }},
   "client_addr": "{{ private_ipv4 }}",
   "advertise_addr": "{{ private_ipv4 }}",
   "bind_addr": "{{ private_ipv4 }}",

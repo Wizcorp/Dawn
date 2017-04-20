@@ -7,6 +7,7 @@ services:
     image: {{ traefik_image }}
     command: >
       --web
+      --logLevel=WARNING
       --docker
       --docker.swarmmode
       --docker.domain={{ traefik_domain }}
@@ -22,9 +23,12 @@ services:
       - net
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      # Consul client certificates
       - "{{ consul_client_ca_file }}:/etc/ssl/certs/consul/ca.pem:ro"
       - "{{ consul_client_cert_file }}:/etc/ssl/certs/consul/cert.pem:ro"
       - "{{ consul_client_key_file }}:/etc/ssl/certs/consul/key.pem:ro"
+      # Extra CAs from our architecture
+      - "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem:/etc/ssl/certs/ca-certificates.crt:ro"
     deploy:
       mode: global
       placement:
