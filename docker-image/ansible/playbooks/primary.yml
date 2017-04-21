@@ -113,6 +113,51 @@
           published_ports:
             - "5000:5000"
 
+### HTTPS Setup
+# Create a CA that emits self-signed HTTPS certificates for our load balancers
+###
+- hosts: control[0]
+  become: true
+  environment:
+    VAULT_ADDR: "http://127.0.0.1:8200"
+  roles:
+    - vault-auth
+    - role: vault-setup-ca
+      backend_name: https
+      server_ttl: "{{ https_server_max_ttl }}"
+      vault_addr: "http://127.0.0.1:8200"
+
+- hosts: all
+  become: true
+  tasks:
+    - name: "Check TLS certificates status"
+      stat:
+        path: "{{ https_cert_file }}"
+      register: https_certs_stat
+    - name: "Generate server TLS certificates"
+      when: >
+        https_certs_stat.stat.exists|bool == False
+        or cert_rotate_https_server|default(false)|bool
+        or cert_rotate_https|default(false)|bool
+        or cert_rotate_server|default(false)|bool
+        or cert_rotate_all|default(false)|bool
+      include_role:
+        name: generate-tls
+      vars:
+        pki:
+          # vault backend
+          backend: https
+          role: server
+          # targets
+          files:
+            cert: "{{ https_cert_file }}"
+            key: "{{ https_key_file }}"
+            ca: "{{ https_ca_file }}"
+          # TLS request data
+          request_data:
+            common_name: "*.{{ consul_domain }}"
+            ip_sans: "{{ private_ipv4 }}"
+
 ### CA Certificates
 # Make sure that every nodes have all intermediate CAs installed in their trust
 # database, this allows us to have containers talk to vault/consul/etc...
@@ -128,3 +173,5 @@
       backend: docker
     - role: register-ca
       backend: vault
+    - role: register-ca
+      backend: https

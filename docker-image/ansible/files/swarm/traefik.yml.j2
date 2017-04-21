@@ -6,18 +6,22 @@ services:
   lb:
     image: {{ traefik_image }}
     command: >
-      --web
-      --logLevel=WARNING
-      --docker
-      --docker.swarmmode
-      --docker.domain={{ traefik_domain }}
-      --docker.watch
       --consul.endpoint=consul.service.{{ local_domain_full }}:8500
       --consul.tls.ca=/etc/ssl/certs/consul/ca.pem
       --consul.tls.cert=/etc/ssl/certs/consul/cert.pem
       --consul.tls.key=/etc/ssl/certs/consul/key.pem
+      --defaultentrypoints=https
+      --docker
+      --docker.swarmmode
+      --docker.domain={{ traefik_domain }}
+      --docker.watch
+      --entrypoints='Name:http Address::80'
+      --entrypoints='Name:https Address::443 TLS:/etc/ssl/certs/https/cert.pem,/etc/ssl/certs/https/key.pem'
+      --logLevel=WARNING
+      --web
     ports:
       - 80:80
+      - 443:443
       - 8080:8080
     networks:
       - net
@@ -27,6 +31,10 @@ services:
       - "{{ consul_client_ca_file }}:/etc/ssl/certs/consul/ca.pem:ro"
       - "{{ consul_client_cert_file }}:/etc/ssl/certs/consul/cert.pem:ro"
       - "{{ consul_client_key_file }}:/etc/ssl/certs/consul/key.pem:ro"
+      # HTTPs server certificates
+      - "{{ https_ca_file }}:/etc/ssl/certs/https/ca.pem:ro"
+      - "{{ https_cert_file }}:/etc/ssl/certs/https/cert.pem:ro"
+      - "{{ https_key_file }}:/etc/ssl/certs/https/key.pem:ro"
       # Extra CAs from our architecture
       - "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem:/etc/ssl/certs/ca-certificates.crt:ro"
     deploy:

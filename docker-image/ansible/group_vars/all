@@ -70,3 +70,9 @@ local_storage_dir: "/home/dawn"
 local_vault_client_key_file: "{{ local_storage_dir }}/certs/vault/client.key.pem"
 local_vault_client_cert_file: "{{ local_storage_dir }}/certs/vault/client.cert.pem"
 local_vault_client_ca_file: "{{ local_storage_dir }}/certs/vault/client.ca.pem"
+
+# HTTPS configuration
+https_server_max_ttl: 17520h
+https_cert_file: /etc/ssl/certs/https/server.key.pem
+https_key_file: /etc/ssl/certs/https/server.cert.pem
+https_ca_file: /etc/ssl/certs/https/server.ca.pem
