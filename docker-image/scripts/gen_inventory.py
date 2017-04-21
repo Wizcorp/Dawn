@@ -46,7 +46,7 @@ with open(TERRAFORM_STATE_FILE) as raw_state:
 				if key.startswith('tags.')
 			])
 
-			name = tags['Name']
+			name = tags['Name'].split('.')[-1]
 
 			# convert some of our current tags to actual ansible variables
 			instance_data = {
