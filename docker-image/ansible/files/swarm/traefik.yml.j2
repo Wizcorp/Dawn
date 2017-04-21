@@ -6,19 +6,26 @@ services:
   lb:
     image: {{ traefik_image }}
     command: >
-      --consul.endpoint=consul.service.{{ local_domain_full }}:8500
+      --checknewversion=false
+      --cluster.node="{{ inventory_hostname }}"
+      --consul.endpoint="consul.service.{{ local_domain_full }}:8500"
       --consul.tls.ca=/etc/ssl/certs/consul/ca.pem
       --consul.tls.cert=/etc/ssl/certs/consul/cert.pem
       --consul.tls.key=/etc/ssl/certs/consul/key.pem
-      --defaultentrypoints=https
+      --defaultentrypoints=http,https
       --docker
       --docker.swarmmode
-      --docker.domain={{ traefik_domain }}
+      --docker.domain="{{ traefik_domain }}"
       --docker.watch
       --entrypoints='Name:http Address::80'
       --entrypoints='Name:https Address::443 TLS:/etc/ssl/certs/https/cert.pem,/etc/ssl/certs/https/key.pem'
       --logLevel=WARNING
       --web
+      --web.readonly
+      --web.certfile=/etc/ssl/certs/https/cert.pem
+      --web.keyfile=/etc/ssl/certs/https/key.pem
+      --web.statistics
+      {{ traefik_extra_args|default("") }}
     ports:
       - 80:80
       - 443:443

@@ -36,7 +36,7 @@
         ca: "{{ vault_ca_file }}"
       # TLS request data
       request_data:
-        common_name: "{{ inventory_hostname }}.node.{{ consul_datacenter }}.{{ consul_domain }}"
+        common_name: "{{ inventory_hostname }}.node.{{ local_domain_full }}"
         ip_sans: "{{ private_ipv4 }}"
       notify:
         - Restart vault
@@ -62,7 +62,7 @@
         ca: "{{ vault_client_ca_file }}"
       # TLS request data
       request_data:
-        common_name: "client.vault.{{ consul_domain }}"
+        common_name: "client.vault.{{ local_domain_name }}"
 
 - name: "Install vault in TLS mode"
   include_role:

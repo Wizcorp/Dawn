@@ -76,3 +76,6 @@ https_server_max_ttl: 17520h
 https_cert_file: /etc/ssl/certs/https/server.key.pem
 https_key_file: /etc/ssl/certs/https/server.cert.pem
 https_ca_file: /etc/ssl/certs/https/server.ca.pem
+
+# Certification configuration
+cert_rotate_all: "{{ cert_rotate_cas|default(false)|bool }}"

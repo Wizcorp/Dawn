@@ -163,7 +163,7 @@
         - key: "traefik/frontends/kibana/backend"
           value: "kibana"
         - key: "traefik/frontends/kibana/routes/kibana/rule"
-          value: "Host:kibana.{{ consul_domain }}"
+          value: "Host:kibana.{{ local_domain_name }}"
         # grafana
         - key: "traefik/backends/grafana/servers/monitoring/url"
           value: "http://{{ group_ipv4.monitor[0] }}:3000"
@@ -172,4 +172,4 @@
         - key: "traefik/frontends/grafana/backend"
           value: "grafana"
         - key: "traefik/frontends/grafana/routes/grafana/rule"
-          value: "Host:grafana.{{ consul_domain }}"
+          value: "Host:grafana.{{ local_domain_name }}"

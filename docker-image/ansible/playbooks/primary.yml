@@ -155,7 +155,7 @@
             ca: "{{ https_ca_file }}"
           # TLS request data
           request_data:
-            common_name: "*.{{ consul_domain }}"
+            common_name: "*.{{ local_domain_name }}"
             ip_sans: "{{ private_ipv4 }}"
 
 ### CA Certificates

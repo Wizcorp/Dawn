@@ -53,5 +53,5 @@
         - key: "traefik/frontends/vault/backend"
           value: "vault"
         - key: "traefik/frontends/vault/routes/vault/rule"
-          value: "Host:vault.{{ consul_domain }}"
+          value: "Host:vault.{{ local_domain_name }}"
 
