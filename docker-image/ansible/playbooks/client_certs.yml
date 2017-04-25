@@ -38,4 +38,4 @@
             ca: "{{ local_vault_client_ca_file }}"
           # TLS request data
           request_data:
-            common_name: "client.vault.{{ consul_domain }}"
+            common_name: "client.vault.{{ local_domain_name }}"

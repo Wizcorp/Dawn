@@ -24,8 +24,6 @@
     or cert_rotate_all|default(false)|bool
   include_role:
     name: generate-tls
-  notify:
-    - Restart docker
   vars:
     pki:
       # docker backend
@@ -39,9 +37,11 @@
         ca: "{{ docker_ca_file }}"
       # TLS request data
       request_data:
-        common_name: "{{ inventory_hostname }}.node.{{ consul_datacenter }}.{{ consul_domain }}"
-        alt_names: "docker.service.{{ consul_datacenter }}.{{ consul_domain }},swarm.service.{{ consul_datacenter }}.{{ consul_domain }},*.swarm.service.{{ consul_datacenter }}.{{ consul_domain }}"
-        ip_sans: "{{ private_ipv4 }}"
+        common_name: "{{ inventory_hostname }}.node.{{ local_domain_full }}"
+        alt_names: "docker.service.{{ local_domain_full }},swarm.service.{{ local_domain_full }},*.swarm.service.{{ local_domain_full }}"
+        ip_sans: "{{ private_ipv4 }},{{ ansible_ssh_host }}"
+      notify:
+        - Restart docker
 
 - name: "Generate client TLS certificates"
   when: >
@@ -64,7 +64,7 @@
         ca: "{{ docker_client_ca_file }}"
       # TLS request data
       request_data:
-        common_name: "client.docker.{{ consul_domain }}"
+        common_name: "client.docker.{{ local_domain_name }}"
 
 - name: "Install and configure dnsmasq"
   include_role:

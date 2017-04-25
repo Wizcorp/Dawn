@@ -27,7 +27,7 @@
 ### Traefik
 # Starts traefik in swarm mode
 ###
-- hosts: control
+- hosts: control[0]
   become: true
   tasks:
     - name: "Upload traefik stack file"
@@ -35,6 +35,23 @@
         dest: "{{ traefik_file }}"
         src: "{{ playbook_dir }}/../files/swarm/traefik.yml.j2"
     - name: "Start traefik on the cluster"
-      run_once: true
       shell: "docker stack deploy -c '{{ traefik_file }}' {{ traefik_stack }}"
+
+    # Here we expose a couple extra things from the primary architecture
+    - name: "Allow access to vault through traefik"
+      consul_kv:
+        host: "127.0.0.1"
+        key: "{{ item.key }}"
+        value: "{{ item.value }}"
+      run_once: true
+      with_items:
+        # vault
+        - key: "traefik/backends/vault/servers/vault/url"
+          value: "https://{{ group_ipv4.control[0] }}:8200"
+        - key: "traefik/backends/vault/servers/vault/weight"
+          value: "1"
+        - key: "traefik/frontends/vault/backend"
+          value: "vault"
+        - key: "traefik/frontends/vault/routes/vault/rule"
+          value: "Host:vault.{{ local_domain_name }}"
 

@@ -55,7 +55,7 @@ docker_client_cert_file: /etc/ssl/certs/docker/client.cert.pem
 docker_client_ca_file: /etc/ssl/certs/docker/client.ca.pem
 
 # Traefik setup
-traefik_version: v1.2.0
+traefik_version: v1.2.3
 traefik_image: "traefik:{{ traefik_version }}"
 traefik_stack: traefik
 traefik_file: /opt/dawn/traefik.yml
@@ -70,3 +70,12 @@ local_storage_dir: "/home/dawn"
 local_vault_client_key_file: "{{ local_storage_dir }}/certs/vault/client.key.pem"
 local_vault_client_cert_file: "{{ local_storage_dir }}/certs/vault/client.cert.pem"
 local_vault_client_ca_file: "{{ local_storage_dir }}/certs/vault/client.ca.pem"
+
+# HTTPS configuration
+https_server_max_ttl: 17520h
+https_cert_file: /etc/ssl/certs/https/server.key.pem
+https_key_file: /etc/ssl/certs/https/server.cert.pem
+https_ca_file: /etc/ssl/certs/https/server.ca.pem
+
+# Certification configuration
+cert_rotate_all: "{{ cert_rotate_cas|default(false)|bool }}"

@@ -33,7 +33,9 @@
   register: vault_root_cert_status
 
 - name: "Create root CA"
-  when: vault_root_cert_status and vault_root_cert_status.failed|default(false)|bool
+  when: >
+    cert_rotate_cas|default(false)|bool
+    or vault_root_cert_status and vault_root_cert_status.failed|default(false)|bool
   hashivault_write:
     token: "{{ vault_vars.root_token }}"
     secret: /pki/root/generate/internal
@@ -42,10 +44,12 @@
       ttl: "{{ vault_root_ca_ttl }}"
 
 - name: "Set CA urls"
-  when: vault_root_cert_status and vault_root_cert_status.failed|default(false)|bool
+  when: >
+    cert_rotate_cas|default(false)|bool
+    or vault_root_cert_status and vault_root_cert_status.failed|default(false)|bool
   hashivault_write:
     token: "{{ vault_vars.root_token }}"
     secret: /pki/config/urls
     data:
-      issuing_certificates: "http://{{ inventory_hostname }}.node.{{ consul_datacenter }}.{{ consul_domain }}/v1/pki/ca"
-      crl_distribution_points: "http://{{ inventory_hostname }}.node.{{ consul_datacenter }}.{{ consul_domain }}/v1/pki/crl"
+      issuing_certificates: "http://vault.{{ local_domain_name }}/v1/pki/ca"
+      crl_distribution_points: "http://vault.{{ local_domain_name }}/v1/pki/crl"
