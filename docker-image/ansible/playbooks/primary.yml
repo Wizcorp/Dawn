@@ -18,13 +18,29 @@
     - consul
 
 ### Vault
-# Vaulot is the key component of our security framework, it is tasked with delivering
+# Vault is the key component of our security framework, it is tasked with delivering
 # TLS certificates for both servers and clients
 ###
 - hosts: control
   become: true
   roles:
     - vault
+
+### LDAP
+# Used a single source a truth for credentials in Dawn
+###
+# - hosts: control[0]
+#   become: true
+#   environment:
+#     VAULT_ADDR: "http://127.0.0.1:8200"
+#   roles:
+#     - vault-auth
+#     - role: vault-setup-ca
+#       backend_name: ldap
+#       server_ttl: "{{ ldap_server_max_ttl }}"
+#       client_ttl: "{{ ldap_server_max_ttl }}"
+#       vault_addr: "http://127.0.0.1:8200"
+#     - openldap
 
 ### Fluentd
 # Fluentd is installed on all the nodes and is used to collect logs from local
@@ -98,21 +114,6 @@
       tags:
         - telegraf
 
-### Docker registry
-# The first control node has a registry running on it, it is used by the swarm
-# when deploying custom built images accross the cluster
-###
-- hosts: control
-  become: true
-  roles:
-    - role: AerisCloud.docker-manage
-      docker_containers:
-        - name: registry
-          image: registry:2
-          restart_policy: always
-          published_ports:
-            - "5000:5000"
-
 ### HTTPS Setup
 # Create a CA that emits self-signed HTTPS certificates for our load balancers
 ###
@@ -158,6 +159,22 @@
             common_name: "*.{{ local_domain_name }}"
             ip_sans: "{{ private_ipv4 }}"
 
+### LDAP
+# Used a single source a truth for credentials in Dawn
+###
+- hosts: control[0]
+  become: true
+  environment:
+    VAULT_ADDR: "http://127.0.0.1:8200"
+  roles:
+    - vault-auth
+    - role: vault-setup-ca
+      backend_name: ldap
+      server_ttl: "{{ ldap_server_max_ttl }}"
+      client_ttl: "{{ ldap_server_max_ttl }}"
+      vault_addr: "http://127.0.0.1:8200"
+    - openldap
+
 ### CA Certificates
 # Make sure that every nodes have all intermediate CAs installed in their trust
 # database, this allows us to have containers talk to vault/consul/etc...
@@ -175,3 +192,80 @@
       backend: vault
     - role: register-ca
       backend: https
+    - role: register-ca
+      backend: ldap
+
+### Docker registry
+# The first control node has a registry running on it, it is used by the swarm
+# when deploying custom built images accross the cluster
+###
+- hosts: control[0]
+  become: true
+  roles:
+    - role: AerisCloud.docker-manage
+      docker_containers:
+        - name: docker_auth
+          image: cesanta/docker_auth:1
+          restart_policy: always
+          links:
+            - "openldap:ldap"
+          published_ports:
+            - "5001:5001"
+          volumes:
+            - "/opt/dawn/docker_auth.yml:/config/auth_config.yml:ro"
+            - "/opt/dawn/ldap_password.txt:/tmp/ldap_password.txt:ro"
+            # HTTPS Certs
+            - "{{ https_ca_file }}:/etc/ssl/certs/https/ca.pem:ro"
+            - "{{ https_cert_file }}:/etc/ssl/certs/https/cert.pem:ro"
+            - "{{ https_key_file }}:/etc/ssl/certs/https/key.pem:ro"
+            # Extra CAs from our architecture
+            - "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem:/etc/ssl/certs/ca-certificates.crt:ro"
+          sync_templates:
+            - src: "{{ playbook_dir }}/../files/docker_auth.yml.j2"
+              dest: /opt/dawn/docker_auth.yml
+              mode: 0644
+            - src: "{{ playbook_dir }}/../files/ldap_password.txt.j2"
+              dest: /opt/dawn/ldap_password.txt
+              mode: 0644
+        - name: registry
+          image: registry:2
+          restart_policy: always
+          links:
+            - "docker_auth:auth"
+          published_ports:
+            - "5000:5000"
+          volumes:
+            - "{{ https_cert_file }}:/etc/ssl/certs/https/cert.pem:ro"
+            # Extra CAs from our architecture
+            - "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem:/etc/ssl/certs/ca-certificates.crt:ro"
+          env:
+            REGISTRY_AUTH_TOKEN_REALM: "https://registry-auth.{{ local_domain_name }}/auth"
+            REGISTRY_AUTH_TOKEN_SERVICE: "Docker Registry"
+            REGISTRY_AUTH_TOKEN_ISSUER: "Dawn"
+            REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE: "/etc/ssl/certs/https/cert.pem"
+  tasks:
+    - name: "Expose registry and docker_auth via traefik"
+      consul_kv:
+        host: "127.0.0.1"
+        key: "{{ item.key }}"
+        value: "{{ item.value }}"
+      run_once: true
+      with_items:
+        # registry
+        - key: "traefik/backends/registry/servers/registry/url"
+          value: "http://{{ group_ipv4.control[0] }}:5000"
+        - key: "traefik/backends/registry/servers/registry/weight"
+          value: "1"
+        - key: "traefik/frontends/registry/backend"
+          value: "registry"
+        - key: "traefik/frontends/registry/routes/registry/rule"
+          value: "Host:registry.{{ local_domain_name }}"
+        # registry-auth
+        - key: "traefik/backends/registry-auth/servers/registry-auth/url"
+          value: "https://{{ group_ipv4.control[0] }}:5001"
+        - key: "traefik/backends/registry-auth/servers/registry-auth/weight"
+          value: "1"
+        - key: "traefik/frontends/registry-auth/backend"
+          value: "registry-auth"
+        - key: "traefik/frontends/registry-auth/routes/registry-auth/rule"
+          value: "Host:registry-auth.{{ local_domain_name }}"

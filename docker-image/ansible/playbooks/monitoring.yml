@@ -26,12 +26,22 @@
 # so that the user can stop those containers if they do not need/want them
 - hosts: monitor
   become: true
+  pre_tasks:
+    - name: "Create storage directories on the host for monitoring containers"
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: 0755
+      with_items:
+        #- "/storage/elasticsearch/usr/share/elasticsearch/data"
+        - "/storage/grafana/var/lib/grafana"
+        - "/storage/prometheus/prometheus"
   roles:
     - role: AerisCloud.docker-manage
       docker_containers:
         # setup elastic search for log storage from remote fluentd instances
         - name: elasticsearch
-          image: docker.elastic.co/elasticsearch/elasticsearch:5.2.1
+          image: docker.elastic.co/elasticsearch/elasticsearch:5.3.2
           env:
             ES_JAVA_OPTS: "-Xms512m -Xmx512m"
             http.host: 0.0.0.0
@@ -43,9 +53,11 @@
           published_ports:
             - "9200:9200"
             - "9300:9300"
+          volumes:
+            - "esdata:/usr/share/elasticsearch/data"
         # setup kibana for reading those logs
         - name: kibana
-          image: docker.elastic.co/kibana/kibana:5.2.1
+          image: docker.elastic.co/kibana/kibana:5.3.2
           env:
             LOGGING_VERBOSE: "false"
             LOGGING_QUIET: "true"
@@ -60,10 +72,13 @@
           image: "prom/prometheus:master"
           restart_policy: unless-stopped
           volumes:
+            # Configuration
             - "/etc/prometheus.yml:/etc/prometheus/prometheus.yml"
             - "{{ consul_client_ca_file }}:/etc/ssl/certs/consul/ca.pem:ro"
             - "{{ consul_client_cert_file }}:/etc/ssl/certs/consul/cert.pem:ro"
             - "{{ consul_client_key_file }}:/etc/ssl/certs/consul/key.pem:ro"
+            # Data Volumes
+            - "/storage/prometheus/prometheus:/prometheus"
           sync_templates:
             - src: "{{ playbook_dir }}/../files/monitoring/prometheus.yml"
               dest: /etc/prometheus.yml
@@ -79,6 +94,20 @@
             - prometheus
           published_ports:
             - "3000:3000"
+          volumes:
+            # Configuration
+            - "/etc/grafana.ini:/etc/grafana/grafana.ini"
+            - "/etc/grafana-ldap.toml:/etc/grafana/ldap.toml"
+            - "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem:/etc/ssl/certs/ca-certificates.crt:ro"
+            # Data Volumes
+            - "/storage/grafana/var/lib/grafana:/var/lib/grafana"
+          sync_templates:
+            - src: "{{ playbook_dir }}/../files/monitoring/grafana/config.ini"
+              dest: /etc/grafana.ini
+              mode: 0644
+            - src: "{{ playbook_dir }}/../files/monitoring/grafana/ldap.toml"
+              dest: /etc/grafana-ldap.toml
+              mode: 0644
   # the following tasks will automatically provision grafana with the prometheus
   # source as well as a custom dashboard
   tasks:
@@ -138,7 +167,7 @@
         method: POST
         user: "{{ monitoring_user }}"
         password: "{{ monitoring_password }}"
-        body: "{\"dashboard\":{{ lookup('file','../files/monitoring/grafana.json') }},\"overwrite\":false}"
+        body: "{\"dashboard\":{{ lookup('file','../files/monitoring/grafana/dashboard.json') }},\"overwrite\":false}"
         force_basic_auth: yes
         status_code: 200
         body_format: json

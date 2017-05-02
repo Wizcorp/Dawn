@@ -1,0 +1,99 @@
+- name: "Check TLS certificates status"
+  stat:
+    path: "{{ ldap_cert_file }}"
+  register: ldap_certs_stat
+
+- name: "Generate server TLS certificates"
+  when: >
+    ldap_certs_stat.stat.exists|bool == False
+    or cert_rotate_ldap_server|default(false)|bool
+    or cert_rotate_ldap|default(false)|bool
+    or cert_rotate_server|default(false)|bool
+    or cert_rotate_all|default(false)|bool
+  include_role:
+    name: generate-tls
+  vars:
+    pki:
+      # vault backend
+      backend: ldap
+      role: server
+      # targets
+      files:
+        cert: "{{ ldap_cert_file }}"
+        key: "{{ ldap_key_file }}"
+        ca: "{{ ldap_ca_file }}"
+      # TLS request data
+      request_data:
+        common_name: "ldap.{{ local_domain_name }}"
+        ip_sans: "{{ private_ipv4 }}"
+
+- name: "Create storage directories on the host for openldap"
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+  with_items:
+    - "/storage/openldap/var/lib/ldap"
+    - "/storage/openldap/etc/ldap/slapd.d"
+
+- name: "Start openldap container"
+  include_role:
+    name: AerisCloud.docker-manage
+  vars:
+    docker_containers:
+      - name: openldap
+        image: osixia/openldap:1.1.8
+        command: --copy-service
+        restart_policy: always
+        published_ports:
+          - "389:389"
+          - "636:636"
+        volumes:
+          # Data volumes
+          - "/storage/openldap/var/lib/ldap:/var/lib/ldap"
+          - "/storage/openldap/etc/ldap/slapd.d:/etc/ldap/slapd.d"
+          # Certificates
+          - "{{ ldap_cert_file }}:/container/service/slapd/assets/certs/cert.pem:ro"
+          - "{{ ldap_key_file }}:/container/service/slapd/assets/certs/key.pem:ro"
+          - "{{ ldap_ca_file }}:/container/service/slapd/assets/certs/ca.pem:ro"
+        env:
+          LDAP_ORGANISATION: "{{ ldap_organisation }}"
+          LDAP_DOMAIN: "{{ local_domain_name }}"
+          LDAP_ADMIN_PASSWORD: "{{ ldap_admin_password }}"
+          LDAP_TLS_CRT_FILENAME: cert.pem
+          LDAP_TLS_KEY_FILENAME: key.pem
+          LDAP_TLS_CA_CRT_FILENAME: ca.pem
+          LDAP_TLS_VERIFY_CLIENT: allow
+      - name: phpldapadmin
+        image: osixia/phpldapadmin:0.6.12
+        restart_policy: always
+        published_ports:
+          - "6443:443"
+        links:
+          - "openldap:ldap"
+        volumes:
+          - "{{ https_cert_file }}:/container/service/phpldapadmin/assets/apache2/certs/cert.pem:ro"
+          - "{{ https_key_file }}:/container/service/phpldapadmin/assets/apache2/certs/key.pem:ro"
+          - "{{ https_ca_file }}:/container/service/phpldapadmin/assets/apache2/certs/ca.pem:ro"
+        env:
+          PHPLDAPADMIN_LDAP_HOSTS: ldap
+          PHPLDAPADMIN_HTTPS_CRT_FILENAME: cert.pem
+          PHPLDAPADMIN_HTTPS_KEY_FILENAME: key.pem
+          PHPLDAPADMIN_HTTPS_CA_CRT_FILENAME: ca.pem
+
+- name: "Expose phpldapadmin via Traefik"
+  consul_kv:
+    host: "127.0.0.1"
+    key: "{{ item.key }}"
+    value: "{{ item.value }}"
+  run_once: true
+  with_items:
+    # registry
+    - key: "traefik/backends/phpldapadmin/servers/phpldapadmin/url"
+      value: "https://{{ group_ipv4.control[0] }}:6443"
+    - key: "traefik/backends/phpldapadmin/servers/phpldapadmin/weight"
+      value: "1"
+    - key: "traefik/frontends/phpldapadmin/backend"
+      value: "phpldapadmin"
+    - key: "traefik/frontends/phpldapadmin/routes/phpldapadmin/rule"
+      value: "Host:ldap-admin.{{ local_domain_name }}"

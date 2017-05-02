@@ -2,7 +2,7 @@
 # do it in your inventory [all:vars] section or use --extra-vars, it is used by
 # docker containers and various elements of dawn to find which machines is where
 # via consul
-local_domain_name: dawn
+local_domain_name: local.dawn
 local_domain_dc: in
 local_domain_full: "{{ local_domain_dc }}.{{ local_domain_name }}"
 
@@ -65,17 +65,26 @@ traefik_domain: "{{ local_domain_name }}"
 monitoring_user: admin
 monitoring_password: admin
 
-# Local configuration
-local_storage_dir: "/home/dawn"
-local_vault_client_key_file: "{{ local_storage_dir }}/certs/vault/client.key.pem"
-local_vault_client_cert_file: "{{ local_storage_dir }}/certs/vault/client.cert.pem"
-local_vault_client_ca_file: "{{ local_storage_dir }}/certs/vault/client.ca.pem"
-
 # HTTPS configuration
 https_server_max_ttl: 17520h
 https_cert_file: /etc/ssl/certs/https/server.key.pem
 https_key_file: /etc/ssl/certs/https/server.cert.pem
 https_ca_file: /etc/ssl/certs/https/server.ca.pem
 
-# Certification configuration
+# LDAP configuration
+ldap_server_max_ttl: 17520h
+ldap_cert_file: /etc/ssl/certs/ldap/server.key.pem
+ldap_key_file: /etc/ssl/certs/ldap/server.cert.pem
+ldap_ca_file: /etc/ssl/certs/ldap/server.ca.pem
+#ldap_root_pw: "{SSHA}JZtIWFbTrHqDJYmB4ZX6PtDeQlYIs2EO"
+ldap_admin_password: vX6KvyVZvvQWbDeM69AnZSJUQiCGZhqj
+ldap_organisation: Dawn
+
+# CA configuration
 cert_rotate_all: "{{ cert_rotate_cas|default(false)|bool }}"
+
+# Local configuration
+local_storage_dir: "/home/dawn"
+local_vault_client_key_file: "{{ local_storage_dir }}/certs/vault/client.key.pem"
+local_vault_client_cert_file: "{{ local_storage_dir }}/certs/vault/client.cert.pem"
+local_vault_client_ca_file: "{{ local_storage_dir }}/certs/vault/client.ca.pem"
