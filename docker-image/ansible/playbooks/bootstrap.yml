@@ -5,7 +5,7 @@
 # The role of this playbook is the initial bootstrap of the whole architecture,
 # it runs only on the first control machine to setup the main vault and consul.
 
-- hosts: control[0]
+- hosts: 'control[0]'
   become: true
   vars:
     # setup consul in localhost mode with no TLS
@@ -21,6 +21,7 @@
       stat:
         path: "/opt/dawn/bootstrap-status"
       register: bootstrap_status
+
     - name: "Run security bootstrap"
       when: >
         bootstrap_status.stat.exists|bool == False

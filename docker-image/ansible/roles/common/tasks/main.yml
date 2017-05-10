@@ -1,0 +1,39 @@
+---
+- name: "Set the timezone to UTC"
+  become: true
+  file:
+    src: /usr/share/zoneinfo/UTC
+    dest: /etc/localtime
+    state: link
+    owner: root
+    group: root
+    force: yes
+  tags:
+    - common
+    - timezone
+
+- name: "Set the hostname"
+  become: true
+  copy:
+    dest: /etc/hostname
+    content: "{{ inventory_hostname }}"
+    force: yes
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - common
+
+- name: "Configure hosts file"
+  become: true
+  template:
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: 0644
+  tags:
+    - common
+
+- include: centos.yml
+  when: ansible_distribution == 'CentOS'

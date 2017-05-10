@@ -64,6 +64,10 @@
       request_data:
         common_name: "client.vault.{{ local_domain_name }}"
 
+# Workaround variables being lazily interpreted
+- set_fact:
+    vault_config: "{{ role_path }}/templates/vault.hcl.j2"
+
 - name: "Install vault in TLS mode"
   include_role:
     name: AerisCloud.vault

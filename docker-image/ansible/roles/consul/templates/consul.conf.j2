@@ -7,17 +7,19 @@
   "bind_addr": "{{ private_ipv4 }}",
   "datacenter": "{{ consul_datacenter }}",
   "domain": "{{ consul_domain }}",
-  "retry_join": {{ group_ipv4.consul|list|to_json }},
+  "retry_join": {{ group_ipv4.control|list|to_json }},
   "disable_remote_exec": true,
   "rejoin_after_leave": true,
   "dns_config": {
     "allow_stale": false
   },
-  "server": true,
-  "bootstrap_expect": {{ group_ipv4.consul|list|length }},
+  "server": {{ (inventory_hostname in groups["control"])|bool|to_json }},
+{% if inventory_hostname in groups["control"] %}
+  "bootstrap_expect": {{ group_ipv4.control|list|length }},
   "performance": {
     "raft_multiplier": 3
   },
+{% endif %}
   "addresses": {
     "http": "127.0.0.1",
     "https": "{{ private_ipv4 }}"

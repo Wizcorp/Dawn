@@ -1,0 +1,8 @@
+dependencies:
+  - vault-auth
+  - role: vault-setup-ca
+    backend_name: consul
+    server_ttl: "{{ consul_server_max_ttl }}"
+    client_ttl: "{{ consul_client_max_ttl }}"
+  - role: register-ca
+    backend: consul

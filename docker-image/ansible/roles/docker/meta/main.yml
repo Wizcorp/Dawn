@@ -1,0 +1,8 @@
+dependencies:
+  - vault-auth
+  - role: vault-setup-ca
+    backend_name: docker
+    server_ttl: "{{ docker_server_max_ttl }}"
+    client_ttl: "{{ docker_client_max_ttl }}"
+  - role: register-ca
+    backend: docker

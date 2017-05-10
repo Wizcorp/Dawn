@@ -42,32 +42,6 @@
 #       vault_addr: "http://127.0.0.1:8200"
 #     - openldap
 
-### Fluentd
-# Fluentd is installed on all the nodes and is used to collect logs from local
-# containers and services, those logs are then forwarded to a configurable
-# target which is by default elasticsearch on the monitoring nodes.
-###
-- hosts: all
-  become: true
-  roles:
-    - role: williamyeh.fluentd
-      tdagent_conf_template: "../files/monitoring/td-agent.conf"
-      tdagent_plugins:
-        - fluent-plugin-elasticsearch
-  tasks:
-    - name: "Transform syslog messages to json"
-      copy:
-        dest: /etc/rsyslog.conf
-        src: "{{ playbook_dir }}/../files/monitoring/rsyslog.conf"
-      register: rsyslog_conf
-    - name: "Restart rsyslog"
-      service:
-        name: "{{ item }}"
-        state: restarted
-      when: rsyslog_conf.changed
-      with_items:
-        - rsyslog
-        - td-agent
 
 ### Docker
 # Docker is installed on every node, default setup is to listen on both the

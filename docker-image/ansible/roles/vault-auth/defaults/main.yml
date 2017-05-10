@@ -1,0 +1,3 @@
+vault_local_root_config: "/home/dawn/.vault.root.conf"
+vault_local_ansible_config: "/home/dawn/.vault.ansible.conf"
+vault_addr: "http://127.0.0.1:8200"

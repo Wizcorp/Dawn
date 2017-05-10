@@ -14,6 +14,7 @@
       and vault_status.status.sealed|default(false)|bool)
   include_role:
     name: vault-auth
+    defaults_from: "{{ role_path }}/../vault/defaults/main.yml"
 
 - name: "Make sure the directories for each file exists (no delegate)"
   when: pki.delegate_to is not defined

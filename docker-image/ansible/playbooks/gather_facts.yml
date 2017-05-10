@@ -15,3 +15,6 @@
     private_ipv4: "{{ hostvars[gather_facts_host]['ansible_' + hostvars[gather_facts_host]['private_interface']]['ipv4']['address'] }}"
   delegate_to: "{{ gather_facts_host }}"
   delegate_facts: true
+
+- debug: var=hostvars[gather_facts_host]
+- fail: msg=lol

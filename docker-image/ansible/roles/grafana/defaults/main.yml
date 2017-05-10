@@ -1,0 +1,5 @@
+grafana_image: grafana/grafana
+grafana_version: 4.2.0
+
+grafana_user: admin
+grafana_password: bFJiX8aY3agbPIB3xlUjlYEeDVxCtFdy

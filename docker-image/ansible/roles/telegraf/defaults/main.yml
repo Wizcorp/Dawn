@@ -1,0 +1,11 @@
+telegraf_agent_version: 1.2.1
+telegraf_agent_version_sub_l: ""
+telegraf_agent_output:
+  - type: prometheus_client
+    config:
+      - listen = "0.0.0.0:9126"
+telegraf_plugins_extra:
+  - plugin: docker
+    config:
+      - endpoint = "unix:///var/run/docker.sock"
+      - container_names = []

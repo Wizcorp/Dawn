@@ -1,0 +1,49 @@
+---
+# Query servers and setup custom facts
+- include: /dawn/ansible/playbooks/setup.yml
+
+# Bootstrap the system if necessary
+- include: /dawn/ansible/playbooks/bootstrap.yml
+
+# Run basic roles on every nodes (fluentd, telegraf, etc...)
+- hosts: all
+  become: true
+  gather_facts: yes
+  roles:
+    - common
+    # - AerisCloud.disks
+    # - certificates
+    - consul
+    - dnsmasq
+    - docker
+    - fluentd
+    - telegraf
+    - https
+
+# Setup vault, ldap and swarm on the control nodes
+- hosts: control
+  become: true
+  roles:
+    - vault
+    - swarm
+    - openldap
+
+# Have the workers join the swarm
+- hosts: worker
+  become: true
+  roles:
+    - swarm
+
+# Have the edge nodes join the swarm and run traefik
+- hosts: edge
+  become: true
+  roles:
+    - swarm
+    - traefik
+
+- hosts: monitoring
+  become: true
+  roles:
+    - elasticsearch
+    - prometheus
+    - grafana

@@ -1,0 +1,105 @@
+- name: "Create prometheus config file"
+  copy:
+    src: "grafana.ini"
+    dest: /etc/grafana.ini
+    mode: 0644
+  tags:
+    - files
+    - grafana
+
+- name: "Create prometheus config file"
+  template:
+    src: "ldap.toml.j2"
+    dest: /etc/grafana-ldap.toml
+    mode: 0644
+  tags:
+    - files
+    - grafana
+
+- name: "Start Grafana on monitoring nodes"
+  docker_container:
+    # setup elastic search for log storage from remote fluentd instances
+    name: grafana
+    image: "{{ grafana_image}}:{{ grafana_version }}"
+    restart_policy: unless-stopped
+    env:
+      GF_SECURITY_ADMIN_USER: "{{ grafana_user }}"
+      GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_password }}"
+    links:
+      - prometheus
+    published_ports:
+      - "3000:3000"
+    volumes:
+      # Configuration
+      - "/etc/grafana.ini:/etc/grafana/grafana.ini"
+      - "/etc/grafana-ldap.toml:/etc/grafana/ldap.toml"
+      - "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem:/etc/ssl/certs/ca-certificates.crt:ro"
+      # Data Volumes
+      - "grafana:/var/lib/grafana"
+  tags:
+    - docker
+    - grafana
+
+- name: "Build internal grafana URL"
+  set_fact:
+    grafana_url: "http://{{ group_ipv4.monitor[0] }}:3000"
+  tags:
+    - grafana
+
+- name: "Check if prometheus source exists"
+  uri:
+    url: "{{ grafana_url}}/api/datasources"
+    return_content: yes
+    user: "{{ monitoring_user }}"
+    password: "{{ monitoring_password }}"
+    force_basic_auth: yes
+  retries: 5
+  delay: 5
+  register: grafana_datasources
+  until: grafana_datasources.json is defined
+  tags:
+    - grafana
+
+- name: "Setup prometheus source on grafana"
+  uri:
+    url: "{{ grafana_url}}/api/datasources"
+    method: POST
+    user: "{{ monitoring_user }}"
+    password: "{{ monitoring_password }}"
+    body:
+      name: prometheus
+      type: prometheus
+      url: http://prometheus:9090
+      access: proxy
+      basicAuth: false
+    force_basic_auth: yes
+    status_code: 200
+    body_format: json
+  when: "{{ 'prometheus' not in grafana_datasources.json|map(attribute='name') }}"
+  tags:
+  - grafana
+
+- name: "Check if a dashboard exists"
+  uri:
+    url: "{{ grafana_url}}/api/search?query=Hardware"
+    return_content: yes
+    user: "{{ monitoring_user }}"
+    password: "{{ monitoring_password }}"
+    force_basic_auth: yes
+  register: grafana_dashboards
+  tags:
+    - grafana
+
+- name: "Register hardware dashboard"
+  uri:
+    url: "{{ grafana_url}}/api/dashboards/db"
+    method: POST
+    user: "{{ monitoring_user }}"
+    password: "{{ monitoring_password }}"
+    body: "{\"dashboard\":{{ lookup('file','../files/monitoring/grafana/dashboard.json') }},\"overwrite\":false}"
+    force_basic_auth: yes
+    status_code: 200
+    body_format: json
+  when: "{{ grafana_dashboards.json|length == 0 }}"
+  tags:
+  - grafana

@@ -7,22 +7,6 @@
 # other nodes join this node in the swarm.
 # Finally we also advertise the swarm on consul
 ###
-- hosts: swarm
-  become: true
-  roles:
-    - role: swarm
-      swarm_leader: "{{ groups['control'][0] == inventory_hostname }}"
-      swarm_manager: "{{ (inventory_hostname in groups['control'] and groups['control'][0] != inventory_hostname) or inventory_hostname in groups['edge'] }}"
-      swarm_worker: "{{ inventory_hostname not in groups['control'] and inventory_hostname not in groups['edge'] }}"
-      swarm_listen_addr: 0.0.0.0
-      swarm_advertise_addr: "{{ private_ipv4 }}"
-    - role: AerisCloud.consul-service
-      consul_service_name: "swarm"
-      consul_service_port: 2377
-      consul_service_tags: "{{ group_names | intersect(['worker', 'control', 'edge']) | default(['worker']) }}"
-      consul_service_checks:
-        - type: script
-          script: "test -S /var/run/docker.sock"
 
 ### Traefik
 # Starts traefik in swarm mode

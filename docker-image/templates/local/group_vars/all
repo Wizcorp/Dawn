@@ -1,0 +1,9 @@
+# This is the default internal domain, if you want to change those values either
+# do it in your inventory [all:vars] section or use --extra-vars, it is used by
+# docker containers and various elements of dawn to find which machines is where
+# via consul
+local_domain_name: local.dawn
+local_domain_dc: in
+local_domain_full: "{{ local_domain_dc }}.{{ local_domain_name }}"
+
+ldap_admin_password: vX6KvyVZvvQWbDeM69AnZSJUQiCGZhqj

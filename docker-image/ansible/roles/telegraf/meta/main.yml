@@ -1,0 +1,6 @@
+dependencies:
+  - role: AerisCloud.consul-service
+    consul_service_name: "telegraf"
+    consul_service_port: 9126
+    consul_service_tags:
+      - monitor
