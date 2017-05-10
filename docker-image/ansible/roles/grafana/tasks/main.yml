@@ -50,8 +50,8 @@
   uri:
     url: "{{ grafana_url}}/api/datasources"
     return_content: yes
-    user: "{{ monitoring_user }}"
-    password: "{{ monitoring_password }}"
+    user: "{{ grafana_user }}"
+    password: "{{ grafana_password }}"
     force_basic_auth: yes
   retries: 5
   delay: 5
@@ -64,8 +64,8 @@
   uri:
     url: "{{ grafana_url}}/api/datasources"
     method: POST
-    user: "{{ monitoring_user }}"
-    password: "{{ monitoring_password }}"
+    user: "{{ grafana_user }}"
+    password: "{{ grafana_password }}"
     body:
       name: prometheus
       type: prometheus
@@ -83,8 +83,8 @@
   uri:
     url: "{{ grafana_url}}/api/search?query=Hardware"
     return_content: yes
-    user: "{{ monitoring_user }}"
-    password: "{{ monitoring_password }}"
+    user: "{{ grafana_user }}"
+    password: "{{ grafana_password }}"
     force_basic_auth: yes
   register: grafana_dashboards
   tags:
@@ -94,9 +94,9 @@
   uri:
     url: "{{ grafana_url}}/api/dashboards/db"
     method: POST
-    user: "{{ monitoring_user }}"
-    password: "{{ monitoring_password }}"
-    body: "{\"dashboard\":{{ lookup('file','../files/monitoring/grafana/dashboard.json') }},\"overwrite\":false}"
+    user: "{{ grafana_user }}"
+    password: "{{ grafana_password }}"
+    body: "{\"dashboard\":{{ lookup('file','dashboard.json') }},\"overwrite\":false}"
     force_basic_auth: yes
     status_code: 200
     body_format: json

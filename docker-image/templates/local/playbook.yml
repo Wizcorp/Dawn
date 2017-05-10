@@ -41,9 +41,12 @@
     - swarm
     - traefik
 
-- hosts: monitoring
+- hosts: monitor
   become: true
   roles:
     - elasticsearch
     - prometheus
     - grafana
+
+# Fetch client certificates
+- include: /dawn/ansible/playbooks/client_certs.yml

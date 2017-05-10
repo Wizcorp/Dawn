@@ -19,7 +19,10 @@
     - name: "Generate vault client TLS certificates"
       when: >
         vault_token is defined
-        and (vault_certs_stat.stat.exists|bool == False
+        and (
+          vault_certs_stat.stat is not defined
+          or vault_certs_stat.stat.exists is not defined
+          or vault_certs_stat.stat.exists|bool == False
           or cert_rotate_local_vault_client|default(false)|bool
           or cert_rotate_local_vault|default(false)|bool
           or cert_rotate_all|default(false)|bool)

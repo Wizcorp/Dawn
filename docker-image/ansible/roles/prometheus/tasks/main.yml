@@ -1,6 +1,6 @@
 - name: "Create prometheus config file"
   template:
-    src: "prometheus.yml"
+    src: "prometheus.yml.j2"
     dest: /etc/prometheus.yml
     mode: 0644
 
