@@ -7,7 +7,7 @@
   with_items:
     # kibana
     - key: "traefik/backends/{{ service_name }}/servers/{{ service_name }}/url"
-      value: "http://{{ service_ip }}:{{ service_port }}"
+      value: "{{ service_scheme|default('http') }}://{{ service_ip }}:{{ service_port }}"
     - key: "traefik/backends/{{ service_name }}/servers/{{ service_name }}/weight"
       value: "1"
     - key: "traefik/frontends/{{ service_name }}/backend"

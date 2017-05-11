@@ -9,3 +9,11 @@
     dnsmasq_addresses:
       - "/{{ local_domain_name }}/{{ group_ipv4.edge[0] }}"
       - "/dockerhost/{{ private_ipv4 }}"
+
+- name: "Update resolv.conf to point to the installed dnsmasq"
+  lineinfile:
+    dest: /etc/dhcp/dhclient.conf
+    line: supersede domain-name-servers 127.0.0.1;
+    create: true
+    mode: 0644
+  notify: 'Restart network'
