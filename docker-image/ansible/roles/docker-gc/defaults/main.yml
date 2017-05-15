@@ -1,0 +1,5 @@
+docker_gc_image: spotify/docker-gc
+docker_gc_force_image_removal: 0
+docker_gc_minimum_images_to_save: 0
+docker_gc_force_container_removal: 0
+docker_gc_grace_period: 3600

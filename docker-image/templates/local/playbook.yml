@@ -16,6 +16,7 @@
     - consul
     - dnsmasq
     - docker
+    - docker-gc
     - fluentd
     - telegraf
     - https

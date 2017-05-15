@@ -5,7 +5,7 @@ set -e
 # make sure jq is available
 echo "* Downloading latest version of jq"
 docker pull stedolan/jq >/dev/null
-alias jq="docker run -i stedolan/jq"
+alias jq="docker run --rm -i stedolan/jq"
 
 if
   [[ -z "${VAULT_ADDR}" ]] || [[ -z "${VAULT_ROLE_ID}" ]] || [[ -z "${VAULT_SECRET_ID}" ]]
