@@ -6,3 +6,9 @@ dependencies:
     client_ttl: "{{ docker_client_max_ttl }}"
   - role: register-ca
     backend: docker
+  - role: AerisCloud.consul-service
+    consul_service_name: "docker"
+    consul_service_port: 2376
+    consul_service_checks:
+      - type: script
+        script: "test -S /var/run/docker.sock"

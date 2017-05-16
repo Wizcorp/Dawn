@@ -1,0 +1,43 @@
+input {
+	udp {
+		id => "input_syslog_main"
+		port => 1514
+		codec => "json"
+		type => "rsyslog"
+	}
+}
+
+filter {
+	if [type] == "rsyslog" {
+		if [CONTAINER_NAME] != "" {
+			# container events
+			mutate {
+				rename => { "_PID" => "pid" }
+				rename => { "MESSAGE" => "message" }
+				rename => { "PRIORITY" => "priority" }
+				rename => { "CONTAINER_TAG" => "container_tag" }
+				rename => { "CONTAINER_ID_FULL" => "container_id_full" }
+				rename => { "CONTAINER_NAME" => "container_name" }
+				rename => { "CONTAINER_ID" => "container_id" }
+				replace => { "host" => "%{_HOSTNAME}" }
+			}
+		} else {
+			# normal events
+			mutate {
+				rename => { "_PID" => "pid" }
+				rename => { "MESSAGE" => "message" }
+				rename => { "PRIORITY" => "priority" }
+				replace => { "host" => "%{_HOSTNAME}" }
+			}
+		}
+	}
+}
+
+output {
+	if [type] == "rsyslog" {
+		elasticsearch {
+			id => "output_elasticsearch_main"
+			hosts => [ "elasticsearch:9200" ]
+		}
+	}
+}

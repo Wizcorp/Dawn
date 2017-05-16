@@ -6,6 +6,29 @@
   tags:
     - sysctl
     - monitoring
+    - elasticsearch
+
+- name: "Create logstash pipeline folder"
+  file:
+    path: "/etc/logstash/pipeline/"
+    state: directory
+    mode: 0755
+  tags:
+    - files
+    - elasticsearch
+    - logstash
+    - monitoring
+
+- name: "Create rsyslog pipeline"
+  template:
+    src: "rsyslog.conf.j2"
+    dest: /etc/logstash/pipeline/rsyslog.conf
+    mode: 0644
+  tags:
+    - files
+    - elasticsearch
+    - logstash
+    - monitoring
 
 - name: "Start ElasticSearch on monitoring nodes"
   docker_container:
@@ -25,6 +48,20 @@
       - "9300:9300"
     volumes:
       - "esdata:/usr/share/elasticsearch/data"
+
+- name: "Start Logstash on monitoring nodes"
+  docker_container:
+    # setup elastic search for log storage from remote fluentd instances
+    name: logstash
+    image: "{{ logstash_image }}:{{ elasticsearch_version }}"
+    restart_policy: unless-stopped
+    published_ports:
+      - "9600:9600"
+      - "1514:1514/udp"
+    volumes:
+      - "/etc/logstash/pipeline/:/usr/share/logstash/pipeline/"
+    links:
+      - elasticsearch
 
 - name: "Start Kibana on monitoring nodes"
   docker_container:

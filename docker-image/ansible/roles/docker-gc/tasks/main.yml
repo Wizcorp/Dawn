@@ -5,13 +5,13 @@
 - name: "Setup a cron to pull docker_gc updates every week"
   cron:
     name: "pull latest docker_gc image"
-    special_time: weekly
+    special_time: "{{ docker_gc_image_update_time }}"
     job: "docker pull {{ docker_gc_image }}"
 
 - name: "Setup a cron to run docker_gc every hour"
   cron:
     name: "run docker_gc"
-    special_time: hourly
+    special_time: "{{ docker_gc_run_time }}"
     job: >
       docker run
       --rm
