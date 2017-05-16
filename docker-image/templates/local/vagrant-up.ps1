@@ -1,5 +1,5 @@
 # Make sure network is set up
-.\networking.ps1
+.\vagrant\networking.ps1
 
 # We try to find sh and ssh on the local system;
 # we essentially check to see if git or cygwin is

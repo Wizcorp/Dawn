@@ -88,7 +88,7 @@ Vagrant.configure("2") do |config|
   environment_name = File.basename(Dir.getwd)
 
   # load configuration
-  configuration = YAML::load_file(ENV['CONFIG_FILE'] || "instances.yml")
+  configuration = YAML::load_file(ENV['CONFIG_FILE'] || "vagrant/instances.yml")
 
   # retrieve the name of the provider to use
   provider = get_provider()
