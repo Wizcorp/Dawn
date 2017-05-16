@@ -71,4 +71,6 @@ fi
 source "${AWS_CREDENTIALS_FILE}"
 
 echo "** Note ** See terraform.tfvars for configuration options."
+echo "** Note ** To run terraform make sure to append the directory:"
+echo "           $ terraform <command> terraform"
 echo ""

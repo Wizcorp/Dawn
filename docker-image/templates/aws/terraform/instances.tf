@@ -52,7 +52,7 @@ resource "aws_instance" "control" {
     environment  = "${var.project_environment}"
     roles        = "control,monitor"
     sshUser      = "${var.nodes["control_ami_user"]}"
-    sshExtraArgs = "ssh -W %h:%p ${aws_eip.edge.public_ip}"
+    sshExtraArgs = "-o ProxyCommand='ssh -l ${var.nodes["edge_ami_user"]} -i ~/.ssh/deploy -W %h:%p -q ${aws_eip.edge.public_ip}'"
     dockerType   = "control"
   }
 }
@@ -78,7 +78,7 @@ resource "aws_instance" "worker" {
     environment  = "${var.project_environment}"
     roles        = "worker"
     sshUser      = "${var.nodes["worker_ami_user"]}"
-    sshExtraArgs = "ssh -W %h:%p ${aws_eip.edge.public_ip}"
+    sshExtraArgs = "-o ProxyCommand='ssh -l ${var.nodes["edge_ami_user"]} -i ~/.ssh/deploy -W %h:%p -q ${aws_eip.edge.public_ip}'"
     dockerType   = "worker"
   }
 }
