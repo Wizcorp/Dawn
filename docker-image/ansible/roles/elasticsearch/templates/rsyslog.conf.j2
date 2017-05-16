@@ -9,6 +9,14 @@ input {
 
 filter {
 	if [type] == "rsyslog" {
+		mutate {
+			rename => { "_PID" => "pid" }
+			rename => { "MESSAGE" => "message" }
+			rename => { "PRIORITY" => "priority" }
+			rename => { "SYSLOG_IDENTIFIER" => "program" }
+			replace => { "host" => "%{_HOSTNAME}" }
+		}
+
 		if [CONTAINER_NAME] != "" {
 			# container events
 			mutate {
@@ -20,14 +28,7 @@ filter {
 				rename => { "CONTAINER_NAME" => "container_name" }
 				rename => { "CONTAINER_ID" => "container_id" }
 				replace => { "host" => "%{_HOSTNAME}" }
-			}
-		} else {
-			# normal events
-			mutate {
-				rename => { "_PID" => "pid" }
-				rename => { "MESSAGE" => "message" }
-				rename => { "PRIORITY" => "priority" }
-				replace => { "host" => "%{_HOSTNAME}" }
+				replace => { "program" => "%{container_name}" }
 			}
 		}
 	}

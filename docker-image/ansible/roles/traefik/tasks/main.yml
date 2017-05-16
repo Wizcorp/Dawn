@@ -2,8 +2,10 @@
   template:
     dest: "{{ traefik_file }}"
     src: "traefik.yml.j2"
+  register: traefik_stack_file
 
 - name: "Start traefik on the cluster"
+  when: traefik_stack_file.changed|bool
   shell: "docker stack deploy -c '{{ traefik_file }}' {{ traefik_stack }}"
 
 # Here we expose a couple extra things from the primary architecture

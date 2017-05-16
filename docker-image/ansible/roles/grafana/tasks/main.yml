@@ -1,4 +1,4 @@
-- name: "Create prometheus config file"
+- name: "Create grafana main config file"
   copy:
     src: "grafana.ini"
     dest: /etc/grafana.ini
@@ -7,7 +7,7 @@
     - files
     - grafana
 
-- name: "Create prometheus config file"
+- name: "Create grafana ldap config file"
   template:
     src: "ldap.toml.j2"
     dest: /etc/grafana-ldap.toml

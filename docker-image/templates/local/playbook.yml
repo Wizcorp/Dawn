@@ -17,7 +17,6 @@
     - dnsmasq
     - docker
     - docker-gc
-    - fluentd
     - telegraf
     - https
 
@@ -28,6 +27,7 @@
     - vault
     - swarm
     - openldap
+    - registry
 
 # Have the workers join the swarm
 - hosts: worker
