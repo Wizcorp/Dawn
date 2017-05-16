@@ -7,8 +7,8 @@ ARG shell_user=dawn
 ARG configuration_folder=dawn
 ARG configuration_filename=dawn.yml
 ARG ansible_version=2.2.3.0
-ARG terraform_version=0.9.2
-ARG vault_version=0.7.1
+ARG terraform_version=0.9.5
+ARG vault_version=0.7.2
 ARG docker_version=17.05.0-ce
 
 # Update the package list
