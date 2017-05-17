@@ -26,7 +26,7 @@
       GF_SECURITY_ADMIN_USER: "{{ grafana_user }}"
       GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_password }}"
     links:
-      - prometheus
+      - "{{ grafana_link_to_container }}"
     published_ports:
       - "3000:3000"
     volumes:
