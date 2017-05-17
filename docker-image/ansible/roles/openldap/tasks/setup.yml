@@ -71,7 +71,3 @@
       PHPLDAPADMIN_HTTPS_CRT_FILENAME: cert.pem
       PHPLDAPADMIN_HTTPS_KEY_FILENAME: key.pem
       PHPLDAPADMIN_HTTPS_CA_CRT_FILENAME: ca.pem
-
-- name: "Set the ldap_server variable to point to this machine"
-  set_fact:
-    ldap_server: "{{ private_ipv4 }}"

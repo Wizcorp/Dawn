@@ -2,8 +2,8 @@
 
 Starts an openldap server and phpldapadmin instance on docker.
 
-If `ldap_server` is defined it will skip the installation, otherwise it will
-set it during the installation to point to the node running openldap.
+If `ldap_external_server` is defined it will skip the installation. Remember to
+set `ldap_server` to point to your actual server!
 
 ## Variables
 
