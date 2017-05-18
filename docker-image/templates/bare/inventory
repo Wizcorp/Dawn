@@ -1,0 +1,14 @@
+# The list of control nodes
+[control]
+
+# Monitoring nodes is where elasticsearch/prometheus is started, for now only
+# one instance is supported
+[monitor]
+
+# Edge nodes run traefik, one is usually sufficient for most project but if you
+# start to see load feel free to add more
+[edge]
+
+# Workers are where your app will run, feel free to add as many as you want
+[worker]
+
