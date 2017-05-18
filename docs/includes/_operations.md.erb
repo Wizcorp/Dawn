@@ -1,5 +1,89 @@
 # Managing your cluster
 
+## Initial Provisioning
+
+When using a template you will be left with a similar structure: An `ansible`
+folder with `group_vars` and `playbook.yml`, and a `run.sh` file.
+
+### ansible folder
+
+The `playbook.yml` file is the file you will use to provision the cluster, it is
+also the file that you should modify if you want to add extra features to your
+servers, such as disk formatting, iptables, etc...
+
+Meanwhile the `group_vars` folder by default contains only one file named `all`
+that contains the most basic variables for your cluster such as domains and
+passwords. Make sure that the domain variables are always in this file since the
+<%= build_config['github']['name'] %> binary will parse it to automatically
+configure your shell.
+
+### run.sh
+
+`run.sh` is your shared `.bash_profile`, it is where you will want to initialize
+common variables and functions that should be shared with every other developers
+using the command-line.
+
+## Certificates
+
+On provisioning by default self-signed certificates will be created for every
+critical parts of the infrastructure. To make the user life easier it can be
+useful to have chrome trust the https CA generated to prevent errors when trying
+to access the various http interfaces available.
+
+To access your https CA (or any CA generated) you can point your browser to
+`http://vault.<local_domain_name>/v1/<backend>/ca/pem` where `local_domain_name`
+is your configured domain name in your inventory and `backend` is any of the
+configured CA backend for <%= build_config['github']['name'] %>, for example
+`https/pki` for the https backend.
+
+   backend   | description
+-------------|------------------------------------------------------------
+`consul/pki` | Used to generate server and client certificates for consul
+`docker/pki` | Same as consul, used to generate both client and server certs
+`https/pki`  | Used only to generate server https certificates
+`ldap/pki`   | Used to generate STARTTLS certs for openldap
+`vault/pki`  | Used for both client and servers certs for vault
+
+### Generating client certificates for consul/docker
+
+```shell
+$ vault write <backend>/issue/client common_name=backend.client.<local_domain_name>
+Key             	Value
+---             	-----
+certificate     	-----BEGIN CERTIFICATE-----
+... cert data ...
+-----END CERTIFICATE-----
+issuing_ca      	-----BEGIN CERTIFICATE-----
+... cert data ...
+-----END CERTIFICATE-----
+private_key     	-----BEGIN RSA PRIVATE KEY-----
+... cert data ...
+-----END RSA PRIVATE KEY-----
+private_key_type	rsa
+serial_number   	... serial number ...
+
+```
+
+Should you need to generate client certificates for another develop or yourself
+you will need to get a valid token for vault (if you configured your container
+properly it should already be set), you can then use the write command of vault
+to generate a certificate on the proper backend like this:
+
+The `common_name` is required and can be anything as long as it ends with the
+`local_domain_name`.
+
+## LDAP
+
+Once <%= build_config['github']['name'] %> is provisioned and running, by default
+a LDAP server will be provisioned and running on the control nodes as well as a
+management interface accessible through traefik at `https://ldap-admin.<local_domain_name>/`.
+
+The default credentials are `cn=admin,<dc_derived_from_local_domain_name>` with
+the password that should have been generated in your `group_vars/all` file.
+
+Creating users in this interface will allow them to access the different services
+available on the cluster such as `grafana`.
+
 ## Vault
 
 Vault is one of the most important part of your cluster; It is in charge of

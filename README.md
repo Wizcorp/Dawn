@@ -13,7 +13,7 @@ discovery, logging, monitoring and storage.
 Requirements
 ------------
 
-**Note**: Windows users will need to make sure that 
+**Note**: Windows users will need to make sure that
 their work drive (normally C:) is shared in Docker.
 See https://blogs.msdn.microsoft.com/stevelasker/2016/06/14/configuring-docker-for-windows-volumes/
 for more details.
@@ -74,10 +74,11 @@ What does it include?
 | Storage                 | [Ceph](https://ceph.com/)                                       |
 
 We also install additional subsystems which will sit behind each components above;
-for instance, logs are collected using [FluentD](http://www.fluentd.org/)
-and are sent to [ElasticSearch](https://www.elastic.co/products/elasticsearch),
-while metrics are collected with [Telegraf](https://github.com/influxdata/telegraf)
-before being sent to [Prometheus](https://prometheus.io/).
+for instance, logs are collected using [rsyslog](http://www.rsyslog.com/)
+and are sent to [Logstash](https://www.elastic.co/products/logstash) to be stored
+in [ElasticSearch](https://www.elastic.co/products/elasticsearch), while metrics
+are collected with [Telegraf](https://github.com/influxdata/telegraf) before
+being sent to [Prometheus](https://prometheus.io/).
 
 For a more detailed view of what software Dawn will install for you, please
 see the [ansible folder](./docker-image/ansible).

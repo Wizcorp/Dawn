@@ -1,10 +1,143 @@
 # Deploying your apps
 
-## Cloud stack files
+```yaml
+# sample compose-file that deploy an app+db to the cluster
+---
+version: "3.1"
+services:
+  db:
+    image: postgres:9
+    deploy:
+      placement:
+        constraints:
+          - engine.labels.dawn.node.type == worker
+  app:
+    image: registry.local.dawn/user/app:latest
+    deploy:
+      replicas: 2
+      placement:
+        constraints:
+          - engine.labels.dawn.node.type == worker
+```
 
-## Deploy to the cluster
+When using docker swarm, `docker-compose` cannot be used, instead the user needs
+to use the `docker stack deploy` command. To make thing easiers though the
+command can take your `docker-compose.yml` file but has several limitations:
+
+  * `docker-compose.override.yml` is not supported
+  * You cannot pass multiple compose files, if you want to make this configurable
+    you will either need environment variables or merging the files manually.
+  * It does not support all of the options docker-compose supports, and also
+    adds a couple unique definitions
+
+To get more details about that last point see the [compose-file documentation](https://docs.docker.com/compose/compose-file/).
+One recommended way to do things is to make the basic `docker-compose.yml`
+sufficient enough to deploy on Dawn, then add an override for local development.
+
+The important thing is to define a [deploy](https://docs.docker.com/compose/compose-file/#deploy)
+strategy, a very important point in particular is your placement constraints to
+make sure your app runs on the workers instead of managers.
+
+By default `docker stack` will create an overlay network to connect your apps
+accross the cluster so you do not have to worry about it.
+
+Once your stack file is ready, you just need to run `docker stack deploy -c <stack_file> <stack_name`
+to start your stack in the cluster. If your images are on a private registry you
+should add the `--with-registry-auth` flag to tell swarm to use your registry
+credentials when pulling the images.
+
+## Exposing your app via Traefik
+
+```yaml
+# sample compose-file that makes an app available via traefik
+---
+version: "3.1"
+networks:
+  traefik:
+    external:
+      name: traefik_net
+services:
+  app:
+    image: nginx
+    networks:
+      - default
+      - traefik
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - engine.labels.dawn.node.type == worker
+      labels:
+        traefik.port: 80
+        traefik.docker.network: traefik_net
+```
+
+While the compose file above is enough to run your application on the network
+you will still not be able to see it through traefik, this is because exposition
+is opt-in based and requires labels to tell traefik how your application works.
+
+If you take a look at the example on the right you will notice 2 changes compared
+to our previous compose file, that is the extra external network and the deploy
+labels.
+
+### network
+
+Traefik runs in docker but each stack is isolated on its own network and cannot
+talk to each other. To allow traefik to access your application you can add the
+`traefik_net` network to your stack and tell your service to use it. Only the
+services that need to be reachable through traefik need to use this network.
+
+Do not forget also to add the default network to your service or it will not be
+able to talk to other services in the same stack.
+
+### labels
+
+Labels are how you can configure traefik, in this example we tell traefik that
+our app is listening on port 80 and that we are using the traefik_net network,
+but many more options are available, here is a list of the most common ones and
+if you want to know more about them check the [documentation](https://docs.traefik.io/toml/#docker-backend):
+
+label                                        | description
+---------------------------------------------|-----------------------------------------
+`traefik.port=<int>`                         | On which port your app is listening
+`traefik.protocol=<string>`                  | If your app uses https you can define it here
+`traefik.enable=<bool>`                      | Allows you to disable the container (maybe for maintenance)
+`traefik.backend.loadbalancer.sticky=<bool>` | Allow usage of sticky sessions
+`traefik.frontend.rule=<string>`             | Alows overriding the domain the container is listening to, see [matchers](https://docs.traefik.io/basics/#matchers)
 
 ## Monitoring your deployment
+
+Once your stack is up and running you will want to check if it is being exposed
+properly, and check metrics and logs.
+
+### traefik dashboard
+
+The traefik dashboard is where you can find the list of all applications and
+stacks currently exposed by the cluster, you will find it at `<edge_ip>:8080`.
+
+The screen is fairly straightforward, notice at the top how there are 2 tabs
+marked `consul` and `docker` (maybe more if you enabled other backends). By
+default the `consul` backends is used to expose application that are not running
+in swarm, if you need to add extra application in there refer to the [kv doc](https://docs.traefik.io/user-guide/kv-config/)
+for more details. The tab you care about is the `docker` tab and will reference
+every docker stack that was properly configured with their rules.
+
+### logs
+
+Logs can be accessed in 2 ways:
+
+* Via `docker service logs <stack_name>_<service_name>`, you can add the `-t`
+  flag to add timestamps and the `-f` flag to follow logs as they come.
+* Via kibana, which should by default be exposed on `kibana.<local_domain_name>`,
+  once connected click on discover and you should be greeted with logs from the
+  whole cluster.
+
+### metrics
+
+By default metrics are pulled from docker and stored in grafana, which should be
+accessible via `grafana.<local_domain_name>` in your browser, once logged in you
+should see a dashboard called "Hardware and Docker stats", click on it and at the
+top select the stack to point to your docker stack.
 
 ## Update an existing application
 
