@@ -5,13 +5,13 @@
 swarm_docker_url: ""
 
 # whether we should create a cluster on this node?
-swarm_leader: false
+swarm_leader: "{{ groups['control'][0] == inventory_hostname }}"
 
 # use to join a cluster as a manager
-swarm_manager: false
+swarm_manager: "{{ (inventory_hostname in groups['control'] and groups['control'][0] != inventory_hostname) or inventory_hostname in groups['edge'] }}"
 
 # use to join a cluster as a worker
-swarm_worker: false
+swarm_worker: "{{ inventory_hostname not in groups['control'] and inventory_hostname not in groups['edge'] }}"
 
 # when joining a cluster, this should contain a list of nodes with docker available through HTTP (port defaults to 2376
 # if not specified)
@@ -21,4 +21,4 @@ swarm_remote_addrs: []
 swarm_listen_addr: 0.0.0.0
 
 # advertise address, docker will try to find a decent default
-swarm_advertise_addr: ""
+swarm_advertise_addr: "{{ private_ipv4 }}"

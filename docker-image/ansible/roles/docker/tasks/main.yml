@@ -39,7 +39,7 @@
       request_data:
         common_name: "{{ inventory_hostname }}.node.{{ local_domain_full }}"
         alt_names: "docker.service.{{ local_domain_full }},swarm.service.{{ local_domain_full }},*.swarm.service.{{ local_domain_full }}"
-        ip_sans: "{{ private_ipv4 }},{{ ansible_ssh_host }}"
+        ip_sans: "{{ private_ipv4 }},{{ ansible_ssh_host }},{{ dawn_docker_ip|default(private_ipv4) }}"
       notify:
         - Restart docker
 
@@ -66,26 +66,15 @@
       request_data:
         common_name: "client.docker.{{ local_domain_name }}"
 
-- name: "Install and configure dnsmasq"
-  include_role:
-    name: AerisCloud.dnsmasq-template
-  vars:
-    dnsmasq_servers:
-      - "/{{ local_domain_full }}/{{ group_ipv4.control[0] }}#8600"
-      - "8.8.8.8"
-      - "8.8.4.4"
-    dnsmasq_addresses:
-      - "/{{ local_domain_name }}/{{ group_ipv4.edge[0] }}"
-      - "/dockerhost/{{ private_ipv4 }}"
-
 - name: "Install and configure docker"
   include_role:
     name: AerisCloud.docker
   vars:
+    docker_ip: "{{ dawn_docker_ip|default(private_ipv4) }}"
     docker_dns: [ "{{ private_ipv4 }}" ]
     docker_hosts:
       - unix:///var/run/docker.sock
-      - "{{ docker_ip }}:2376"
+      - "{{ dawn_docker_ip|default(private_ipv4) }}:2376"
     docker_log_driver: "journald"
     docker_insecure_registries: "{{  group_ipv4.control | map('regex_replace', '$', ':5000') | list }}"
     docker_tls:
@@ -94,16 +83,6 @@
       cacert: "{{ docker_ca_file }}"
       cert: "{{ docker_cert_file }}"
       key: "{{ docker_key_file }}"
-
-- name: "Setup docker service discovery"
-  include_role:
-    name: AerisCloud.consul-service
-  vars:
-    consul_service_name: "docker"
-    consul_service_port: 2376
-    consul_service_checks:
-      - type: script
-        script: "test -S /var/run/docker.sock"
 
 - name: "Make sure to flush all handlers right now"
   meta: flush_handlers

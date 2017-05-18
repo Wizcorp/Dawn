@@ -1,0 +1,2 @@
+- include: setup.yml
+  when: not ldap_external_server|bool

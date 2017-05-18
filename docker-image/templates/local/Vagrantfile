@@ -39,12 +39,16 @@ def generate_inventory(configuration, environment_name)
 
      ansible_vars = [
       instance_name,
-      "ansible_ssh_host=#{instance_info["ip"]}",
+      "ansible_ssh_host=\"#{instance_info["ip"]}\"",
       "ansible_ssh_port=22",
       "ansible_ssh_user=#{configuration.fetch("user", "vagrant")}",
       "ansible_ssh_private_key_file='#{private_key}'",
       "docker_labels='#{instance_info["labels"].to_json}'"
     ]
+
+    if instance_info['vars']
+      ansible_vars += instance_info['vars']
+    end
 
     inventory_file.puts ansible_vars.join(" ")
 
@@ -70,6 +74,11 @@ private_interface=#{get_interface(configuration)}
 
 vars
 
+  # append user vars
+  if configuration['vars']
+    inventory_file.puts configuration['vars'].join("\n")
+  end
+
   inventory_file.close
 end
 
@@ -79,7 +88,7 @@ Vagrant.configure("2") do |config|
   environment_name = File.basename(Dir.getwd)
 
   # load configuration
-  configuration = YAML::load_file(ENV['CONFIG_FILE'] || "instances.yml")
+  configuration = YAML::load_file(ENV['CONFIG_FILE'] || "vagrant/instances.yml")
 
   # retrieve the name of the provider to use
   provider = get_provider()
@@ -107,6 +116,9 @@ Vagrant.configure("2") do |config|
           # linked_clone helps making the creation of new
           # virtual machines faster on VirtualBox
           vb.linked_clone = true
+
+          # disable the DNS proxy, for some reason it crashes every night for me
+          vb.customize ['modifyvm', :id, '--natdnsproxy1', 'off']
         when "hyperv"
           # set up the vm name
           vb.vmname = instance_name
@@ -146,6 +158,10 @@ Vagrant.configure("2") do |config|
           echo ""
           cat ${file}
 SHELL
+      end
+
+      if instance_info['public'] == true
+        instance.vm.network "public_network"
       end
 
       # The base xenial box doesn't have python installed so we need to install it manually

@@ -26,7 +26,8 @@
 
 - name: "Read vault configuration"
   when: >
-    vault_root_config.stat.exists is defined
+    vault_root_config.stat is defined
+    and vault_root_config.stat.exists is defined
     and vault_root_config.stat.exists|bool
   include_vars:
     file: "{{ vault_local_root_config }}"
@@ -35,7 +36,8 @@
 # Unseal the vault
 - name: "Unseal vault"
   when: >
-    vault_seal_status.json.sealed is defined
+    vault_seal_status.json is defined
+    and vault_seal_status.json.sealed is defined
     and vault_seal_status.json.sealed|default(false)|bool
     and vault_root_vars['keys'] is defined
   hashivault_unseal:
@@ -45,7 +47,8 @@
 
 - name: "Check for successful unseal attempt"
   when: >
-    vault_seal_status.json.sealed is defined
+    vault_seal_status.json is defined
+    and vault_seal_status.json.sealed is defined
     and vault_seal_status.json.sealed|default(false)|bool
     and vault_root_vars['keys'] is defined
   uri:
@@ -56,7 +59,8 @@
 # Otherwise ask for the user to intervene
 - name: "Wait for user to unseal vault"
   when: >
-    vault_seal_status.json.sealed is defined
+    vault_seal_status.json is defined
+    and vault_seal_status.json.sealed is defined
     and vault_seal_status.json.sealed|default(false)|bool
   pause:
     prompt: |

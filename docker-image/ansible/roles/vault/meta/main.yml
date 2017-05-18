@@ -1,0 +1,13 @@
+dependencies:
+  - vault-auth
+  - role: vault-setup-ca
+    backend_name: vault
+    server_ttl: "{{ vault_server_max_ttl }}"
+    client_ttl: "{{ vault_client_max_ttl }}"
+  - role: register-ca
+    backend: vault
+  - role: traefik-expose
+    service_name: vault
+    service_port: 8200
+    service_scheme: https
+    service_ip: "{{ group_ipv4.monitor[0] }}"

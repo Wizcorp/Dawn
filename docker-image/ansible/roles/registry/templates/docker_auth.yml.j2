@@ -1,0 +1,42 @@
+# . See reference.yml for explanation for explanation of all options.
+#
+#  auth:
+#    token:
+#      realm: "https://127.0.0.1:5001/auth"
+#      service: "Docker registry"
+#      issuer: "Acme auth server"
+#      rootcertbundle: "/path/to/server.pem"
+
+server:
+  addr: ":5001"
+  certificate: "/etc/ssl/certs/https/cert.pem"
+  key: "/etc/ssl/certs/https/key.pem"
+
+token:
+  issuer: "Dawn"  # Must match issuer in the Registry config.
+  expiration: 900
+
+# LDAP authentication.
+# Authentication is performed by first binding to the server, looking up the user entry
+# by using the specified filter, and then re-binding using the matched DN and the password provided.
+ldap_auth:
+  addr: "{{ ldap_server }}:389"
+  #tls: true
+  # In case bind DN and password is required for querying user information,
+  # specify them here. Plain text password is read from the file.
+  bind_dn: "cn=admin,dc={{ local_domain_name.split(".") | join(",dc=") }}"
+  # Make sure you remove newlines and carriage returns from the password file.
+  bind_password_file: /config/ldap_password.txt
+  # User query settings. ${account} is expanded from auth request
+  base: "ou=Users,dc={{ local_domain_name.split(".") | join(",dc=") }}"
+  filter: "(&(uid=${account})(objectClass=organizationalPerson))"
+
+acl:
+  # Admin has full access to everything.
+  - match: {account: "admin"}
+    actions: ["*"]
+
+  # This will allow authenticated users to pull/push
+  - match:
+      account: /.+/
+    actions: ['*']

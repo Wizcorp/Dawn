@@ -1,0 +1,8 @@
+consul_key_file: /etc/ssl/certs/consul/server.key.pem
+consul_cert_file: /etc/ssl/certs/consul/server.cert.pem
+consul_ca_file: /etc/ssl/certs/consul/server.ca.pem
+consul_client_key_file: /etc/ssl/certs/consul/client.key.pem
+consul_client_cert_file: /etc/ssl/certs/consul/client.cert.pem
+consul_client_ca_file: /etc/ssl/certs/consul/client.ca.pem
+consul_server_max_ttl: 17520h
+consul_client_max_ttl: 8760h

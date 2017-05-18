@@ -9,8 +9,7 @@
 
 # aeriscloud roles, those are maintained by us
 - name: AerisCloud.consul
-  src: https://github.com/christopherobin/ansible-consul.git
-  version: feature/update
+  version: v1.0.2
 - name: AerisCloud.consul-service
   version: v1.0.0
 - name: AerisCloud.docker
@@ -22,7 +21,7 @@
 - name: AerisCloud.rsyslog
   version: v1.1.0
 - name: AerisCloud.vault
-  version: v1.0.1
+  version: v1.0.2
 
 # external roles
 - name: williamyeh.fluentd

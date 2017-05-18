@@ -1,0 +1,36 @@
+- name: "Pull latest version of docker_gc"
+  docker_image:
+    name: "{{ docker_gc_image }}"
+
+- name: "Setup a cron to pull docker_gc updates every week"
+  cron:
+    name: "pull latest docker_gc image"
+    special_time: "{{ docker_gc_image_update_time }}"
+    job: "docker pull {{ docker_gc_image }}"
+
+- name: "Setup a cron to run docker_gc every hour"
+  cron:
+    name: "run docker_gc"
+    special_time: "{{ docker_gc_run_time }}"
+    job: >
+      docker run
+      --rm
+      -v /var/run/docker.sock:/var/run/docker.sock
+      -v /etc:/etc:ro
+      -e FORCE_IMAGE_REMOVAL={{ docker_gc_force_image_removal }}
+      -e MINIMUM_IMAGES_TO_SAVE={{ docker_gc_minimum_images_to_save }}
+      -e FORCE_CONTAINER_REMOVAL={{ docker_gc_force_container_removal }}
+      -e GRACE_PERIOD_SECONDS={{ docker_gc_grace_period }}
+      {{ docker_gc_image }}
+
+- name: "Exclude images from garbage collection"
+  when: docker_gc_exclude_images is defined
+  copy:
+    content: "{{ docker_gc_exclude_images|list|join('\n') }}"
+    dest: /etc/docker-gc-exclude
+
+- name: "Exclude containers from garbage collection"
+  when: docker_gc_exclude_containers is defined
+  copy:
+    content: "{{ docker_gc_exclude_containers|list|join('\n') }}"
+    dest: /etc/docker-gc-exclude-containers

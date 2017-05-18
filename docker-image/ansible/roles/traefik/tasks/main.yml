@@ -1,0 +1,9 @@
+- name: "Upload traefik stack file"
+  template:
+    dest: "{{ traefik_stack_file }}"
+    src: "traefik.yml.j2"
+  register: traefik_stack_file_status
+
+- name: "Start traefik on the cluster"
+  when: traefik_stack_file_status.changed|bool
+  shell: "docker stack deploy -c '{{ traefik_stack_file }}' {{ traefik_stack }}"

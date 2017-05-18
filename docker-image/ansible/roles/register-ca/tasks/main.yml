@@ -1,19 +1,6 @@
 ---
-- name: "Fetch remote CA"
-  uri:
-    HEADER_X-Vault-Token: "{{ vault_token }}"
-    url: "http://127.0.0.1:8200/v1/{{ backend }}/pki/ca/pem"
-    method: GET
-    return_content: yes
-  delegate_to: "{{ groups['control'][0] }}"
-  register: ca_cert
-
-- name: "Save CA to anchors folder"
-  copy:
-    content: "{{ ca_cert.content }}"
-    dest: "/etc/pki/ca-trust/source/anchors/{{ backend }}.pem"
-  register: anchors_copy
-
-- name: "Regenerate CAs"
-  when: anchors_copy.changed|bool
-  shell: update-ca-trust
+- name: "Register CA on all hosts"
+  include: register_ca.yml target_host="{{ item }}"
+  with_items: "{{ groups['all'] }}"
+  static: false
+  run_once: true

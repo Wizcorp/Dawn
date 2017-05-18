@@ -66,6 +66,13 @@
       request_data:
         common_name: "client.consul.{{ local_domain_name }}"
 
+# work around role_path not working properly in include_role
+- set_fact:
+    consul_template: "{{ role_path }}/templates/consul.conf.j2"
+
 - name: "Install consul in TLS mode"
   include_role:
     name: AerisCloud.consul
+  vars:
+    consul_domain: "{{ local_domain_name }}"
+    consul_datacenter: "{{ local_domain_dc }}"

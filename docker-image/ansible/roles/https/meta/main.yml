@@ -1,0 +1,8 @@
+dependencies:
+  - vault-auth
+  - role: vault-setup-ca
+    backend_name: https
+    server_ttl: "{{ https_server_max_ttl }}"
+    vault_addr: "http://127.0.0.1:8200"
+  - role: register-ca
+    backend: https

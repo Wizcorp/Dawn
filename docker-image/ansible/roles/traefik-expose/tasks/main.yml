@@ -1,0 +1,16 @@
+- name: "Expose {{ service_name }} via traefik"
+  consul_kv:
+    host: "127.0.0.1"
+    key: "{{ item.key }}"
+    value: "{{ item.value }}"
+  run_once: true
+  with_items:
+    # kibana
+    - key: "traefik/backends/{{ service_name }}/servers/{{ service_name }}/url"
+      value: "{{ service_scheme|default('http') }}://{{ service_ip|default(private_ipv4) }}:{{ service_port }}"
+    - key: "traefik/backends/{{ service_name }}/servers/{{ service_name }}/weight"
+      value: "1"
+    - key: "traefik/frontends/{{ service_name }}/backend"
+      value: "{{ service_name }}"
+    - key: "traefik/frontends/{{ service_name }}/routes/{{ service_name }}/rule"
+      value: "Host:{{ service_name }}.{{ local_domain_name }}"

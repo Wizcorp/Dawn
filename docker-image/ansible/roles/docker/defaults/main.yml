@@ -1,0 +1,46 @@
+docker_key_file: /etc/ssl/certs/docker/server.key.pem
+docker_cert_file: /etc/ssl/certs/docker/server.cert.pem
+docker_ca_file: /etc/ssl/certs/docker/server.ca.pem
+docker_client_key_file: /etc/ssl/certs/docker/client.key.pem
+docker_client_cert_file: /etc/ssl/certs/docker/client.cert.pem
+docker_client_ca_file: /etc/ssl/certs/docker/client.ca.pem
+docker_server_max_ttl: 17520h
+docker_client_max_ttl: 8760h
+
+# Docker repository branch
+docker_repo: main
+# docker_repo: testing
+# docker_repo: experimental
+# By default we listen on the docker socket, if you want to listen on TCP just
+# update this variable to add new entries such as "tcp://192.168.0.1:4738"
+docker_hosts:
+  - unix:///var/run/docker.sock
+  - "{{ docker_ip }}:2376"
+# Default IP when binding container ports
+docker_ip: "{{ private_ipv4 }}"
+# The logging level of the daemon
+docker_log_level: "info"
+# Preferred Docker registry mirror
+docker_registry_mirror: []
+# Add insecure registries
+docker_insecure_registries: "{{  group_ipv4.control | map('regex_replace', '$', ':5000') | list }}"
+# Setup TLS options
+docker_tls:
+  enabled: true
+  verify: true
+  cacert: "{{ docker_ca_file }}"
+  cert: "{{ docker_cert_file }}"
+  key: "{{ docker_key_file }}"
+# Enable SELinux support
+docker_selinux: false
+# Cluster advertising
+docker_cluster:
+  advertise: ""
+  store: ""
+  options: {}
+# Docker DNS setup
+docker_dns: [ "{{ private_ipv4 }}" ]
+# Set logs to journald
+docker_log_driver: "journald"
+
+

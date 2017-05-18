@@ -1,0 +1,20 @@
+- name: "Create prometheus config file"
+  template:
+    src: "prometheus.yml.j2"
+    dest: /etc/prometheus.yml
+    mode: 0644
+
+- name: "Start Prometheus on monitoring nodes"
+  docker_container:
+    name: prometheus
+    image: "{{ prometheus_image }}:{{ prometheus_version }}"
+    restart_policy: unless-stopped
+    volumes:
+      # Configuration
+      - "/etc/prometheus.yml:/etc/prometheus/prometheus.yml"
+      - "{{ consul_client_ca_file }}:/etc/ssl/certs/consul/ca.pem:ro"
+      - "{{ consul_client_cert_file }}:/etc/ssl/certs/consul/cert.pem:ro"
+      - "{{ consul_client_key_file }}:/etc/ssl/certs/consul/key.pem:ro"
+      # Data Volumes
+      - "prometheus:/prometheus"
+

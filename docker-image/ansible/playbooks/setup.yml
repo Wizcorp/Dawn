@@ -11,12 +11,15 @@
   gather_facts: true
   become: true
   tasks:
-    # This works around a bug in ansible 2.2.x where delegate_facts doesn't work
-    # when using with_items, so instead we do the loop above the setup call.
-    # This allows us to do --limit=something without all hell breaking loose
-    - name: "Gather IP informations"
-      include: gather_facts.yml gather_facts_host="{{ item }}"
-      with_items: "{{ groups['all'] }}"
+    - fail:
+        msg: "--limit is not supported on those playbooks due to ansible limitations"
+      when: ansible_play_batch|length != groups['all']|length
+
+    # We need to use the private_interface of the target otherwise we'll run into
+    # issues with multi-os clusters
+    - name: "Save the private IPv4 as fact"
+      set_fact:
+        private_ipv4: "{{ hostvars[inventory_hostname]['ansible_' + private_interface]['ipv4']['address'] }}"
       tags:
         - always
 
@@ -47,6 +50,7 @@
         - python-virtualenv
         - openssl-devel
       tags: [ 'always' ]
+
     - name: "Install docker python library"
       pip:
         name: "{{ item }}"

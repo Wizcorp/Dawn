@@ -1,0 +1,38 @@
+#!/bin/sh
+
+set -e
+
+# make sure jq is available
+echo "* Downloading latest version of jq"
+docker pull stedolan/jq >/dev/null
+alias jq="docker run --rm -i stedolan/jq"
+
+if
+  [[ -z "${VAULT_ADDR}" ]] || [[ -z "${VAULT_ROLE_ID}" ]] || [[ -z "${VAULT_SECRET_ID}" ]]
+then
+  echo "Missing vault credentials and address, make sure that VAULT_ADDR, VAULT_ROLE_ID and VAULT_SECRET_ID are set"
+  exit 1
+fi
+
+if
+  [[ -z "${DOCKER_CERT_PATH}" ]]
+then
+  export DOCKER_CERT_PATH="~/.docker"
+fi
+
+# auth on vault and get a client certificate
+echo "* Authenticating with vault"
+VAULT_TOKEN="$( curl -sS -k -XPOST "${VAULT_ADDR}/v1/auth/approle/login" -d '{"role_id":"'${VAULT_ROLE_ID}'","secret_id":"'${VAULT_SECRET_ID}'"}' | jq -r '.auth.client_token' )"
+
+echo "* Authenticating with docker"
+DOCKER_CERT="$( curl -sS -k -H "X-Vault-Token: ${VAULT_TOKEN}" -XPOST "${VAULT_ADDR}/v1/docker/pki/issue/client" -d '{"common_name":"'${CI_JOB_ID}'.docker.{{ local_domain_name }}"}' )"
+
+# write it inside /tmp/docker
+mkdir "${DOCKER_CERT_PATH}" || true
+echo "${DOCKER_CERT}" | jq -r .data.certificate > "${DOCKER_CERT_PATH}/cert.pem"
+echo "${DOCKER_CERT}" | jq -r .data.issuing_ca  > "${DOCKER_CERT_PATH}/ca.pem"
+echo "${DOCKER_CERT}" | jq -r .data.private_key > "${DOCKER_CERT_PATH}/key.pem"
+chmod -R 0640 "${DOCKER_CERT_PATH}"
+
+echo "* Stored docker client certificates in ${DOCKER_CERT_PATH}:"
+ls -l "${DOCKER_CERT_PATH}"

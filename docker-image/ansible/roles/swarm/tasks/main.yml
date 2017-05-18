@@ -29,3 +29,9 @@
     # we also need ip_forward to be set to true to allow containers to query
     # services on the host's local network
     - { name: "net.ipv4.ip_forward", value: 1 }
+
+- name: "Install small binary to help authenticate with swarm"
+  template:
+    src: "swarm_auth.sh.j2"
+    dest: "/usr/local/bin/swarm_auth"
+    mode: 0755

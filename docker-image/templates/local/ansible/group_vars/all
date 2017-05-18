@@ -1,0 +1,13 @@
+# This is the default internal domain, if you want to change those values either
+# do it in your inventory [all:vars] section or use --extra-vars, it is used by
+# docker containers and various elements of dawn to find which machines is where
+# via consul
+local_domain_name: local.dawn
+local_domain_dc: in
+local_domain_full: "{{ local_domain_dc }}.{{ local_domain_name }}"
+
+# Local storage is used to put your client vault certificates and vault config
+local_storage_dir: "/home/dawn"
+local_vault_client_key_file: "{{ local_storage_dir }}/certs/vault/client.key.pem"
+local_vault_client_cert_file: "{{ local_storage_dir }}/certs/vault/client.cert.pem"
+local_vault_client_ca_file: "{{ local_storage_dir }}/certs/vault/client.ca.pem"

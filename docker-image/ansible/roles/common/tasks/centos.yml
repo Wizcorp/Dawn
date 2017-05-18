@@ -1,0 +1,7 @@
+- name: "Enable EPEL repo"
+  become: true
+  yum:
+    name: epel-release
+    state: latest
+  tags:
+    - common

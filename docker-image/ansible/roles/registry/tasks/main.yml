@@ -1,0 +1,53 @@
+- name: "Create docker_auth config file"
+  template:
+    src: "docker_auth.yml.j2"
+    dest: "/etc/docker_auth.yml"
+    mode: 0644
+  tags:
+    - files
+    - registry
+
+- name: "Create docker_auth ldap password file"
+  template:
+    src: "ldap_password.txt.j2"
+    dest: "/etc/ldap_password.txt"
+    mode: 0644
+  tags:
+    - files
+    - registry
+
+- name: "Start docker_auth container"
+  docker_container:
+    name: docker_auth
+    image: "{{ docker_auth_image }}:{{ docker_auth_version }}"
+    restart_policy: always
+    published_ports:
+      - "5001:5001"
+    volumes:
+      - "/etc/docker_auth.yml:/config/auth_config.yml:ro"
+      - "/etc/ldap_password.txt:/config/ldap_password.txt:ro"
+      # HTTPS Certs
+      - "{{ https_ca_file }}:/etc/ssl/certs/https/ca.pem:ro"
+      - "{{ https_cert_file }}:/etc/ssl/certs/https/cert.pem:ro"
+      - "{{ https_key_file }}:/etc/ssl/certs/https/key.pem:ro"
+      # Extra CAs from our architecture
+      - "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem:/etc/ssl/certs/ca-certificates.crt:ro"
+
+- name: "Start registry container"
+  docker_container:
+    name: registry
+    image: "{{ registry_image }}:{{ registry_version }}"
+    restart_policy: always
+    links:
+      - "docker_auth:auth"
+    published_ports:
+      - "5000:5000"
+    volumes:
+      - "{{ https_cert_file }}:/etc/ssl/certs/https/cert.pem:ro"
+      # Extra CAs from our architecture
+      - "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem:/etc/ssl/certs/ca-certificates.crt:ro"
+    env:
+      REGISTRY_AUTH_TOKEN_REALM: "https://registry-auth.{{ local_domain_name }}/auth"
+      REGISTRY_AUTH_TOKEN_SERVICE: "Docker Registry"
+      REGISTRY_AUTH_TOKEN_ISSUER: "Dawn"
+      REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE: "/etc/ssl/certs/https/cert.pem"

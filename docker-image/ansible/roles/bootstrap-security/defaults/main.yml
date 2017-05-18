@@ -1,0 +1,8 @@
+vault_root_ca_ttl: 87600h
+vault_ansible_token_ttl: 7200
+vault_ansible_token_max_ttl: 7200
+vault_ansible_secret_id_ttl: 31536000
+vault_ansible_secret_id_num_uses: 0
+
+vault_local_root_config: "{{ local_storage_dir }}/.vault.root.conf"
+vault_local_ansible_config: "{{ local_storage_dir }}/.vault.ansible.conf"
