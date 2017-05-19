@@ -14,7 +14,7 @@
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "4.1.1"
+      "version": "4.2.0"
     },
     {
       "type": "panel",
@@ -1163,7 +1163,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "rate(docker_container_cpu_usage_in_usermode{host=~\"$node\"}[1m])",
+              "expr": "rate(docker_container_cpu_usage_in_usermode{host=~\"$node\",com_docker_stack_namespace=~\"$stack\"}[1m])",
               "intervalFactor": 2,
               "legendFormat": "{{container_name}} ({{host}})",
               "metric": "docker_container_cpu_usage_in_usermode",
@@ -1235,7 +1235,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "docker_container_cpu_usage_percent{host=~\"$node\"}",
+              "expr": "docker_container_cpu_usage_percent{host=~\"$node\",com_docker_stack_namespace=~\"$stack\"}",
               "intervalFactor": 2,
               "legendFormat": "{{container_name}} ({{host}})",
               "metric": "docker_container_cpu_usage_percent",
@@ -1307,7 +1307,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "rate(docker_container_cpu_usage_in_kernelmode{host=~\"$node\"}[1m])",
+              "expr": "rate(docker_container_cpu_usage_in_kernelmode{host=~\"$node\",com_docker_stack_namespace=~\"$stack\"}[1m])",
               "intervalFactor": 2,
               "legendFormat": "{{container_name}} ({{host}})",
               "metric": "docker_container_cpu_usage_in_kernelmode",
@@ -1379,7 +1379,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "docker_container_mem_usage{host=~\"$node\"}",
+              "expr": "docker_container_mem_usage{host=~\"$node\",com_docker_stack_namespace=~\"$stack\"}",
               "intervalFactor": 2,
               "legendFormat": "{{container_name}} ({{host}})",
               "metric": "docker_container_mem_usage",
@@ -1451,7 +1451,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "docker_container_mem_cache{host=~\"$node\"}",
+              "expr": "docker_container_mem_cache{host=~\"$node\",com_docker_stack_namespace=~\"$stack\"}",
               "intervalFactor": 2,
               "legendFormat": "{{container_name}} ({{host}})",
               "metric": "docker_container_mem_cache",
@@ -1523,7 +1523,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "rate(docker_container_mem_pgfault{host=~\"$node\"}[1m])",
+              "expr": "rate(docker_container_mem_pgfault{host=~\"$node\",com_docker_stack_namespace=~\"$stack\"}[1m])",
               "intervalFactor": 2,
               "legendFormat": "{{container_name}} ({{host}})",
               "metric": "docker_container_mem",
@@ -1595,7 +1595,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "docker_container_mem_rss{host=~\"$node\"}",
+              "expr": "docker_container_mem_rss{host=~\"$node\",com_docker_stack_namespace=~\"$stack\"}",
               "intervalFactor": 2,
               "legendFormat": "{{container_name}} ({{host}})",
               "metric": "",
@@ -1667,7 +1667,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "rate(docker_container_blkio_io_serviced_recursive_total{host=~\"$node\"}[5m])",
+              "expr": "rate(docker_container_blkio_io_serviced_recursive_total{host=~\"$node\",com_docker_stack_namespace=~\"$stack\"}[5m])",
               "intervalFactor": 2,
               "legendFormat": "{{container_name}} ({{host}})",
               "metric": "docker_container_blkio_io_serviced_recursive_total",
@@ -1739,7 +1739,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "docker_container_blkio_io_queue_recursive_total{host=~\"$node\"}",
+              "expr": "docker_container_blkio_io_queue_recursive_total{host=~\"$node\",com_docker_stack_namespace=~\"$stack\"}",
               "intervalFactor": 2,
               "legendFormat": "{{container_name}} ({{host}})",
               "metric": "docker_container_blkio_io_queue_recursive_total",
@@ -1811,7 +1811,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "docker_container_blkio_io_wait_time_total{host=~\"$node\"}",
+              "expr": "docker_container_blkio_io_wait_time_total{host=~\"$node\",com_docker_stack_namespace=~\"$stack\"}",
               "intervalFactor": 2,
               "legendFormat": "{{container_name}} ({{host}})",
               "metric": "docker_container_blkio_io_wait_time_total",
@@ -3050,6 +3050,26 @@
         "tagsQuery": "",
         "type": "query",
         "useTags": false
+      },
+      {
+        "allValue": ".*",
+        "current": {},
+        "datasource": "prometheus",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Stack",
+        "multi": true,
+        "name": "stack",
+        "options": [],
+        "query": "label_values(com_docker_stack_namespace)",
+        "refresh": 1,
+        "regex": "",
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
       }
     ]
   },
@@ -3084,5 +3104,5 @@
   },
   "timezone": "browser",
   "title": "Hardware and Docker stats",
-  "version": 6
+  "version": 1
 }

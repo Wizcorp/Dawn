@@ -1,0 +1,41 @@
+version: "3"
+networks:
+  net:
+    driver: overlay
+  prometheus:
+    external:
+      name: prometheus_net
+  traefik:
+    external:
+      name: traefik_net
+volumes:
+  grafana:
+services:
+  app:
+    image: {{ grafana_image}}:{{ grafana_version }}
+    networks:
+      - net
+      - prometheus
+      - traefik
+    environment:
+      GF_SECURITY_ADMIN_USER: "{{ grafana_user }}"
+      GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_password }}"
+    volumes:
+      # Configuration
+      - "/etc/grafana.ini:/etc/grafana/grafana.ini"
+      - "/etc/grafana-ldap.toml:/etc/grafana/ldap.toml"
+      - "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem:/etc/ssl/certs/ca-certificates.crt:ro"
+      # Data Volumes
+      - "grafana:/var/lib/grafana"
+    deploy:
+      mode: global
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+          - engine.labels.dawn.node.type == control
+      labels:
+        traefik.port: 3000
+        traefik.frontend.rule: "Host:grafana.{{ local_domain_name }}"
+        traefik.backend.loadbalancer.sticky: "true"
+        traefik.docker.network: traefik_net

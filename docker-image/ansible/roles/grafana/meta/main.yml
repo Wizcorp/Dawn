@@ -1,5 +1,0 @@
-dependencies:
-  - role: traefik-expose
-    service_name: grafana
-    service_port: 3000
-    service_ip: "{{ group_ipv4.monitor[0] }}"
