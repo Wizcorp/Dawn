@@ -20,31 +20,34 @@ services:
           - engine.labels.dawn.node.type == worker
 ```
 
-When using docker swarm, `docker-compose` cannot be used, instead the user needs
-to use the `docker stack deploy` command. To make thing easiers though the
-command can take your `docker-compose.yml` file but has several limitations:
+When using docker swarm, `docker-compose` cannot be used. Instead the user needs
+to use the `docker stack deploy` command.
 
-  * `docker-compose.override.yml` is not supported
-  * You cannot pass multiple compose files, if you want to make this configurable
-    you will either need environment variables or merging the files manually.
-  * It does not support all of the options docker-compose supports, and also
-    adds a couple unique definitions
+This command can take your `docker-compose.yml` file but has several limitations:
+
+  * `docker-compose.override.yml` is not supported.
+  * You cannot pass more than one compose files, if you want to make this configurable
+    you will either need environment variables or merge the files yourself.
+  * Does not support all the options of `docker-compose`, and adds a couple
+    unique definitions.
 
 To get more details about that last point see the [compose-file documentation](https://docs.docker.com/compose/compose-file/).
+
 One recommended way to do things is to make the basic `docker-compose.yml`
-sufficient enough to deploy on Dawn, then add an override for local development.
+enough to deploy on Dawn, then add an override for local development.
 
 The important thing is to define a [deploy](https://docs.docker.com/compose/compose-file/#deploy)
-strategy, a very important point in particular is your placement constraints to
-make sure your app runs on the workers instead of managers.
+strategy, in particular your placement constraints to make sure your app runs on
+the workers instead of managers.
 
 By default `docker stack` will create an overlay network to connect your apps
 accross the cluster so you do not have to worry about it.
 
 Once your stack file is ready, you just need to run `docker stack deploy -c <stack_file> <stack_name`
-to start your stack in the cluster. If your images are on a private registry you
-should add the `--with-registry-auth` flag to tell swarm to use your registry
-credentials when pulling the images.
+to start your stack in the cluster.
+
+If your images are on a private registry add the `--with-registry-auth` flag
+to tell swarm to use your registry credentials.
 
 ## Exposing your app via Traefik
 
@@ -73,29 +76,40 @@ services:
 ```
 
 While the compose file above is enough to run your application on the network
-you will still not be able to see it through traefik, this is because exposition
-is opt-in based and requires labels to tell traefik how your application works.
+you will still not be able to see it through Traefik.
+
+Exposition is opt-in based and requires labels to tell traefik how your
+application works.
 
 If you take a look at the example on the right you will notice 2 changes compared
-to our previous compose file, that is the extra external network and the deploy
-labels.
+to our previous compose file:
+
+  * The extra external network
+  * The `labels` entry in `deploy`
 
 ### network
 
-Traefik runs in docker but each stack is isolated on its own network and cannot
-talk to each other. To allow traefik to access your application you can add the
-`traefik_net` network to your stack and tell your service to use it. Only the
-services that need to be reachable through traefik need to use this network.
+Traefik runs in docker but docker isolates each stack on its own network so that
+they cannot talk to each other.
 
-Do not forget also to add the default network to your service or it will not be
+To allow access to your application you can add the`traefik_net` network to your
+stack and tell your service to use it.
+
+Only the services that need to be reachable through Traefik need to use this network.
+
+Do not forget also to add the `default` network to your service or it will not be
 able to talk to other services in the same stack.
 
 ### labels
 
-Labels are how you can configure traefik, in this example we tell traefik that
-our app is listening on port 80 and that we are using the traefik_net network,
-but many more options are available, here is a list of the most common ones and
-if you want to know more about them check the [documentation](https://docs.traefik.io/toml/#docker-backend):
+Labels are how you can configure Traefik.
+
+In this example we tell traefik that our app is listening on port 80 and that we
+are using the `traefik_net` network (necessary when a container uses more than one
+network).
+
+More labels are available, here is a list of the most common ones and if you want
+to know more about them check the [documentation](https://docs.traefik.io/toml/#docker-backend):
 
 label                                        | description
 ---------------------------------------------|-----------------------------------------
@@ -112,53 +126,59 @@ properly, and check metrics and logs.
 
 ### traefik dashboard
 
-The traefik dashboard is where you can find the list of all applications and
-stacks currently exposed by the cluster, you will find it at `<edge_ip>:8080`.
+The Traefik dashboard is where you can find the list of all applications and
+stacks currently exposed by the cluster. It is available by pointing your
+browser at `<edge_ip>:8080`.
 
-The screen is fairly straightforward, notice at the top how there are 2 tabs
-marked `consul` and `docker` (maybe more if you enabled other backends). By
-default the `consul` backends is used to expose application that are not running
+The screen is straightforward, notice at the top how there are 2 tabs marked
+`consul` and `docker` (maybe more if you enabled other backends). Those are the
+dynamic sources of configuration Traefik uses.
+
+By default the `consul` backends is used to expose application that are not running
 in swarm, if you need to add extra application in there refer to the [kv doc](https://docs.traefik.io/user-guide/kv-config/)
-for more details. The tab you care about is the `docker` tab and will reference
-every docker stack that was properly configured with their rules.
+for more details.
+
+The tab you care about is the `docker` tab and will reference every available
+docker stack with their access rules.
 
 ### logs
 
-Logs can be accessed in 2 ways:
+You can access logs in 2 ways:
 
 * Via `docker service logs <stack_name>_<service_name>`, you can add the `-t`
   flag to add timestamps and the `-f` flag to follow logs as they come.
-* Via kibana, which should by default be exposed on `kibana.<local_domain_name>`,
-  once connected click on discover and you should be greeted with logs from the
-  whole cluster.
+* Via `kibana.<local_domain_name>`,  once connected click on discover and you
+  will see logs from the  whole cluster.
 
 ### metrics
 
-By default metrics are pulled from docker and stored in grafana, which should be
-accessible via `grafana.<local_domain_name>` in your browser, once logged in you
-should see a dashboard called "Hardware and Docker stats", click on it and at the
-top select the stack to point to your docker stack.
+Grafana displays metrics for every containers and is accessible via `grafana.<local_domain_name>`.
+
+Once logged in you should see a dashboard called "Hardware and Docker stats",
+click on it and at the top select the right stack.
 
 ## Update an existing application
+
+You can either:
+
+* Run `docker stack deploy` again, this will update anything out of date.
+* Run `docker service update <service> [--options]` to update part of your services.
 
 ## Extra features and goodies
 
 ### Internal DNS
 
-Every container has direct access to the consul DNS feature, this allows a
-container to access any of the primary service through the internal
-`<local_dc>.<local_domain>` domain, for example if you want to leverage the
-provided consul for service discovery or kv storage, you can simply point your
-application to `consul.service.<local_dc>.<local_domain>` to connect to a random
-consul node in the cluster.
+Every container has direct access to the consul DNS feature.
+
+This allows a container to access any of the primary service through the internal
+`<local_dc>.<local_domain>` domain.
+
+For example if you want to contact a `swarm` manager, use `control.swarm.service.<local_dc>.<local_domain>`.
 
 For more information about the Consul DNS, see the [DNS Interface Documentation](https://www.consul.io/docs/agent/dns.html).
 
-Another useful DNS entry that is made available is the `dockerhost` entry which
-points to IP of the machine currently running your container and could be used
-to declare a service on the local consul agent or find out the IP of the host
-machine for service discovery when using `docker run` instead of `docker service`.
+The `dockerhost` entry is also available and points to IP of the machine currently
+running your container.
 
-If you need to talk to the swarm, it is recommended to instead use the
-`control.swarm.service.<local_dc>.<local_domain>` domain instead since it will
-point you to one of the manage nodes.
+You can use this to declare a service on the local consul agent or find out the
+IP of the host machine for service discovery.

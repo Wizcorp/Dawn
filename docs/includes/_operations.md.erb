@@ -2,8 +2,8 @@
 
 ## Initial Provisioning
 
-When using a template you will be left with a similar structure: An `ansible`
-folder with `group_vars` and `playbook.yml`, and a `run.sh` file.
+Each template has a similar structure: An `ansible` folder with `group_vars` and
+`playbook.yml`, and a `run.sh` file..
 
 ### ansible folder
 
@@ -11,30 +11,28 @@ The `playbook.yml` file is the file you will use to provision the cluster, it is
 also the file that you should modify if you want to add extra features to your
 servers, such as disk formatting, iptables, etc...
 
-Meanwhile the `group_vars` folder by default contains only one file named `all`
-that contains the most basic variables for your cluster such as domains and
-passwords. Make sure that the domain variables are always in this file since the
-<%= build_config['github']['name'] %> binary will parse it to automatically
-configure your shell.
+Meanwhile the `group_vars` folder by default contains only one file named `all`.
+It contains the most basic variables for your cluster such as domains and
+passwords.
+
+The domain variables should be in this file since the <%= build_config['github']['name'] %>
+binary will parse it to configure your shell.
 
 ### run.sh
 
-`run.sh` is your shared `.bash_profile`, it is where you will want to initialize
-common variables and functions that should be shared with every other developers
-using the command-line.
+`run.sh` is ran when entering the container. If you need users to run commands
+on login, this is the file to edit.
 
 ## Certificates
 
-On provisioning by default self-signed certificates will be created for every
-critical parts of the infrastructure. To make the user life easier it can be
-useful to have chrome trust the https CA generated to prevent errors when trying
-to access the various http interfaces available.
+Provisioning will create self-signed certificates for every critical parts of the
+infrastructure. We recommend having your browser/OS trust the https CA.
 
-To access your https CA (or any CA generated) you can point your browser to
-`http://vault.<local_domain_name>/v1/<backend>/ca/pem` where `local_domain_name`
-is your configured domain name in your inventory and `backend` is any of the
-configured CA backend for <%= build_config['github']['name'] %>, for example
-`https/pki` for the https backend.
+To access your https CA (or any CA generated) point your browser to
+`http://vault.<local_domain_name>/v1/<backend>/ca/pem`.
+
+`backend` is any of the configured CA backend for <%= build_config['github']['name'] %>,
+for example `https/pki` for the https backend.
 
    backend   | description
 -------------|------------------------------------------------------------
@@ -64,19 +62,16 @@ serial_number   	... serial number ...
 
 ```
 
-Should you need to generate client certificates for another develop or yourself
-you will need to get a valid token for vault (if you configured your container
-properly it should already be set), you can then use the write command of vault
-to generate a certificate on the proper backend like this:
+If you need to generate client certificates, you can use the write command of
+vault to generate a certificate on the desired backend like this:
 
-The `common_name` is required and can be anything as long as it ends with the
+The `common_name` is required and can be anything as long as it ends with your
 `local_domain_name`.
 
 ## LDAP
 
-Once <%= build_config['github']['name'] %> is provisioned and running, by default
-a LDAP server will be provisioned and running on the control nodes as well as a
-management interface accessible through traefik at `https://ldap-admin.<local_domain_name>/`.
+A LDAP server is provisioned and running on the control nodes and a
+management interface is accessible at `https://ldap-admin.<local_domain_name>/`.
 
 The default credentials are `cn=admin,<dc_derived_from_local_domain_name>` with
 the password that should have been generated in your `group_vars/all` file.
@@ -86,30 +81,34 @@ available on the cluster such as `grafana`.
 
 ## Vault
 
-Vault is one of the most important part of your cluster; It is in charge of
-providing your servers and clients with valid TLS certificates and losing
-credentials with vault will prevent you from connecting to any of the primary
-component unless you SSH on the box (since most of them are configured to allow
-non-TLS connections from localhost).
+Vault is in charge of providing your servers and clients with valid TLS certificates.
+
+Losing credentials with vault will prevent you from connecting to docker and consul
+unless you SSH on the box (They are configured to allow non-TLS connections from localhost).
 
 ### Credentials
 
 Currently 2 types of credentials are generated during the initial setup phase:
 
   * __root__: Root credentials are saved into `~/.vault.root.conf` and contains
-    the unseal keys and root token for vault, this is a crucial file that you
-    will need everytime you restart the servers (to unseal) or if you need to
-    do root operation. Make sure to save it somewhere safe!
-  * __ansible__: This is an admin AppRole access and is saved into `~/.vault.ansible.conf`,
-    it is used when generating certificates during the provisioning process and
-    also needs to be shared safely between the administrators so that they can
-    operate the cluster. Should they be lost they can easily be regenerated by
-    using the root token.
+    the unseal keys and root token for vault.
 
-Finally the `<%= build_config['binary']['name'] %>` binary will support a 3rd
-way to authenticate and this is the one that developers will probably use to
-generate their credentials, when the container starts it will look for a
-`~/vault.conf` file that is a JSON file with 2 keys in it:
+    This is a crucial file that you will need everytime you restart the servers
+    to unseal or if you need to do root operation.
+
+    Make sure to save it somewhere safe!
+
+  * __ansible__: This is an admin access saved into `~/.vault.ansible.conf` and
+    is used by the provisioning process.
+
+    Administrators needs it to operate/provision the cluster.
+
+    It can easily be regenerated by using the root token.
+
+A 3rd way to authenticate exists and should be used by developers.
+
+When the container starts it will look for a `~/vault.conf` file that is a JSON
+file with 2 keys in it:
 
 __key__   | __desc__
 ----------|----------
@@ -117,17 +116,21 @@ __key__   | __desc__
 `data`    | that should be the data to be sent during the auth process
 
 This allows administrators to use any of the auth backend they might want to
-auth user, such as GitHub auth or LDAP auth, please refer to the vault documentation
-for the list of available backend and how to configure/use them.
+auth user, such as GitHub auth or LDAP auth.
+
+Please refer to the vault documentation for the list of available backend and how
+to configure/use them.
 
 ### Unseal Process
 
-The unseal process is necessary when for example your restart the vault daemon,
-it can be done both remotely and localy (on the node itself), make sure that your
-`VAULT_ADDR` environment variable is set properly and run `vault unseal`, it will
-ask for a key, check your `root` credentials described above and take one of the
-keys and input/paste it in the vault prompt, run the command again 2 more times
-with different keys to finish the unseal process.
+The unseal process is necessary when you restart the vault daemon. It can be done
+both remotely or on the node itself.
+
+Make sure that your `VAULT_ADDR` environment variable is set properly and run
+`vault unseal`, it will ask for a key. Check your `root` credentials described
+above and take one of the keys and input/paste it in the vault prompt.
+
+Run the command again 2 more times with different keys to finish the unseal process.
 
 ### Backup
 
