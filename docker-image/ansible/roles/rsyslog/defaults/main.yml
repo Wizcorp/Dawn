@@ -1,0 +1,2 @@
+rsyslog_target: "{{ group_ipv4.monitor[0] }}:1514"
+rsyslog_json: true

@@ -16,33 +16,22 @@
     - files
     - grafana
 
-- name: "Start Grafana on monitoring nodes"
-  docker_container:
-    # setup elastic search for log storage from remote fluentd instances
-    name: grafana
-    image: "{{ grafana_image}}:{{ grafana_version }}"
-    restart_policy: unless-stopped
-    env:
-      GF_SECURITY_ADMIN_USER: "{{ grafana_user }}"
-      GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_password }}"
-    links:
-      - "{{ grafana_link_to_container }}"
-    published_ports:
-      - "3000:3000"
-    volumes:
-      # Configuration
-      - "/etc/grafana.ini:/etc/grafana/grafana.ini"
-      - "/etc/grafana-ldap.toml:/etc/grafana/ldap.toml"
-      - "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem:/etc/ssl/certs/ca-certificates.crt:ro"
-      # Data Volumes
-      - "grafana:/var/lib/grafana"
+- name: "Create grafana stack file"
+  template:
+    dest: "{{ grafana_stack_file }}"
+    src: "grafana_stack.yml.j2"
+  register: grafana_stack_file_status
+
+- name: "Start grafana on the cluster"
+  when: grafana_stack_file_status.changed|bool
+  shell: "docker stack deploy -c '{{ grafana_stack_file }}' {{ grafana_stack }}"
   tags:
     - docker
     - grafana
 
 - name: "Build internal grafana URL"
   set_fact:
-    grafana_url: "http://{{ group_ipv4.monitor[0] }}:3000"
+    grafana_url: "http://grafana.{{ local_domain_name }}"
   tags:
     - grafana
 
@@ -69,7 +58,7 @@
     body:
       name: prometheus
       type: prometheus
-      url: http://prometheus:9090
+      url: http://prometheus_server:9090
       access: proxy
       basicAuth: false
     force_basic_auth: yes

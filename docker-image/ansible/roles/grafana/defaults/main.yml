@@ -3,4 +3,6 @@ grafana_version: 4.2.0
 grafana_user: admin
 grafana_password: admin
 grafana_link_to_container: prometheus
+grafana_stack_file: /opt/dawn/grafana.yml
+grafana_stack: grafana
 ldap_server: "{{ group_ipv4.control[0] }}"

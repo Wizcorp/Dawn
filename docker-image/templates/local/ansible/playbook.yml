@@ -19,6 +19,7 @@
     - docker-gc
     - telegraf
     - https
+    - rsyslog
 
 # Setup vault, ldap and swarm on the control nodes
 - hosts: control
