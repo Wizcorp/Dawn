@@ -1,28 +1,5 @@
-- name: "Check TLS certificates status"
-  stat:
-    path: "{{ https_cert_file }}"
-  register: https_certs_stat
+- include: generate.yml
+  when: https_custom_cert is not defined
 
-- name: "Generate server TLS certificates"
-  when: >
-    https_certs_stat.stat.exists|bool == False
-    or cert_rotate_https_server|default(false)|bool
-    or cert_rotate_https|default(false)|bool
-    or cert_rotate_server|default(false)|bool
-    or cert_rotate_all|default(false)|bool
-  include_role:
-    name: generate-tls
-  vars:
-    pki:
-      # vault backend
-      backend: https
-      role: server
-      # targets
-      files:
-        cert: "{{ https_cert_file }}"
-        key: "{{ https_key_file }}"
-        ca: "{{ https_ca_file }}"
-      # TLS request data
-      request_data:
-        common_name: "*.{{ local_domain_name }}"
-        ip_sans: "{{ private_ipv4 }}"
+- include: copy.yml
+  when: https_custom_cert is defined

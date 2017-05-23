@@ -20,15 +20,15 @@ token:
 # Authentication is performed by first binding to the server, looking up the user entry
 # by using the specified filter, and then re-binding using the matched DN and the password provided.
 ldap_auth:
-  addr: "{{ ldap_server }}:389"
+  addr: "{{ ldap_server }}:{{ ldap_server_port }}"
   #tls: true
   # In case bind DN and password is required for querying user information,
   # specify them here. Plain text password is read from the file.
-  bind_dn: "cn=admin,dc={{ local_domain_name.split(".") | join(",dc=") }}"
+  bind_dn: "{{ ldap_admin_user }}"
   # Make sure you remove newlines and carriage returns from the password file.
   bind_password_file: /config/ldap_password.txt
   # User query settings. ${account} is expanded from auth request
-  base: "ou=Users,dc={{ local_domain_name.split(".") | join(",dc=") }}"
+  base: "ou=Users,{{ ldap_dc }}"
   filter: "(&(uid=${account})(objectClass=organizationalPerson))"
 
 acl:

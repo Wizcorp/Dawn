@@ -1,0 +1,25 @@
+- fail: msg="Missing variable definition for https_custom_key/https_custom_ca"
+  when: https_custom_key is not defined or https_custom_ca is not defined
+
+- name: "Make sure the directories for each file exists"
+  file:
+    path: "{{ item|dirname }}"
+    state: directory
+    mode: 0755
+  with_items:
+    - "{{ https_cert_file }}"
+    - "{{ https_key_file }}"
+    - "{{ https_ca_file }}"
+
+- name: "Copy https certificates to target machine"
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0660
+  with_items:
+    - src: "{{ https_custom_cert }}"
+      dest: "{{ https_cert_file }}"
+    - src: "{{ https_custom_key }}"
+      dest: "{{ https_key_file }}"
+    - src: "{{ https_custom_ca }}"
+      dest: "{{ https_ca_file }}"
