@@ -1,0 +1,47 @@
+{
+  "template" : "logstash-*",
+  "version" : 50001,
+  "settings" : {
+    "index.refresh_interval" : "5s"
+  },
+  "mappings" : {
+    "_default_" : {
+      "_all" : {"enabled" : true, "norms" : false},
+      "dynamic_templates" : [ {
+        "message_field" : {
+          "path_match" : "message",
+          "match_mapping_type" : "string",
+          "mapping" : {
+            "type" : "text",
+            "norms" : false
+          }
+        }
+      }, {
+        "string_fields" : {
+          "match" : "*",
+          "match_mapping_type" : "string",
+          "mapping" : {
+            "type" : "text", "norms" : false,
+            "fields" : {
+              "keyword" : { "type": "keyword" }
+            }
+          }
+        }
+      } ],
+      "properties" : {
+        "@timestamp": { "type": "date", "include_in_all": false },
+        "@version": { "type": "keyword", "include_in_all": false },
+        "host": { "type": "keyword" },
+        "container_id": { "type": "keyword" },
+        "container_id_full": { "type": "keyword" },
+        "container_name": { "type": "text" },
+        "container_tag": { "type": "keyword" },
+        "program": { "type": "text" },
+        "pid": { "type": "long" },
+        "priority": { "type": "short" },
+        "docker_stack": { "type": "keyword" },
+        "docker_service": { "type": "keyword" }
+      }
+    }
+  }
+}
