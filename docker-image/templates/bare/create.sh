@@ -25,6 +25,3 @@ echo "credentials available. You will also most likely want to edit the ansible"
 echo "playbook at ansible/playbook.yml to add firewall rules and any custom"
 echo "software to your servers."
 echo ""
-
-# Self destruct
-rm create.sh

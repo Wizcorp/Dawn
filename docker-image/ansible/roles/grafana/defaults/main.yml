@@ -5,8 +5,11 @@ grafana_password: admin
 grafana_link_to_container: prometheus
 grafana_stack_file: /opt/dawn/grafana.yml
 grafana_stack: grafana
+grafana_stack_constraints:
+  - engine.labels.dawn.node.type == control
+grafana_ldap_template: "ldap.toml.j2"
 
 ldap_server: "{{ group_ipv4.control[0] }}"
 ldap_server_port: 389
-ldap_dc: "dc={{ local_domain_name.split(".") | join(",dc=") }}"
+ldap_dc: "dc={{ local_domain_name.split('.') | join(',dc=') }}"
 ldap_admin_user: "cn=admin,{{ ldap_dc }}"

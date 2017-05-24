@@ -2,6 +2,8 @@ prometheus_image: prom/prometheus
 prometheus_version: v1.6.1
 prometheus_stack_file: /opt/dawn/prometheus.yml
 prometheus_stack: prometheus
+prometheus_stack_constraints:
+  - engine.labels.dawn.node.type == control
 
 consul_client_key_file: /etc/ssl/certs/consul/client.key.pem
 consul_client_cert_file: /etc/ssl/certs/consul/client.cert.pem

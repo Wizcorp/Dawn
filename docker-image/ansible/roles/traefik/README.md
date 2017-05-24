@@ -9,5 +9,6 @@ to easily expose services by using docker swarm labels.
 * `traefik_image = "traefik:{{ traefik_version }}"`
 * `traefik_stack = traefik`
 * `traefik_stack_file = /opt/dawn/traefik.yml`
+* `traefik_stack_constraints: ['engine.labels.dawn.node.type == edge']`
 * `traefik_domain = "{{ local_domain_name }}"`
 * `traefik_extra_args`: Add extra arguments to the traefik command line
