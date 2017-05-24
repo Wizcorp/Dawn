@@ -28,7 +28,8 @@ RUN apk add --no-cache \
     python2 \
     py-pip \
     unzip \
-    jq
+    jq \
+    libssl-1.0
 
 # Install Ansible and configuration
 RUN apk add --no-cache \
