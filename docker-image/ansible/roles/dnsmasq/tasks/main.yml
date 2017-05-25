@@ -2,10 +2,7 @@
   include_role:
     name: AerisCloud.dnsmasq-template
   vars:
-    dnsmasq_servers:
-      - "/{{ local_domain_full }}/{{ group_ipv4.control[0] }}#8600"
-      - "8.8.8.8"
-      - "8.8.4.4"
+    dnsmasq_servers: "{{ ['/' + local_domain_full + '/' + group_ipv4.control[0] + '#8600']|union(dnsmasq_default_dns) }}"
     dnsmasq_addresses:
       - "/{{ local_domain_name }}/{{ group_ipv4.edge[0] }}"
       - "/dockerhost/{{ private_ipv4 }}"
