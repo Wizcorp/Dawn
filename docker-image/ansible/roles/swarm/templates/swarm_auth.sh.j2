@@ -3,9 +3,11 @@
 set -e
 
 # make sure jq is available
-echo "* Downloading latest version of jq"
+echo "* Downloading latest version of jq and curl"
 docker pull stedolan/jq >/dev/null
+docker pull appropriate/curl >/dev/null
 alias jq="docker run --rm -i stedolan/jq"
+alias curl="docker run --rm -i appropriate/curl"
 
 if
   [[ -z "${VAULT_ADDR}" ]] || [[ -z "${VAULT_ROLE_ID}" ]] || [[ -z "${VAULT_SECRET_ID}" ]]

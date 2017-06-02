@@ -32,8 +32,7 @@ services:
       restart_policy:
         condition: on-failure
       placement:
-        constraints:
-          - engine.labels.dawn.node.type == control
+        constraints: {{ grafana_stack_constraints|to_yaml }}
       labels:
         traefik.port: 3000
         traefik.frontend.rule: "Host:grafana.{{ local_domain_name }}"

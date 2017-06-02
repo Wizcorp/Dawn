@@ -46,5 +46,4 @@ services:
     deploy:
       mode: global
       placement:
-        constraints:
-          - engine.labels.dawn.node.type == edge
+        constraints: {{ traefik_stack_constraints|to_yaml }}

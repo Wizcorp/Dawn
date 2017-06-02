@@ -1,11 +1,15 @@
+traefik_domain: "{{ local_domain_name }}"
 traefik_version: v1.2.3
 traefik_image: "traefik:{{ traefik_version }}"
 traefik_stack: traefik
 traefik_stack_file: /opt/dawn/traefik.yml
-traefik_domain: "{{ local_domain_name }}"
+traefik_stack_constraints:
+  - engine.labels.dawn.node.type == edge
+
 consul_client_key_file: /etc/ssl/certs/consul/client.key.pem
 consul_client_cert_file: /etc/ssl/certs/consul/client.cert.pem
 consul_client_ca_file: /etc/ssl/certs/consul/client.ca.pem
+
 https_cert_file: /etc/ssl/certs/https/server.key.pem
 https_key_file: /etc/ssl/certs/https/server.cert.pem
 https_ca_file: /etc/ssl/certs/https/server.ca.pem

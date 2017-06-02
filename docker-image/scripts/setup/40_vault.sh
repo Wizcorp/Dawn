@@ -16,6 +16,19 @@ then
     export VAULT_ADDR="http://vault.${LOCAL_DOMAIN}"
 fi
 
+export VAULT_CACERT="${VAULT_CERT_PATH}/client.ca.pem"
+export VAULT_CLIENT_CERT="${VAULT_CERT_PATH}/client.cert.pem"
+export VAULT_CLIENT_KEY="${VAULT_CERT_PATH}/client.key.pem"
+
+# Automatically unseal vault if possible
+if
+    [ -f "${HOME}/.vault.root.conf" ] \
+        && [ "$(vault status | grep Sealed | cut -d ' ' -f 2)" == "true" ]
+then
+    echo "Automatically unsealing vault"
+    jq -r .keys[] ~/.vault.root.conf | head -n 3 | xargs -n 1 vault unseal >/dev/null
+fi
+
 # set VAULT environment variables, we first attempt to login using a generic
 # configuration, this configuration is created by the admin for each user and
 # should be installed manually on first setup. If this configuration does not
@@ -23,10 +36,6 @@ fi
 if
     [ -f "${HOME}/.vault.conf" ]
 then
-    export VAULT_CACERT="${VAULT_CERT_PATH}/client.ca.pem"
-    export VAULT_CLIENT_CERT="${VAULT_CERT_PATH}/client.cert.pem"
-    export VAULT_CLIENT_KEY="${VAULT_CERT_PATH}/client.key.pem"
-
     VAULT_AUTH_BACKEND="$( jq -r .backend "${HOME}/.vault.conf" )"
     VAULT_AUTH_DATA="$( jq -cM .data "${HOME}/.vault.conf" )"
 
@@ -34,18 +43,10 @@ then
 elif
     [ -f "${HOME}/.vault.ansible.conf" ]
 then
-    export VAULT_CACERT="${VAULT_CERT_PATH}/client.ca.pem"
-    export VAULT_CLIENT_CERT="${VAULT_CERT_PATH}/client.cert.pem"
-    export VAULT_CLIENT_KEY="${VAULT_CERT_PATH}/client.key.pem"
-
     export VAULT_TOKEN="$( curl --connect-timeout 3 --cacert "${VAULT_CACERT}" -XPOST -sS "${VAULT_ADDR}/v1/auth/approle/login" -d "$( cat ${HOME}/.vault.ansible.conf )" | jq -r .auth.client_token )"
 elif
     [ -f "${HOME}/.vault.root.conf" ]
 then
-    export VAULT_CACERT="${VAULT_CERT_PATH}/client.ca.pem"
-    export VAULT_CLIENT_CERT="${VAULT_CERT_PATH}/client.cert.pem"
-    export VAULT_CLIENT_KEY="${VAULT_CERT_PATH}/client.key.pem"
-
     export VAULT_TOKEN="$( jq -r '.root_token' /home/dawn/.vault.root.conf )"
 else
     cat <<- EOM

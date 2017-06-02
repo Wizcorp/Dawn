@@ -51,17 +51,9 @@ Here is a map of what services are installed on each nodes:
     </thead>
     <tbody>
         <tr>
-            <td colspan="1" rowspan="5" class="node-type"><p><span>control</span></p></td>
-            <td colspan="1" rowspan="1"><p><span>consul-ui</span></p></td>
+            <td colspan="1" rowspan="3" class="node-type"><p><span>control</span></p></td>
+            <td colspan="1" rowspan="1"><p><span>consul (server)</span></p></td>
             <td colspan="1" rowspan="1"><p><span>Service discovery, config management</span></p></td>
-        </tr>
-        <tr>
-            <td colspan="1" rowspan="1"><p><span>fluentd-ui</span></p></td>
-            <td colspan="1" rowspan="1"><p><span>Monitor and configure fluentd</span></p></td>
-        </tr>
-        <tr>
-            <td colspan="1" rowspan="1"><p><span>Portainer</span></p></td>
-            <td colspan="1" rowspan="1"><p><span>Docker container management</span></p></td>
         </tr>
         <tr>
             <td colspan="1" rowspan="1"><p><span>Kibana</span></p></td>
@@ -77,7 +69,7 @@ Here is a map of what services are installed on each nodes:
             <td colspan="1" rowspan="1"><p><span>HTTP/S Load balancer</span></p></td>
         </tr>
         <tr>
-            <td colspan="1" rowspan="1"><p><span>consul</span></p></td>
+            <td colspan="1" rowspan="1"><p><span>consul (agent) with ui</span></p></td>
             <td colspan="1" rowspan="1"><p><span>Service discovery and internal DNS</span></p></td>
         </tr>
         <tr>
@@ -85,9 +77,13 @@ Here is a map of what services are installed on each nodes:
             <td colspan="1" rowspan="1"><p><span>S3 API-compatible routing gateway</span></p></td>
         </tr>
         <tr>
-            <td colspan="1" rowspan="2" class="node-type"><p><span>storage</span></p></td>
+            <td colspan="1" rowspan="3" class="node-type"><p><span>storage</span></p></td>
             <td colspan="1" rowspan="1"><p><span>docker registry</span></p></td>
             <td colspan="1" rowspan="1"><p><span>Container image registry.</span></p></td>
+        </tr>
+        <tr>
+            <td colspan="1" rowspan="1"><p><span>consul (agent)</span></p></td>
+            <td colspan="1" rowspan="1"><p><span>Service discovery and internal DNS</span></p></td>
         </tr>
         <tr>
             <td colspan="1" rowspan="1"><p><span>elasticsearch</span></p></td>
@@ -117,7 +113,7 @@ since it has it's own auth mechanisms, this allows you to recover a new set of
 certificates should you lose them.
 
 You will definitely want to become familiar with the inner workings of Vault,
-since Dawn heavily depends on it.
+since <%= build_config['github']['name'] %> heavily depends on it.
 
 See the official [documentation](https://www.vaultproject.io/docs/index.html)
 for more details.

@@ -9,7 +9,7 @@
 
 - name: "Create grafana ldap config file"
   template:
-    src: "ldap.toml.j2"
+    src: "{{ grafana_ldap_template }}"
     dest: /etc/grafana-ldap.toml
     mode: 0644
   tags:
