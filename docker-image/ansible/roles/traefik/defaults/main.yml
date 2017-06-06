@@ -1,10 +1,13 @@
 traefik_domain: "{{ local_domain_name }}"
-traefik_version: v1.2.3
+traefik_version: v1.3
 traefik_image: "traefik:{{ traefik_version }}"
 traefik_stack: traefik
+traefik_stack_template: stack.yml.j2
 traefik_stack_file: /opt/dawn/traefik.yml
 traefik_stack_constraints:
   - engine.labels.dawn.node.type == edge
+traefik_config_template: config.toml.j2
+traefik_config_file: /etc/traefik.toml
 
 consul_client_key_file: /etc/ssl/certs/consul/client.key.pem
 consul_client_cert_file: /etc/ssl/certs/consul/client.cert.pem
