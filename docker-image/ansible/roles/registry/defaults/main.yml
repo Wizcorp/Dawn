@@ -1,5 +1,5 @@
-https_cert_file: /etc/ssl/certs/https/server.key.pem
-https_key_file: /etc/ssl/certs/https/server.cert.pem
+https_cert_file: /etc/ssl/certs/https/server.cert.pem
+https_key_file: /etc/ssl/certs/https/server.key.pem
 https_ca_file: /etc/ssl/certs/https/server.ca.pem
 
 docker_auth_image: cesanta/docker_auth

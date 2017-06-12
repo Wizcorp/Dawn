@@ -9,10 +9,10 @@ traefik_stack_constraints:
 traefik_config_template: config.toml.j2
 traefik_config_file: /etc/traefik.toml
 
-consul_client_key_file: /etc/ssl/certs/consul/client.key.pem
 consul_client_cert_file: /etc/ssl/certs/consul/client.cert.pem
+consul_client_key_file: /etc/ssl/certs/consul/client.key.pem
 consul_client_ca_file: /etc/ssl/certs/consul/client.ca.pem
 
-https_cert_file: /etc/ssl/certs/https/server.key.pem
-https_key_file: /etc/ssl/certs/https/server.cert.pem
+https_cert_file: /etc/ssl/certs/https/server.cert.pem
+https_key_file: /etc/ssl/certs/https/server.key.pem
 https_ca_file: /etc/ssl/certs/https/server.ca.pem

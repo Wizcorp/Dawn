@@ -7,8 +7,8 @@ ldap_key_file: /etc/ssl/certs/ldap/server.cert.pem
 ldap_ca_file: /etc/ssl/certs/ldap/server.ca.pem
 ldap_organisation: Dawn
 
-https_cert_file: /etc/ssl/certs/https/server.key.pem
-https_key_file: /etc/ssl/certs/https/server.cert.pem
+https_cert_file: /etc/ssl/certs/https/server.cert.pem
+https_key_file: /etc/ssl/certs/https/server.key.pem
 https_ca_file: /etc/ssl/certs/https/server.ca.pem
 
 openldap_image: osixia/openldap
