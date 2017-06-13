@@ -1,4 +1,4 @@
-version: "3"
+version: "3.2"
 networks:
   net:
     driver: overlay
@@ -9,9 +9,18 @@ services:
       --cluster.node="{{ inventory_hostname }}"
       {{ traefik_extra_args|default("") }}
     ports:
-      - 80:80
-      - 443:443
-      - 8080:8080
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: host
+      - target: 443
+        published: 443
+        protocol: tcp
+        mode: host
+      - target: 8080
+        published: 8080
+        protocol: tcp
+        mode: host
     networks:
       - net
     volumes:
