@@ -16,6 +16,7 @@ RUN apk update && apk upgrade
 
 # Install general dependencies
 RUN apk add --no-cache \
+    make \
     bash \
     figlet \
     git \

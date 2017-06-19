@@ -5,6 +5,6 @@ getBuildConfig () {
         | docker run \
             -i \
             --rm \
-            jlordiales/jyparser \
+jlordiales/jyparser:allow-command-line-options-in-jq \
             get -r ${@}
 }
