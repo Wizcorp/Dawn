@@ -184,7 +184,7 @@ SHELL
         echo ""
         echo "  dawn #{environment_name}"
         echo "  # Then, in the dawn shell"
-        echo "  ansible-playbook /dawn/ansible/playbook.yml"
+        echo "  ansible-playbook ansible/playbook.yml"
         echo ""
 SHELL
       end
