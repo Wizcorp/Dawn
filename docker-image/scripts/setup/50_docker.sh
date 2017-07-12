@@ -14,7 +14,7 @@ then
     export DOCKER_CERT_PATH="${HOME}/certs/docker"
 
     # Get a new certificate set from vault for this connection
-    mkdir "${DOCKER_CERT_PATH}" >/dev/null 2>&1 || true
+    mkdir -p "${DOCKER_CERT_PATH}" >/dev/null 2>&1 || true
     VAULT_TMP_FILE="$( mktemp )"
 
     if

@@ -6,3 +6,5 @@ consul_client_cert_file: /etc/ssl/certs/consul/client.cert.pem
 consul_client_ca_file: /etc/ssl/certs/consul/client.ca.pem
 consul_server_max_ttl: 17520h
 consul_client_max_ttl: 8760h
+consul_server_cert_ttl: 8760h
+consul_client_cert_ttl: 4380h

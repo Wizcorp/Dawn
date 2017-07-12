@@ -7,8 +7,8 @@ ARG shell_user=dawn
 ARG configuration_folder=dawn
 ARG configuration_filename=dawn.yml
 ARG ansible_version=2.2.3.0
-ARG terraform_version=0.9.5
-ARG vault_version=0.7.2
+ARG terraform_version=0.9.9
+ARG vault_version=0.7.3
 ARG docker_version=17.05.0-ce
 
 # Update the package list
@@ -21,6 +21,7 @@ RUN apk add --no-cache \
     figlet \
     git \
     openssh \
+    openssl \
     rsync \
     curl \
     wget \

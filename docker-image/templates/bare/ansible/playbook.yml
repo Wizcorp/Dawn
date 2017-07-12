@@ -10,44 +10,61 @@
   become: true
   gather_facts: yes
   roles:
-    - common
-    # - AerisCloud.disks
-    # - certificates
-    - consul
-    - dnsmasq
-    - docker
-    - docker-gc
-    - telegraf
-    - https
+    - role: common
+      tags: [ 'role:common' ]
+    - role: consul
+      tags: [ 'role:consul', 'type:discovery' ]
+    - role: dnsmasq
+      tags: [ 'role:dnsmasq', 'type:discovery' ]
+    - role: docker
+      tags: [ 'role:docker', 'type:docker' ]
+    - role: docker-gc
+      tags: [ 'role:docker-gc', 'type:docker' ]
+    - role: telegraf
+      tags: [ 'role:telegraf', 'type:monitoring' ]
+    - role: https
+      tags: [ 'role:https', 'type:certificates' ]
+    - role: rsyslog
+      tags: [ 'role:rsyslog', 'type:monitoring' ]
 
 # Setup vault, ldap and swarm on the control nodes
 - hosts: control
   become: true
   roles:
-    - vault
-    - swarm
-    - openldap
-    - registry
+    - role: vault
+      tags: [ 'group:control', 'role:vault' ]
+    - role: swarm
+      tags: [ 'group:control', 'role:swarm', 'type:docker' ]
+    - role: openldap
+      tags: [ 'group:control', 'role:ldap' ]
+    - role: registry
+      tags: [ 'group:control', 'role:registry', 'type:docker' ]
 
 # Have the workers join the swarm
 - hosts: worker
   become: true
   roles:
-    - swarm
+    - role: swarm
+      tags: [ 'group:worker', 'role:swarm', 'type:docker' ]
 
 # Have the edge nodes join the swarm and run traefik
 - hosts: edge
   become: true
   roles:
-    - swarm
-    - traefik
+    - role: swarm
+      tags: [ 'group:edge', 'role:swarm', 'type:docker' ]
+    - role: traefik
+      tags: [ 'group:edge', 'role:traefik' ]
 
 - hosts: monitor
   become: true
   roles:
-    - elasticsearch
-    - prometheus
-    - grafana
+    - role: elasticsearch
+      tags: [ 'group:monitor', 'role:elasticsearch', 'type:monitoring' ]
+    - role: prometheus
+      tags: [ 'group:monitor', 'role:prometheus', 'type:monitoring' ]
+    - role: grafana
+      tags: [ 'group:monitor', 'role:grafana', 'type:monitoring' ]
 
 # Fetch client certificates
 - include: /dawn/ansible/playbooks/client_certs.yml

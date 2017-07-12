@@ -11,6 +11,9 @@ The default `playbook.yml` will deploy a vanilla version of the cluster with
 everything working out of the box. If you need custom iptables or software
 installed on the cluster this is the file to edit.
 
+To help with provisioning every role is tagged with either `role`, `group` and
+`type` tags, see the content of the playbook for the full list.
+
 Meanwhile the `group_vars` folder should contain a single file called `all` that
 contains a set of default variables for your cluster.
 

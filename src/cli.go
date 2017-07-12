@@ -9,6 +9,8 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
+	"syscall"
+	"text/template"
 
 	"path/filepath"
 
@@ -38,6 +40,16 @@ var (
 	cliBuildTime   = "n/a"
 	cliBuildServer = "n/a"
 )
+
+var dockerfileTpl = template.Must(template.New("dockerfile").Parse(`# Create a build of dawn with our project embedded
+FROM {{ .Image }}
+
+ARG default_env={{ .DefaultEnv }}
+
+ENV PROJECT_ENVIRONMENT ${default_env}
+ENV PROJECT_NAME {{ .ProjectName }}
+
+COPY . /dawn/project/dawn`))
 
 // In this directory, we will be storing local project data, such as
 // the shell history, ssh keys, and so on. This is also where any
@@ -117,18 +129,30 @@ func printVersion() {
 	fmt.Printf("Build server:  %s\n", cliBuildServer)
 }
 
-func runSubProcess(command string, arguments []string) error {
+func runSubProcess(command string, arguments []string) (int, error) {
 	cmd := exec.Command(command, arguments...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 
-	if err != nil {
-		fmt.Printf("%#v", err)
+	if eerr, ok := err.(*exec.ExitError); ok {
+		// on unix get the exit code
+		if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
+			ws := eerr.Sys().(syscall.WaitStatus)
+			return ws.ExitStatus(), nil
+		}
+
+		// no documentation on how to do it for windows
+		return -1, err
 	}
 
-	return err
+	if err != nil {
+		fmt.Printf("%#v", err)
+		return -1, err
+	}
+
+	return 0, nil
 }
 
 func ensureDirectoryExists(dir string) (string, error) {
@@ -211,6 +235,10 @@ func getConfigurationFilePath() string {
 	return fmt.Sprintf("%s/%s", getConfigurationFolderPath(), cliConfigurationFilename)
 }
 
+func getDockerFilePath() string {
+	return fmt.Sprintf("%s/%s", getConfigurationFolderPath(), "Dockerfile")
+}
+
 func getFullImageName(image string) string {
 	if strings.Index(image, ":") == -1 {
 		return fmt.Sprintf("%s:%s", cliDefaultImageName, image)
@@ -240,6 +268,20 @@ func createConfigurationFile(projectName string) error {
 	return err
 }
 
+func createProjectDockerfile(projectName string) error {
+	file, err := os.OpenFile(getDockerFilePath(), os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	return dockerfileTpl.Execute(file, map[string]string{
+		"Image":       cliDefaultImageName,
+		"ProjectName": projectName,
+		"DefaultEnv":  os.Args[1],
+	})
+}
+
 func requestConfigurationFileCreation() bool {
 	fmt.Printf("This project is not configured yet to use %s. Would you like to configure it? [y/n]: ", cliName)
 	answer := readLine()
@@ -259,6 +301,12 @@ func requestConfigurationFileCreation() bool {
 	err := createConfigurationFile(projectName)
 	if err != nil {
 		fmt.Printf("Failed to create configuration: %#v", err)
+		return false
+	}
+
+	err = createProjectDockerfile(projectName)
+	if err != nil {
+		fmt.Printf("Failed to create Dockerfile: %#v", err)
 		return false
 	}
 
@@ -302,7 +350,7 @@ func getConfigurationForEnvironment(environment string) (*Config, error) {
 	}, nil
 }
 
-func runUpdate() error {
+func runUpdate() (int, error) {
 	var shell string
 	var url string
 	var arguments []string
@@ -327,10 +375,10 @@ func runUpdate() error {
 	return runSubProcess(shell, arguments)
 }
 
-func runEnvironmentContainer(environment string, configuration *Config, command []string) error {
+func runEnvironmentContainer(environment string, configuration *Config, command []string) (int, error) {
 	localEnvironmentDir, err := getLocalProjectEnvironmentDirectory(configuration.ProjectName, environment)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	arguments := []string{
@@ -366,6 +414,7 @@ func runEnvironmentContainer(environment string, configuration *Config, command 
 
 func main() {
 	var err error
+	var exitCode int
 
 	if len(os.Args) < 2 {
 		printHelp()
@@ -379,7 +428,7 @@ func main() {
 	case "--version":
 		printVersion()
 	case "--update":
-		err = runUpdate()
+		exitCode, err = runUpdate()
 	default:
 		// Make sure the configuration folder and file exists
 		if doesConfigurationFileExist() == false {
@@ -403,10 +452,12 @@ func main() {
 		}
 
 		// Run the container
-		err = runEnvironmentContainer(environment, configuration, command)
+		exitCode, err = runEnvironmentContainer(environment, configuration, command)
 	}
 
-	if err != nil {
+	if err != nil && exitCode == 0 {
 		os.Exit(1)
 	}
+
+	os.Exit(exitCode)
 }

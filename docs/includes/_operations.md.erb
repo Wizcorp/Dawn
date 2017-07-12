@@ -121,6 +121,11 @@ auth user, such as GitHub auth or LDAP auth.
 Please refer to the vault documentation for the list of available backend and how
 to configure/use them.
 
+Finally when using a docker image containing the project (see the section at the
+bottom of this document), you can either provide a `VAULT_TOKEN` or `VAULT_ROLE_ID`
+and `VAULT_SECRET_ID` variables to authenticate with vault. The role or token
+provided should have enough access to create docker client certificates.
+
 ### Unseal Process
 
 The unseal process is necessary when you restart the vault daemon. It can be done
@@ -165,3 +170,12 @@ The playbooks support rotating certificates by setting some variables to true:
 
 You might need to manually restart some of the daemons and containers that are
 using the certificates once the new certificates are generated.
+
+## Project Dockerfile
+
+When creating your project a `Dockerfile` is created in the dawn folder, you can
+build it by running `docker build -t 'my-project:latest' dawn`.
+
+This `Dockerfile` can then be pushed to a registry and used for quick access to
+the docker cluster by starting it while setting the `VAULT_*` variables as
+described in the above section.

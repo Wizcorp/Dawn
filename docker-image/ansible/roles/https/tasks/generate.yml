@@ -26,3 +26,4 @@
       request_data:
         common_name: "*.{{ local_domain_name }}"
         ip_sans: "{{ private_ipv4 }}"
+        ttl: "{{ https_server_cert_ttl }}"

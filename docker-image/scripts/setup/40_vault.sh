@@ -13,12 +13,33 @@ export VAULT_ADDR="https://${CONTROL_NODE}:8200"
 if
     nslookup "vault.${LOCAL_DOMAIN}" 1>/dev/null 2>&1
 then
-    export VAULT_ADDR="http://vault.${LOCAL_DOMAIN}"
+    export VAULT_ADDR="https://vault.${LOCAL_DOMAIN}"
+else
+    # if we go through the IP we need to trust the certificate
+    export VAULT_CACERT="${HOME}/certs/vault/client.ca.pem"
 fi
 
-export VAULT_CACERT="${VAULT_CERT_PATH}/client.ca.pem"
-export VAULT_CLIENT_CERT="${VAULT_CERT_PATH}/client.cert.pem"
-export VAULT_CLIENT_KEY="${VAULT_CERT_PATH}/client.key.pem"
+# When running inside a custom container we can end up in a situation where the
+# cacert is not available, in that case pull it from the vault instance and
+# check the fingerprint if provided by the user
+if
+    [ ! -z "${VAULT_CACERT}" ] && [ ! -f "${VAULT_CACERT}" ]
+then
+    # Change the CA cert to point to a tmp file
+    export VAULT_CACERT="$( mktemp )"
+
+    # Retrieve the remote cert
+    curl -sk "${VAULT_ADDR}/v1/vault/pki/ca/pem" -o "${VAULT_CACERT}"
+fi
+
+# If provided extract the fingerprint and compare it
+if
+    [ ! -z "${VAULT_TRUSTED_FINGERPRINT}" ] \
+        && [ "$( openssl x509 -in "${VAULT_CACERT}" -noout -sha256 -fingerprint )" != "${VAULT_TRUSTED_FINGERPRINT}" ]
+then
+    echo "Invalid fingerprint retrieved from server, expected '${VAULT_TRUSTED_FINGERPRINT}' but got '$( openssl x509 -in "${VAULT_CACERT}" -noout -sha256 -fingerprint )'"
+    exit 1
+fi
 
 # Automatically unseal vault if possible
 if
@@ -33,21 +54,35 @@ fi
 # configuration, this configuration is created by the admin for each user and
 # should be installed manually on first setup. If this configuration does not
 # exist we check for the ansible configuration, and finally the root conf.
+#
+# This step is skipped if the user provides a vault token manually
+[ ! -z "${VAULT_TOKEN}" ] && return 0
+
 if
+    [ ! -z "${VAULT_ROLE_ID}" ] && [ ! -z "${VAULT_SECRET_ID}" ]
+then
+    VAULT_PAYLOAD='{"role_id":"'${VAULT_ROLE_ID}'","secret_id":"'${VAULT_SECRET_ID}'"}'
+    export VAULT_TOKEN="$( curl --connect-timeout 3 -k -XPOST -sS "${VAULT_ADDR}/v1/auth/approle/login" -d "${VAULT_PAYLOAD}" | jq -r .auth.client_token )"
+elif
     [ -f "${HOME}/.vault.conf" ]
 then
     VAULT_AUTH_BACKEND="$( jq -r .backend "${HOME}/.vault.conf" )"
     VAULT_AUTH_DATA="$( jq -cM .data "${HOME}/.vault.conf" )"
 
-    export VAULT_TOKEN="$( curl --connect-timeout 3 --cacert "${VAULT_CACERT}" -XPOST -sS "${VAULT_ADDR}/v1/auth/${VAULT_AUTH_BACKEND}/login" -d "${VAULT_AUTH_DATA}" | jq -r .auth.client_token )"
+    export VAULT_TOKEN="$( curl --connect-timeout 3 -k -XPOST -sS "${VAULT_ADDR}/v1/auth/${VAULT_AUTH_BACKEND}/login" -d "${VAULT_AUTH_DATA}" | jq -r .auth.client_token )"
 elif
     [ -f "${HOME}/.vault.ansible.conf" ]
 then
-    export VAULT_TOKEN="$( curl --connect-timeout 3 --cacert "${VAULT_CACERT}" -XPOST -sS "${VAULT_ADDR}/v1/auth/approle/login" -d "$( cat ${HOME}/.vault.ansible.conf )" | jq -r .auth.client_token )"
+    export VAULT_TOKEN="$( curl --connect-timeout 3 -k -XPOST -sS "${VAULT_ADDR}/v1/auth/approle/login" -d "$( cat ${HOME}/.vault.ansible.conf )" | jq -r .auth.client_token )"
 elif
     [ -f "${HOME}/.vault.root.conf" ]
 then
     export VAULT_TOKEN="$( jq -r '.root_token' /home/dawn/.vault.root.conf )"
+elif
+    [ -f "${HOME}/.vault-token" ]
+then
+    # do nothing, we are auth already
+    true
 else
     cat <<- EOM
 

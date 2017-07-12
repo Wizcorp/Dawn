@@ -11,3 +11,5 @@ vault_client_ca_file: /etc/ssl/certs/vault/client.ca.pem
 
 vault_server_max_ttl: 17520h
 vault_client_max_ttl: 8760h
+vault_server_cert_ttl: 8760h
+vault_client_cert_ttl: 4380h
