@@ -42,7 +42,9 @@ var (
 )
 
 var dockerfileTpl = template.Must(template.New("dockerfile").Parse(`# Create a build of dawn with our project embedded
-FROM {{ .Image }}
+ARG base_image={{ .Image }}
+
+FROM ${base_image}
 
 ARG default_env={{ .DefaultEnv }}
 
@@ -61,6 +63,7 @@ var cliAppDirs = appdir.New(cliName)
 // image to use
 type Config struct {
 	ProjectName string
+	BaseImage   string
 	Image       string
 }
 
@@ -69,6 +72,7 @@ type Config struct {
 type FileConfig struct {
 	ProjectName  string           `yaml:"project_name"`
 	Image        string           `yaml:"image"`
+	BaseImage    string           `yaml:"base_image"`
 	Environments FileEnvironments `yaml:"environments,omitempty"`
 }
 
@@ -80,7 +84,8 @@ type FileEnvironments map[string]FileEnvironmentConfig
 // FileEnvironmentConfig is a set of custom configuration to
 // apply to the global environment
 type FileEnvironmentConfig struct {
-	Image string `yaml:"image"`
+	Image     string `yaml:"image"`
+	BaseImage string `yaml:"base_image"`
 }
 
 // Used by readLine
@@ -112,9 +117,10 @@ func printHelp() {
 	fmt.Println()
 	fmt.Println("Flags")
 	fmt.Println()
-	fmt.Println("    --update       Update this binary")
-	fmt.Println("    --version      Show version information")
-	fmt.Println("    --help         Show this screen")
+	fmt.Println("    --update              Update this binary")
+	fmt.Println("    --version             Show version information")
+	fmt.Println("    --build <environment> Build a docker image that embeds the environment")
+	fmt.Println("    --help                Show this screen")
 	fmt.Println()
 	fmt.Printf("For more information: %s\n", cliDocsURL)
 	fmt.Println()
@@ -262,7 +268,13 @@ func createConfigurationFile(projectName string) error {
 		return err
 	}
 
-	content := fmt.Sprintf("project_name: %s\nimage: %s", projectName, cliDefaultImageVersion)
+	content := fmt.Sprintf(
+		"project_name: %s\nbase_image: %s:%s\nimage: %s",
+		projectName,
+		cliDefaultImageName,
+		cliDefaultImageVersion,
+		projectName,
+	)
 	err = ioutil.WriteFile(getConfigurationFilePath(), []byte(content), 0644)
 
 	return err
@@ -332,6 +344,7 @@ func getFileConfiguration() (*FileConfig, error) {
 
 func getConfigurationForEnvironment(environment string) (*Config, error) {
 	var image string
+	baseImage := fmt.Sprintf("%s:%s", cliDefaultImageName, cliDefaultImageVersion)
 	fileConfig, err := getFileConfiguration()
 
 	if err != nil {
@@ -340,12 +353,15 @@ func getConfigurationForEnvironment(environment string) (*Config, error) {
 
 	if environmentConfiguration, ok := fileConfig.Environments[environment]; ok {
 		image = environmentConfiguration.Image
+		baseImage = environmentConfiguration.BaseImage
 	} else {
 		image = fileConfig.Image
+		baseImage = fileConfig.BaseImage
 	}
 
 	return &Config{
 		fileConfig.ProjectName,
+		baseImage,
 		image,
 	}, nil
 }
@@ -373,6 +389,25 @@ func runUpdate() (int, error) {
 	}
 
 	return runSubProcess(shell, arguments)
+}
+
+func runBuild(environment string) (int, error) {
+	configuration, err := getConfigurationForEnvironment(environment)
+	if err != nil {
+		panic(err)
+	}
+
+	arguments := []string{
+		"build",
+		"-t", fmt.Sprintf("%s:%s", configuration.ProjectName, environment),
+		"dawn",
+		"--build-arg", fmt.Sprintf("base_image=%s", configuration.BaseImage),
+		"--build-arg", fmt.Sprintf("default_env=%s", environment),
+	}
+
+	fmt.Println(arguments)
+
+	return runSubProcess("docker", arguments)
 }
 
 func runEnvironmentContainer(environment string, configuration *Config, command []string) (int, error) {
@@ -429,12 +464,25 @@ func main() {
 		printVersion()
 	case "--update":
 		exitCode, err = runUpdate()
+	case "--build":
+		if len(args) < 2 {
+			printHelp()
+			return
+		}
+
+		exitCode, err = runBuild(args[1])
 	default:
 		// Make sure the configuration folder and file exists
 		if doesConfigurationFileExist() == false {
 			created := requestConfigurationFileCreation()
 			if !created {
 				break
+			}
+
+			// Build the image for the current environment
+			_, err = runBuild(args[0])
+			if err != nil {
+				panic(err)
 			}
 		}
 
