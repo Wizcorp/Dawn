@@ -7,12 +7,16 @@
 
 - hosts: localhost
   roles:
-    - vault-auth
+    - name: vault-auth
+      tags:
+        - client-cert
   tasks:
     - name: "Check local vault TLS certificates status"
       stat:
         path: "{{ local_vault_client_cert_file }}"
       register: vault_certs_stat
+      tags:
+        - client-cert
 
     # That should be all we need, since we can generate certificates for the user
     # from vault when running the dawn command
@@ -42,3 +46,6 @@
           # TLS request data
           request_data:
             common_name: "client.vault.{{ local_domain_name }}"
+            ttl: "8760h"
+      tags:
+        - client-cert

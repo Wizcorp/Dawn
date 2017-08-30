@@ -42,8 +42,8 @@
     user: "{{ grafana_user }}"
     password: "{{ grafana_password }}"
     force_basic_auth: yes
-  retries: 5
-  delay: 5
+  retries: 6
+  delay: 10
   register: grafana_datasources
   until: grafana_datasources.json is defined
   tags:

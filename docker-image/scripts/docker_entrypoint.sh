@@ -85,5 +85,14 @@ pushd ${PROJECT_ENVIRONMENT_FILES_PATH} > /dev/null
 # same behaviour
 cp "${ROOT_FOLDER}/scripts/user_bash_profile.sh" "/home/${SHELL_USER}/.bash_profile"
 
-sudo -H -E -u ${SHELL_USER} bash --login -c "${COMMAND}"
+# Some scripts might pass complex arguments that need to be safely escaped before
+# being passed to bash -c, example is gitlab passing 'sh -c "if true; then foo; fi"'
+# that will fail when passed directly, thankfully printf on bash supports the %q format
+# sequence that allows converting an argument to a safe string to be used as shell
+# input
+#
+# Ref: https://stackoverflow.com/questions/34271519/passing-arguments-to-bash-c-with-spaces
+#
+printf -v SAFE_COMMAND '%q ' "${@}"
+sudo -H -E -u ${SHELL_USER} bash --login -c "$SAFE_COMMAND"
 popd > /dev/null

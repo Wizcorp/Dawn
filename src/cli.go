@@ -9,6 +9,8 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
+	"syscall"
+	"text/template"
 
 	"path/filepath"
 
@@ -39,6 +41,18 @@ var (
 	cliBuildServer = "n/a"
 )
 
+var dockerfileTpl = template.Must(template.New("dockerfile").Parse(`# Create a build of dawn with our project embedded
+ARG base_image={{ .Image }}
+
+FROM ${base_image}
+
+ARG default_env={{ .DefaultEnv }}
+
+ENV PROJECT_ENVIRONMENT ${default_env}
+ENV PROJECT_NAME {{ .ProjectName }}
+
+COPY . /dawn/project/dawn`))
+
 // In this directory, we will be storing local project data, such as
 // the shell history, ssh keys, and so on. This is also where any
 // global configuration should go in the future.
@@ -49,6 +63,7 @@ var cliAppDirs = appdir.New(cliName)
 // image to use
 type Config struct {
 	ProjectName string
+	BaseImage   string
 	Image       string
 }
 
@@ -57,6 +72,7 @@ type Config struct {
 type FileConfig struct {
 	ProjectName  string           `yaml:"project_name"`
 	Image        string           `yaml:"image"`
+	BaseImage    string           `yaml:"base_image"`
 	Environments FileEnvironments `yaml:"environments,omitempty"`
 }
 
@@ -68,7 +84,8 @@ type FileEnvironments map[string]FileEnvironmentConfig
 // FileEnvironmentConfig is a set of custom configuration to
 // apply to the global environment
 type FileEnvironmentConfig struct {
-	Image string `yaml:"image"`
+	Image     string `yaml:"image"`
+	BaseImage string `yaml:"base_image"`
 }
 
 // Used by readLine
@@ -100,9 +117,10 @@ func printHelp() {
 	fmt.Println()
 	fmt.Println("Flags")
 	fmt.Println()
-	fmt.Println("    --update       Update this binary")
-	fmt.Println("    --version      Show version information")
-	fmt.Println("    --help         Show this screen")
+	fmt.Println("    --update              Update this binary")
+	fmt.Println("    --version             Show version information")
+	fmt.Println("    --build <environment> Build a docker image that embeds the environment")
+	fmt.Println("    --help                Show this screen")
 	fmt.Println()
 	fmt.Printf("For more information: %s\n", cliDocsURL)
 	fmt.Println()
@@ -117,18 +135,30 @@ func printVersion() {
 	fmt.Printf("Build server:  %s\n", cliBuildServer)
 }
 
-func runSubProcess(command string, arguments []string) error {
+func runSubProcess(command string, arguments []string) (int, error) {
 	cmd := exec.Command(command, arguments...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 
-	if err != nil {
-		fmt.Printf("%#v", err)
+	if eerr, ok := err.(*exec.ExitError); ok {
+		// on unix get the exit code
+		if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
+			ws := eerr.Sys().(syscall.WaitStatus)
+			return ws.ExitStatus(), nil
+		}
+
+		// no documentation on how to do it for windows
+		return -1, err
 	}
 
-	return err
+	if err != nil {
+		fmt.Printf("%#v", err)
+		return -1, err
+	}
+
+	return 0, nil
 }
 
 func ensureDirectoryExists(dir string) (string, error) {
@@ -211,6 +241,10 @@ func getConfigurationFilePath() string {
 	return fmt.Sprintf("%s/%s", getConfigurationFolderPath(), cliConfigurationFilename)
 }
 
+func getDockerFilePath() string {
+	return fmt.Sprintf("%s/%s", getConfigurationFolderPath(), "Dockerfile")
+}
+
 func getFullImageName(image string) string {
 	if strings.Index(image, ":") == -1 {
 		return fmt.Sprintf("%s:%s", cliDefaultImageName, image)
@@ -234,10 +268,30 @@ func createConfigurationFile(projectName string) error {
 		return err
 	}
 
-	content := fmt.Sprintf("project_name: %s\nimage: %s", projectName, cliDefaultImageVersion)
+	content := fmt.Sprintf(
+		"project_name: %s\nbase_image: %s:%s\nimage: %s",
+		projectName,
+		cliDefaultImageName,
+		cliDefaultImageVersion,
+		projectName,
+	)
 	err = ioutil.WriteFile(getConfigurationFilePath(), []byte(content), 0644)
 
 	return err
+}
+
+func createProjectDockerfile(projectName string) error {
+	file, err := os.OpenFile(getDockerFilePath(), os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	return dockerfileTpl.Execute(file, map[string]string{
+		"Image":       cliDefaultImageName,
+		"ProjectName": projectName,
+		"DefaultEnv":  os.Args[1],
+	})
 }
 
 func requestConfigurationFileCreation() bool {
@@ -259,6 +313,12 @@ func requestConfigurationFileCreation() bool {
 	err := createConfigurationFile(projectName)
 	if err != nil {
 		fmt.Printf("Failed to create configuration: %#v", err)
+		return false
+	}
+
+	err = createProjectDockerfile(projectName)
+	if err != nil {
+		fmt.Printf("Failed to create Dockerfile: %#v", err)
 		return false
 	}
 
@@ -284,6 +344,7 @@ func getFileConfiguration() (*FileConfig, error) {
 
 func getConfigurationForEnvironment(environment string) (*Config, error) {
 	var image string
+	baseImage := fmt.Sprintf("%s:%s", cliDefaultImageName, cliDefaultImageVersion)
 	fileConfig, err := getFileConfiguration()
 
 	if err != nil {
@@ -292,17 +353,20 @@ func getConfigurationForEnvironment(environment string) (*Config, error) {
 
 	if environmentConfiguration, ok := fileConfig.Environments[environment]; ok {
 		image = environmentConfiguration.Image
+		baseImage = environmentConfiguration.BaseImage
 	} else {
 		image = fileConfig.Image
+		baseImage = fileConfig.BaseImage
 	}
 
 	return &Config{
 		fileConfig.ProjectName,
+		baseImage,
 		image,
 	}, nil
 }
 
-func runUpdate() error {
+func runUpdate() (int, error) {
 	var shell string
 	var url string
 	var arguments []string
@@ -327,10 +391,29 @@ func runUpdate() error {
 	return runSubProcess(shell, arguments)
 }
 
-func runEnvironmentContainer(environment string, configuration *Config, command []string) error {
+func runBuild(environment string) (int, error) {
+	configuration, err := getConfigurationForEnvironment(environment)
+	if err != nil {
+		panic(err)
+	}
+
+	arguments := []string{
+		"build",
+		"-t", fmt.Sprintf("%s:%s", configuration.ProjectName, environment),
+		"dawn",
+		"--build-arg", fmt.Sprintf("base_image=%s", configuration.BaseImage),
+		"--build-arg", fmt.Sprintf("default_env=%s", environment),
+	}
+
+	fmt.Println(arguments)
+
+	return runSubProcess("docker", arguments)
+}
+
+func runEnvironmentContainer(environment string, configuration *Config, command []string) (int, error) {
 	localEnvironmentDir, err := getLocalProjectEnvironmentDirectory(configuration.ProjectName, environment)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	arguments := []string{
@@ -366,6 +449,7 @@ func runEnvironmentContainer(environment string, configuration *Config, command 
 
 func main() {
 	var err error
+	var exitCode int
 
 	if len(os.Args) < 2 {
 		printHelp()
@@ -379,13 +463,26 @@ func main() {
 	case "--version":
 		printVersion()
 	case "--update":
-		err = runUpdate()
+		exitCode, err = runUpdate()
+	case "--build":
+		if len(args) < 2 {
+			printHelp()
+			return
+		}
+
+		exitCode, err = runBuild(args[1])
 	default:
 		// Make sure the configuration folder and file exists
 		if doesConfigurationFileExist() == false {
 			created := requestConfigurationFileCreation()
 			if !created {
 				break
+			}
+
+			// Build the image for the current environment
+			_, err = runBuild(args[0])
+			if err != nil {
+				panic(err)
 			}
 		}
 
@@ -403,10 +500,12 @@ func main() {
 		}
 
 		// Run the container
-		err = runEnvironmentContainer(environment, configuration, command)
+		exitCode, err = runEnvironmentContainer(environment, configuration, command)
 	}
 
-	if err != nil {
+	if err != nil && exitCode == 0 {
 		os.Exit(1)
 	}
+
+	os.Exit(exitCode)
 }

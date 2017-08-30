@@ -18,8 +18,8 @@ services:
       - prometheus
       - traefik
     environment:
-      GF_SECURITY_ADMIN_USER: "{{ grafana_user }}"
-      GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_password }}"
+      GF_SECURITY_ADMIN_USER: {{ grafana_user | to_json }}
+      GF_SECURITY_ADMIN_PASSWORD: {{ grafana_password | replace("$", "$$") | to_json }}
     volumes:
       # Configuration
       - "/etc/grafana.ini:/etc/grafana/grafana.ini"

@@ -1,4 +1,6 @@
 https_server_max_ttl: 17520h
+https_server_cert_ttl: 8760h
 https_cert_file: /etc/ssl/certs/https/server.cert.pem
 https_key_file: /etc/ssl/certs/https/server.key.pem
 https_ca_file: /etc/ssl/certs/https/server.ca.pem
+

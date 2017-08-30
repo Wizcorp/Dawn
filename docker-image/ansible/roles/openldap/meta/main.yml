@@ -3,7 +3,6 @@ dependencies:
   - role: vault-setup-ca
     backend_name: ldap
     server_ttl: "{{ ldap_server_max_ttl }}"
-    client_ttl: "{{ ldap_client_max_ttl }}"
   - role: register-ca
     backend: ldap
   - role: traefik-expose

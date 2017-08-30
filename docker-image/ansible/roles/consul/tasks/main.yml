@@ -40,6 +40,7 @@
         common_name: "{{ inventory_hostname }}.node.{{ local_domain_full }}"
         alt_names: "consul.service.{{ local_domain_full }}"
         ip_sans: "{{ private_ipv4 }}"
+        ttl: "{{ consul_server_cert_ttl }}"
       notify:
         - Restart consul
 
@@ -65,6 +66,7 @@
       # TLS request data
       request_data:
         common_name: "client.consul.{{ local_domain_name }}"
+        ttl: "{{ consul_client_cert_ttl }}"
 
 # work around role_path not working properly in include_role
 - set_fact:

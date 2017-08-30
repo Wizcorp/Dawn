@@ -40,6 +40,7 @@
         common_name: "{{ inventory_hostname }}.node.{{ local_domain_full }}"
         alt_names: "docker.service.{{ local_domain_full }},swarm.service.{{ local_domain_full }},*.swarm.service.{{ local_domain_full }}"
         ip_sans: "{{ private_ipv4 }},{{ ansible_ssh_host }},{{ dawn_docker_ip|default(private_ipv4) }}"
+        ttl: "{{ docker_server_cert_ttl }}"
       notify:
         - Restart docker
 
@@ -65,6 +66,7 @@
       # TLS request data
       request_data:
         common_name: "client.docker.{{ local_domain_name }}"
+        ttl: "{{ docker_client_cert_ttl }}"
 
 - name: "Install and configure docker"
   include_role:

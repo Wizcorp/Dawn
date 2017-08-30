@@ -26,6 +26,7 @@
       request_data:
         common_name: "ldap.{{ local_domain_name }}"
         ip_sans: "{{ private_ipv4 }}"
+        ttl: "{{ ldap_server_cert_ttl }}"
 
 - name: "Start openldap container"
   docker_container:
