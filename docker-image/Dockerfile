@@ -6,10 +6,10 @@ ARG root_folder=/dawn
 ARG shell_user=dawn
 ARG configuration_folder=dawn
 ARG configuration_filename=dawn.yml
-ARG ansible_version=2.2.3.0
-ARG terraform_version=0.9.9
-ARG vault_version=0.7.3
-ARG docker_version=17.05.0-ce
+ARG ansible_version=2.3.2.0
+ARG terraform_version=0.10.4
+ARG vault_version=0.8.2
+ARG docker_version=17.06.2-ce
 
 # Update the package list
 RUN apk update && apk upgrade
@@ -68,7 +68,7 @@ RUN wget -q https://releases.hashicorp.com/vault/${vault_version}/vault_${vault_
     && rm /tmp/vault.zip
 
 # Install Docker binaries
-RUN wget -q https://get.docker.com/builds/Linux/x86_64/docker-${docker_version}.tgz \
+RUN wget -q https://download.docker.com/linux/static/stable/x86_64/docker-${docker_version}.tgz \
       -O /tmp/docker.tgz \
     && cd /tmp \
     && tar -zxf docker.tgz \

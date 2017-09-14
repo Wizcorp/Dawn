@@ -16,9 +16,10 @@
   # We need to do the tuning manually since the lib doesn't provide the method for it
   - name: "Tune {{ backend_name }} CA TTL"
     uri:
-      HEADER_X-Vault-Token: "{{ vault_token }}"
       url: "{{ vault_addr }}/v1/sys/mounts/{{ backend_name }}/pki/tune"
       method: POST
+      headers:
+        X-Vault-Token: "{{ vault_token }}"
       body_format: json
       body: "{\"max_lease_ttl\":\"{{ vault_intermediate_ca_ttl }}\"}"
       status_code: 204

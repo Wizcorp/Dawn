@@ -1,7 +1,13 @@
 - name: "Enable EPEL repo"
-  become: true
   yum:
     name: epel-release
     state: latest
   tags:
     - common
+
+- name: "Upgrade all packages"
+  when: system_upgrade is defined and system_upgrade|bool
+  yum:
+    update_cache: yes
+    name: '*'
+    state: latest

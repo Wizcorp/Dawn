@@ -88,7 +88,7 @@ image:
 
   # The version to use for each software installed in the image
   software_versions:
-    ansible:   "2.2.3.0"
-    terraform: "0.9.9"
-    vault:     "0.7.3"
-    docker:    "17.05.0-ce"
+    ansible:   "2.3.2.0"
+    terraform: "0.10.4"
+    vault:     "0.8.2"
+    docker:    "17.06.2-ce"
