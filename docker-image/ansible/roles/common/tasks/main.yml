@@ -1,6 +1,5 @@
 ---
 - name: "Set the timezone to {{ timezone }}"
-  become: true
   file:
     src: "/usr/share/zoneinfo/{{ timezone }}"
     dest: /etc/localtime
@@ -13,7 +12,6 @@
     - timezone
 
 - name: "Set the hostname"
-  become: true
   copy:
     dest: /etc/hostname
     content: "{{ inventory_hostname }}"
@@ -25,7 +23,6 @@
     - common
 
 - name: "Configure hosts file"
-  become: true
   template:
     src: hosts.j2
     dest: /etc/hosts

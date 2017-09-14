@@ -1,6 +1,7 @@
 - name: "Fetch remote CA"
   uri:
-    HEADER_X-Vault-Token: "{{ vault_token }}"
+    headers:
+      X-Vault-Token: "{{ vault_token }}"
     url: "http://127.0.0.1:8200/v1/{{ backend }}/pki/ca/pem"
     method: GET
     return_content: yes
@@ -13,9 +14,9 @@
     dest: "/etc/pki/ca-trust/source/anchors/{{ backend }}.pem"
   register: anchors_copy
   delegate_to: "{{ target_host }}"
-  delegate_facts: true
+  #delegate_facts: true
 
 - name: "Regenerate CAs ({{ target_host }})"
-  when: hostvars[target_host].anchors_copy.changed|bool
+  when: anchors_copy.changed|bool
   shell: update-ca-trust
   delegate_to: "{{ target_host }}"

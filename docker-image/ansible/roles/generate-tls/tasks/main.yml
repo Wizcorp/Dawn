@@ -24,7 +24,8 @@
 # Generate the server certificates
 - name: "Generate certificates"
   uri:
-    HEADER_X-Vault-Token: "{{ vault_token }}"
+    headers:
+      X-Vault-Token: "{{ vault_token }}"
     url: "http://127.0.0.1:8200/v1/{{ pki.backend }}/pki/issue/{{ pki.role }}"
     method: POST
     body_format: json
