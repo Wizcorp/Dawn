@@ -17,5 +17,3 @@
   user:
     name: telegraf
     groups: docker
-  tags:
-    - telegraf

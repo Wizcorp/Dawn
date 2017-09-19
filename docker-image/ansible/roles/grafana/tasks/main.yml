@@ -3,18 +3,12 @@
     src: "grafana.ini"
     dest: /etc/grafana.ini
     mode: 0644
-  tags:
-    - files
-    - grafana
 
 - name: "Create grafana ldap config file"
   template:
     src: "{{ grafana_ldap_template }}"
     dest: /etc/grafana-ldap.toml
     mode: 0644
-  tags:
-    - files
-    - grafana
 
 - name: "Create grafana stack file"
   template:
@@ -25,15 +19,10 @@
 - name: "Start grafana on the cluster"
   when: grafana_stack_file_status.changed|bool
   shell: "docker stack deploy -c '{{ grafana_stack_file }}' {{ grafana_stack }}"
-  tags:
-    - docker
-    - grafana
 
 - name: "Build internal grafana URL"
   set_fact:
     grafana_url: "http://grafana.{{ local_domain_name }}"
-  tags:
-    - grafana
 
 - name: "Check if prometheus source exists"
   uri:
@@ -46,8 +35,6 @@
   delay: 10
   register: grafana_datasources
   until: grafana_datasources.json is defined
-  tags:
-    - grafana
 
 - name: "Setup prometheus source on grafana"
   uri:
@@ -65,8 +52,6 @@
     status_code: 200
     body_format: json
   when: "{{ 'prometheus' not in grafana_datasources.json|map(attribute='name') }}"
-  tags:
-  - grafana
 
 - name: "Check if a dashboard exists"
   uri:
@@ -76,8 +61,6 @@
     password: "{{ grafana_password }}"
     force_basic_auth: yes
   register: grafana_dashboards
-  tags:
-    - grafana
 
 - name: "Register hardware dashboard"
   uri:
@@ -90,5 +73,3 @@
     status_code: 200
     body_format: json
   when: "{{ grafana_dashboards.json|length == 0 }}"
-  tags:
-  - grafana

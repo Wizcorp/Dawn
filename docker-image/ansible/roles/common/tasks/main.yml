@@ -7,9 +7,6 @@
     owner: root
     group: root
     force: yes
-  tags:
-    - common
-    - timezone
 
 - name: "Set the hostname"
   copy:
@@ -19,8 +16,6 @@
     owner: root
     group: root
     mode: 0644
-  tags:
-    - common
 
 - name: "Configure hosts file"
   template:
@@ -29,8 +24,6 @@
     owner: root
     group: root
     mode: 0644
-  tags:
-    - common
 
 - include: centos.yml
   when: ansible_distribution == 'CentOS'

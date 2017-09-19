@@ -3,18 +3,12 @@
     src: "docker_auth.yml.j2"
     dest: "/etc/docker_auth.yml"
     mode: 0644
-  tags:
-    - files
-    - registry
 
 - name: "Create docker_auth ldap password file"
   template:
     src: "ldap_password.txt.j2"
     dest: "/etc/ldap_password.txt"
     mode: 0644
-  tags:
-    - files
-    - registry
 
 - name: "Start docker_auth container"
   docker_container:
