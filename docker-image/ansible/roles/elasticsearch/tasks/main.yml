@@ -3,43 +3,24 @@
     name: vm.max_map_count
     value: 262144
     state: present
-  tags:
-    - sysctl
-    - monitoring
-    - elasticsearch
 
 - name: "Create logstash pipeline folder"
   file:
     path: "/etc/logstash/pipeline/"
     state: directory
     mode: 0755
-  tags:
-    - files
-    - elasticsearch
-    - logstash
-    - monitoring
 
 - name: "Create rsyslog pipeline"
   template:
     src: "rsyslog.conf.j2"
     dest: /etc/logstash/pipeline/rsyslog.conf
     mode: 0644
-  tags:
-    - files
-    - elasticsearch
-    - logstash
-    - monitoring
 
 - name: "Store elasticsearch template"
   copy:
     src: "elasticsearch-template.json"
     dest: /etc/logstash/elasticsearch-template.json
     mode: 0644
-  tags:
-    - files
-    - elasticsearch
-    - logstash
-    - monitoring
 
 - name: "Start ElasticSearch on monitoring nodes"
   docker_container:

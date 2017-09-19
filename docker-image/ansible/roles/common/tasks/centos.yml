@@ -2,8 +2,6 @@
   yum:
     name: epel-release
     state: latest
-  tags:
-    - common
 
 - name: "Upgrade all packages"
   when: system_upgrade is defined and system_upgrade|bool
