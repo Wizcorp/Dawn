@@ -29,7 +29,7 @@ then
     export VAULT_CACERT="$( mktemp )"
 
     # Retrieve the remote cert
-    curl -sk "${VAULT_ADDR}/v1/vault/pki/ca/pem" -o "${VAULT_CACERT}"
+    curl -sk "${VAULT_ADDR}/v1/vault/pki/ca/pem" -o "${VAULT_CACERT}" 2> /dev/null
 fi
 
 # If provided extract the fingerprint and compare it

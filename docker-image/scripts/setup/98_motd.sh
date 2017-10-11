@@ -12,15 +12,15 @@ then
   echo "* Monitoring:"
   printf "%-15s %s\n" "  - Kibana:" "http://${CONTROL_NODE}:5601/"
   printf "%-15s %s\n" "  - ElasticSearch:" "http://${CONTROL_NODE}:9200/"
-  printf "%-15s %s\n" "  - Grafana:" "http://${CONTROL_NODE}:3000/"
+  printf "%-15s %s\n" "  - Grafana:" "https://grafana.${LOCAL_DOMAIN_DC}.${LOCAL_DOMAIN}/"
 
   echo "* Service Discovery:"
-  printf "%-15s %s\n" "  - Consul:" "http://${CONTROL_NODE}:8500/ui/"
+  printf "%-15s %s\n" "  - Consul:" "https://${CONTROL_NODE}:8500/ui/"
   printf "%-15s %s\n" "  - Consul DNS:" "${CONTROL_NODE}:8600"
   printf "%-15s %s\n" "  - DNSMasq DNS:" "${CONTROL_NODE}:53"
 
   echo "* Load Balancing"
-  printf "%-15s %s\n" "  - Traefik:" "http://${EDGE_NODE}"
+  printf "%-15s %s\n" "  - Traefik:" "https://${EDGE_NODE}:8080"
 
   if
       [ ! -z "${VAULT_TOKEN}" ]

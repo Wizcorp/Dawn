@@ -9,7 +9,9 @@
   uri:
     url: "http://127.0.0.1:8200/v1/sys/seal-status"
   register: vault_seal_status
-  until: vault_seal_status.json.sealed is defined
+  until: >
+    vault_seal_status.json is defined
+    and vault_seal_status.json.sealed is defined
   retries: 5
   delay: 10
   delegate_to: "{{ groups['control'][0] }}"

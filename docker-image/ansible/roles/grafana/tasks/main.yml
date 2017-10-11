@@ -26,7 +26,7 @@
 
 - name: "Check if prometheus source exists"
   uri:
-    url: "{{ grafana_url}}/api/datasources"
+    url: "{{ grafana_url }}/api/datasources"
     return_content: yes
     user: "{{ grafana_user }}"
     password: "{{ grafana_password }}"
@@ -38,7 +38,7 @@
 
 - name: "Setup prometheus source on grafana"
   uri:
-    url: "{{ grafana_url}}/api/datasources"
+    url: "{{ grafana_url }}/api/datasources"
     method: POST
     user: "{{ grafana_user }}"
     password: "{{ grafana_password }}"
@@ -55,7 +55,7 @@
 
 - name: "Check if a dashboard exists"
   uri:
-    url: "{{ grafana_url}}/api/search?query=Hardware"
+    url: "{{ grafana_url }}/api/search?query=Hardware"
     return_content: yes
     user: "{{ grafana_user }}"
     password: "{{ grafana_password }}"
@@ -64,7 +64,7 @@
 
 - name: "Register hardware dashboard"
   uri:
-    url: "{{ grafana_url}}/api/dashboards/db"
+    url: "{{ grafana_url }}/api/dashboards/db"
     method: POST
     user: "{{ grafana_user }}"
     password: "{{ grafana_password }}"
