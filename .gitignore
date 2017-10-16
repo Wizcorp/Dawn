@@ -1,8 +1,10 @@
 # Ansible
 *.log
-
 *.retry
 /ansible/inventory
+
+# Python
+*.pyc
 
 # Vagrant
 /.vagrant
@@ -18,3 +20,7 @@
 
 # Build documentation
 /.docs
+
+# IDEs
+*.idea
+/.vscode
