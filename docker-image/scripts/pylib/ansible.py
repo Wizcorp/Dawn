@@ -83,11 +83,11 @@ class AnsibleEnvironment():
         self._templar = Templar(loader=loader, variables=self._vars)
 
         # setup some easy variables that we use a lot
-        self._vars['control_ip'] = self.template(
+        self._vars['control_ip'] = self.get_var(
             "hostvars[groups['control'][0]]['ansible_ssh_host']")
-        self._vars['edge_ip'] = self.template(
+        self._vars['edge_ip'] = self.get_var(
             "hostvars[groups['edge'][0]]['ansible_ssh_host']")
-        self._vars['monitor_ip'] = self.template(
+        self._vars['monitor_ip'] = self.get_var(
             "hostvars[groups['monitor'][0]]['ansible_ssh_host']")
 
     def get_var(self, name, cache=True):

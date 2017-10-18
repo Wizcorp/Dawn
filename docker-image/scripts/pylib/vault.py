@@ -12,9 +12,15 @@ class VaultClient(object):
     that supports verifying IP SANs on python 2.7
     """
 
-    def __init__(self, vault_addr, vault_cacert, vault_token=None):
+    def __init__(self, vault_addr, vault_cacert=None, vault_token=None):
         self._ctx = customssl.create_default_context()
-        self._ctx.load_verify_locations(vault_cacert)
+
+        if vault_cacert != None:
+            self._ctx.load_verify_locations(vault_cacert)
+            self._ctx.verify_flags = ssl.VERIFY_DEFAULT
+        else:
+            self._ctx.check_hostname = False
+            self._ctx.verify_mode = ssl.CERT_NONE
 
         self._vault_addr = vault_addr
         self._vault_token = vault_token
@@ -72,21 +78,8 @@ def setup_vault(env):
     except socket.gaierror:
         pass
 
-    # retrieve the vault CA certificate if necessary
-    if not os.path.exists(vault_cacert) and vault_cacert_source != "custom":
-        warnings.simplefilter("ignore", RuntimeWarning)
-        vault_cacert = os.tempnam()
-        with open(vault_cacert, "w") as fd:
-            ca_url = "%s/v1/%s/pki/ca/pem" % (vault_addr, vault_cacert_source)
-
-            # do not check the certificate's validity
-            ctx = ssl.create_default_context()
-            ctx.check_hostname = False
-            ctx.verify_mode = ssl.CERT_NONE
-
-            fd.write(urllib2.urlopen(ca_url, context=ctx).read())
-
-    vault_client = VaultClient(vault_addr, vault_cacert)
+    # create a client with no cert verification for unsealing
+    vault_client = VaultClient(vault_addr)
     seal_status = vault_client.query("sys/seal-status")
 
     # if vault is sealed, try to unseal it
@@ -97,6 +90,30 @@ def setup_vault(env):
                 res = vault_client.query('sys/unseal', {'key': unseal_key})
                 if res['t'] <= 0:
                     break
+
+    # retrieve the vault CA certificate if necessary
+    if not os.path.exists(vault_cacert) and vault_cacert_source != "custom":
+        warnings.simplefilter("ignore", RuntimeWarning)
+        vault_cacert = os.tempnam()
+        with open(vault_cacert, "w") as fd:
+            # first fetch the root CA
+            root_ca_url = "%s/v1/pki/ca/pem" % (vault_addr)
+
+            # do not check the certificate's validity
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+
+            fd.write(urllib2.urlopen(root_ca_url, context=ctx).read())
+            fd.write("\n")
+
+            # then add the intermediate CA
+            ca_url = "%s/v1/%s/pki/ca/pem" % (vault_addr, vault_cacert_source)
+
+            fd.write(urllib2.urlopen(ca_url, context=ctx).read())
+
+    # recreate the vault with the proper ca_cert
+    vault_client = VaultClient(vault_addr, vault_cacert)
 
     # try one of the many supported login methods
     vault_token = None
