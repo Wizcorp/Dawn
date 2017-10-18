@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 from ansible.compat.six import string_types
-from ansible.errors import AnsibleFileNotFound, AnsibleParserError
+from ansible.errors import AnsibleFileNotFound, AnsibleParserError, AnsibleUndefinedVariable
 from ansible.inventory import Inventory
 from ansible.module_utils._text import to_bytes
 from ansible.parsing.dataloader import DataLoader
@@ -92,7 +92,10 @@ class AnsibleEnvironment():
 
     def get_var(self, name, cache=True):
         if name not in self._cache or not cache:
-            self._cache[name] = self._templar.template("{{%s}}" % name)
+            try:
+                self._cache[name] = self._templar.template("{{%s}}" % name)
+            except AnsibleUndefinedVariable:
+                self._cache[name] = None
         return self._cache.get(name)
 
     def set_var(self, name, value):
