@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import os
+import sys
+import urllib2
 
 from pylib import base_template, motd_template, run_template
 from pylib.ansible import AnsibleEnvironment
@@ -11,8 +13,13 @@ if __name__ == "__main__":
     env = AnsibleEnvironment()
 
     # setup vault and docker
-    vault_template = setup_vault(env)
-    docker_template = setup_docker(env)
+    try:
+        vault_template = setup_vault(env)
+        docker_template = setup_docker(env)
+    except urllib2.HTTPError as e:
+        if e.getcode() == 500:
+            print('echo "Vault seems to be having troubles, try to restart it and logout/login again"')
+            sys.exit(0)
 
     # setup our templates
     templates = [
