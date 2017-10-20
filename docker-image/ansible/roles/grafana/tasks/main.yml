@@ -31,6 +31,7 @@
     user: "{{ grafana_user }}"
     password: "{{ grafana_password }}"
     force_basic_auth: yes
+    validate_certs: no
   retries: 6
   delay: 10
   register: grafana_datasources
@@ -51,6 +52,7 @@
     force_basic_auth: yes
     status_code: 200
     body_format: json
+    validate_certs: no
   when: "{{ 'prometheus' not in grafana_datasources.json|map(attribute='name') }}"
 
 - name: "Check if a dashboard exists"
@@ -60,6 +62,7 @@
     user: "{{ grafana_user }}"
     password: "{{ grafana_password }}"
     force_basic_auth: yes
+    validate_certs: no
   register: grafana_dashboards
 
 - name: "Register hardware dashboard"
@@ -72,4 +75,5 @@
     force_basic_auth: yes
     status_code: 200
     body_format: json
+    validate_certs: no
   when: "{{ grafana_dashboards.json|length == 0 }}"
