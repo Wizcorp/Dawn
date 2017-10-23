@@ -17,9 +17,13 @@ if __name__ == "__main__":
         vault_template = setup_vault(env)
         docker_template = setup_docker(env)
     except urllib2.HTTPError as e:
-        if e.getcode() == 500:
-            print('echo "Vault seems to be having troubles, try to restart it and logout/login again"')
-            sys.exit(0)
+        print('echo "Vault seems to be having troubles, try to restart it and logout/login again":')
+        print('echo "  %s"' % e.read())
+        sys.exit(0)
+    except Exception as e:
+        print('echo "Vault cannot be reached, try to restart it and logout/login again":')
+        print('echo "  %s"' % e)
+        sys.exit(0)
 
     # setup our templates
     templates = [
