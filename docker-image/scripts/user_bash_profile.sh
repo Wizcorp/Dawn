@@ -11,15 +11,11 @@ SCRIPTS_PATH="${ROOT_FOLDER}/scripts/setup"
 if
     [ -f ./inventory ]
 then
-    # Run the setup scripts
-    for script in \
-    $(find ${SCRIPTS_PATH} -maxdepth 1 \
-        | sed "s#${SCRIPTS_PATH}##" \
-        | tail -n +2 \
-        | sort)
-    do
-    source ${SCRIPTS_PATH}/${script}
-    done
+    # Link the project inventory to the ansible folder
+    sudo ln -sfT ${PROJECT_ENVIRONMENT_FILES_PATH}/inventory /etc/ansible/hosts
+
+    # Setup the user environment
+    eval "$( "${ROOT_FOLDER}/scripts/setup_environment.py" )"
 else
     cat <<-EOM
 
