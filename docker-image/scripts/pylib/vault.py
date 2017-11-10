@@ -15,7 +15,7 @@ class VaultClient(object):
     def __init__(self, vault_addr, vault_cacert=None, vault_token=None):
         self._ctx = customssl.create_default_context()
 
-        if vault_cacert != None:
+        if vault_cacert is not None:
             self._ctx.load_verify_locations(vault_cacert)
             self._ctx.verify_flags = ssl.VERIFY_DEFAULT
         else:
