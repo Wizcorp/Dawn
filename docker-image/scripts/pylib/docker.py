@@ -16,6 +16,9 @@ def setup_docker(env):
     vault_token = env.get_var('vault.token')
     vault_client = VaultClient(vault_addr, vault_cacert, vault_token)
 
+    if vault_token is None:
+        return '''# Docker setup (canceled due to vault not being ready)'''
+
     cert_path = os.path.join(os.environ.get('HOME'), 'certs/docker')
     if not os.path.exists(cert_path):
         os.makedirs(cert_path, mode=0770)

@@ -52,9 +52,9 @@ with open(TERRAFORM_STATE_FILE) as raw_state:
 			instance_data = {
 				'name': name,
 				'vars': {
-					'ansible_ssh_host': attributes['public_ip'] or attributes['private_ip'],
-					'ansible_ssh_user': tags['sshUser'],
-					'ansible_ssh_port': 22,
+					'ansible_host': attributes['public_ip'] or attributes['private_ip'],
+					'ansible_user': tags['sshUser'],
+					'ansible_port': 22,
 					'ansible_ssh_private_key_file': '~/.ssh/deploy',
 					'docker_labels': '["dawn.node.type=%s"]' % (tags['dockerType'])
 				}

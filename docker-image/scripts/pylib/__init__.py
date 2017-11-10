@@ -39,7 +39,7 @@ printf "%-20s %s\\n" "  - DNSMasq DNS:" "{{ control_ip }}:53"
 echo "* Load Balancing"
 printf "%-20s %s\\n" "  - Traefik:" "https://{{ edge_ip }}:8080"
 
-{% if vault.token is defined and vault.token != None %}
+{% if vault is defined and vault.token is defined and vault.token != None %}
 echo "* Security"
 printf "%-20s %s\\n" "  - Vault:" "{{ vault.addr }}"
 {% endif %}
