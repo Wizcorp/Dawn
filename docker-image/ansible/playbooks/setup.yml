@@ -7,7 +7,7 @@
 # the IPv4 of each system, this allows us to run --limit plays while still
 # providing templates with up-to-date informations about other nodes in the inv.
 ###
-- hosts: all
+- hosts: all:!windows
   gather_facts: true
   become: true
   tasks:

@@ -44,7 +44,7 @@
 
 # The full public facing url you use in browser, used for redirects and emails
 # If you use reverse proxy and sub path specify full url (with sub path)
-;root_url = http://localhost:3000
+root_url = https://grafana.{{ local_domain_name }}
 
 # Log web requests
 ;router_logging = false
@@ -291,7 +291,7 @@ config_file = /etc/grafana/ldap.toml
 [log]
 # Either "console", "file", "syslog". Default is console and  file
 # Use space to separate multiple modes, e.g. "console file"
-;mode = console file
+mode = console
 
 # Either "trace", "debug", "info", "warn", "error", "critical", default is "info"
 ;level = info
