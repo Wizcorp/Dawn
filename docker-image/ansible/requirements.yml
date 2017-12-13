@@ -9,11 +9,11 @@
 
 # aeriscloud roles, those are maintained by us
 - name: AerisCloud.consul
-  version: v1.0.2
+  version: v1.2.0
 - name: AerisCloud.consul-service
   version: v1.0.0
 - name: AerisCloud.docker
-  version: v1.1.1
+  version: v1.2.1
 - name: AerisCloud.docker-manage
   version: v1.0.0
 - name: AerisCloud.dnsmasq-template
@@ -21,7 +21,7 @@
 - name: AerisCloud.rsyslog
   version: v1.1.0
 - name: AerisCloud.vault
-  version: v1.1.0
+  version: v1.1.1
 
 # external roles
 - name: williamyeh.fluentd

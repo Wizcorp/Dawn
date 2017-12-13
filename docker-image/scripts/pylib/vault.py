@@ -15,7 +15,7 @@ class VaultClient(object):
     def __init__(self, vault_addr, vault_cacert=None, vault_token=None):
         self._ctx = customssl.create_default_context()
 
-        if vault_cacert != None:
+        if vault_cacert is not None:
             self._ctx.load_verify_locations(vault_cacert)
             self._ctx.verify_flags = ssl.VERIFY_DEFAULT
         else:
@@ -80,7 +80,24 @@ def setup_vault(env):
 
     # create a client with no cert verification for unsealing
     vault_client = VaultClient(vault_addr)
-    seal_status = vault_client.query("sys/seal-status")
+
+    try:
+        seal_status = vault_client.query("sys/seal-status")
+    except urllib2.URLError:
+        return '''# Vault not available
+cat <<- EOM
+
+A connection to Vault couldn't be achieved. This either means that the servers
+are down or that provisioning has not being done yet.
+
+Running the provisioning tools will resolve this issue in the vast majority of
+cases. If you do not have the proper access to do so, contact your cluster's
+administrator:
+
+ansible-playbook ansible/playbook.yml
+
+EOM
+'''
 
     # if vault is sealed, try to unseal it
     if seal_status['sealed'] is True and os.path.exists(config_root):

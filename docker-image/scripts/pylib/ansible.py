@@ -1,15 +1,20 @@
 from __future__ import absolute_import
 
-from ansible.compat.six import string_types
-from ansible.errors import AnsibleFileNotFound, AnsibleParserError, AnsibleUndefinedVariable
-from ansible.inventory import Inventory
+import os
+
+from ansible.errors import (AnsibleFileNotFound, AnsibleParserError,
+                            AnsibleUndefinedVariable)
+from ansible.inventory.manager import InventoryManager
 from ansible.module_utils._text import to_bytes
+from ansible.module_utils.six import binary_type, text_type
 from ansible.parsing.dataloader import DataLoader
 from ansible.parsing.vault import is_encrypted
+from ansible.playbook.play import Play
+from ansible.playbook.task import Task
 from ansible.template import Templar
-from ansible.vars import VariableManager, combine_vars
-
-import os
+from ansible.utils.vars import combine_vars
+from ansible.vars.hostvars import HostVars
+from ansible.vars.manager import VariableManager
 
 
 # this is a custom loader that ignores anything that is encrypted with vault
@@ -19,13 +24,14 @@ class CustomLoader(DataLoader):
         Reads the file contents from the given file name, and will decrypt them
         if they are found to be vault-encrypted.
         '''
-        if not file_name or not isinstance(file_name, string_types):
+        if not file_name or not isinstance(file_name, (binary_type, text_type)):
             raise AnsibleParserError("Invalid filename: '%s'" % str(file_name))
 
-        b_file_name = to_bytes(file_name)
+        b_file_name = to_bytes(self.path_dwim(file_name))
+        # This is what we really want but have to fix unittests to make it pass
+        # if not os.path.exists(b_file_name) or not os.path.isfile(b_file_name):
         if not self.path_exists(b_file_name) or not self.is_file(b_file_name):
-            raise AnsibleFileNotFound("the file_name '%s' does not exist, or "
-                                      "is not readable" % file_name)
+            raise AnsibleFileNotFound("Unable to retrieve file contents", file_name=file_name)
 
         show_content = True
         try:
@@ -49,46 +55,39 @@ class AnsibleEnvironment():
     def __init__(self):
         ansible_basedir = os.path.join(
             os.environ.get("PROJECT_ENVIRONMENT_FILES_PATH"), "ansible")
+        inv_file = '/etc/ansible/hosts'
 
         loader = CustomLoader()
         loader.set_basedir(ansible_basedir)
 
-        var_manager = VariableManager()
-
         # load the inventory, set the basic playbook directory
-        self._inventory = Inventory(
-            loader=loader,
-            variable_manager=var_manager
-        )
-        self._inventory.set_playbook_basedir(ansible_basedir)
+        self._inventory = InventoryManager(loader=loader, sources=[inv_file])
+        var_manager = VariableManager(loader=loader, inventory=self._inventory)
+        hostvars = HostVars(inventory=self._inventory, variable_manager=var_manager, loader=loader)
+        play = Play.load(dict(hosts=['all']), loader=loader, variable_manager=var_manager)
 
-        group = self._inventory.get_group("all")
+        group = self._inventory.groups['all']
 
         # make sure we load all magic variables on top of the global variables
         self._vars = combine_vars(
-            self._inventory.get_group_vars(group, return_results=True),
-            var_manager._get_magic_variables(loader, False, None, None,
-                                             False, False)
+            var_manager.get_vars(
+                play=play,
+                task=Task(),
+                host=group.get_hosts()[0]
+            ),
+            {'env': os.environ}
         )
-        self._vars['groups'] = self._inventory.get_group_dict()
-        self._vars['env'] = os.environ
-
-        hostvars = {}
-        for host in self._inventory.get_hosts():
-            hostvars[host.name] = host.get_vars()
-
-        self._vars['hostvars'] = hostvars
 
         # create the template renderer
         self._templar = Templar(loader=loader, variables=self._vars)
 
         # setup some easy variables that we use a lot
         self._vars['control_ip'] = self.get_var(
-            "hostvars[groups['control'][0]]['ansible_ssh_host']")
+            "hostvars[groups['control'][0]]['ansible_host']")
         self._vars['edge_ip'] = self.get_var(
-            "hostvars[groups['edge'][0]]['ansible_ssh_host']")
+            "hostvars[groups['edge'][0]]['ansible_host']")
         self._vars['monitor_ip'] = self.get_var(
-            "hostvars[groups['monitor'][0]]['ansible_ssh_host']")
+            "hostvars[groups['monitor'][0]]['ansible_host']")
 
     def get_var(self, name, cache=True):
         if name not in self._cache or not cache:

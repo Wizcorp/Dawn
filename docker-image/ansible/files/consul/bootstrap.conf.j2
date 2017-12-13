@@ -7,11 +7,12 @@
   "datacenter": "{{ consul_datacenter }}",
   "domain": "{{ consul_domain }}",
   "disable_remote_exec": true,
+  "enable_script_checks": true,
   "server": true,
   "addresses": {
     "http": "127.0.0.1"
   },
-  "bootstrap_expect": 1,
+  "bootstrap": true,
   "performance": {
     "raft_multiplier": 1
   }

@@ -1,6 +1,6 @@
 - name: "Create grafana main config file"
-  copy:
-    src: "grafana.ini"
+  template:
+    src: "grafana.ini.j2"
     dest: /etc/grafana.ini
     mode: 0644
 
@@ -22,7 +22,8 @@
 
 - name: "Build internal grafana URL"
   set_fact:
-    grafana_url: "http://grafana.{{ local_domain_name }}"
+    grafana_url: "https://{{ group_ipv4.edge[0] }}"
+    grafana_host: "grafana.{{ local_domain_name }}"
 
 - name: "Check if prometheus source exists"
   uri:
@@ -31,12 +32,16 @@
     user: "{{ grafana_user }}"
     password: "{{ grafana_password }}"
     force_basic_auth: yes
+    validate_certs: no
+    headers:
+      Host: "{{ grafana_host }}"
   retries: 6
   delay: 10
   register: grafana_datasources
   until: grafana_datasources.json is defined
 
 - name: "Setup prometheus source on grafana"
+  when: "'prometheus' not in grafana_datasources.json|map(attribute='name')"
   uri:
     url: "{{ grafana_url }}/api/datasources"
     method: POST
@@ -51,7 +56,9 @@
     force_basic_auth: yes
     status_code: 200
     body_format: json
-  when: "{{ 'prometheus' not in grafana_datasources.json|map(attribute='name') }}"
+    validate_certs: no
+    headers:
+      Host: "{{ grafana_host }}"
 
 - name: "Check if a dashboard exists"
   uri:
@@ -60,9 +67,13 @@
     user: "{{ grafana_user }}"
     password: "{{ grafana_password }}"
     force_basic_auth: yes
+    validate_certs: no
+    headers:
+      Host: "{{ grafana_host }}"
   register: grafana_dashboards
 
 - name: "Register hardware dashboard"
+  when: grafana_dashboards.json|length == 0
   uri:
     url: "{{ grafana_url }}/api/dashboards/db"
     method: POST
@@ -72,4 +83,6 @@
     force_basic_auth: yes
     status_code: 200
     body_format: json
-  when: "{{ grafana_dashboards.json|length == 0 }}"
+    validate_certs: no
+    headers:
+      Host: "{{ grafana_host }}"

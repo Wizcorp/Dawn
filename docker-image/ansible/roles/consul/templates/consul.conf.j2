@@ -6,6 +6,7 @@
   "advertise_addr": "{{ private_ipv4 }}",
   "bind_addr": "{{ private_ipv4 }}",
   "datacenter": "{{ consul_datacenter }}",
+  "enable_script_checks": true,
   "domain": "{{ consul_domain }}",
   "retry_join": {{ group_ipv4.control|list|to_json }},
   "disable_remote_exec": true,
@@ -15,7 +16,11 @@
   },
   "server": {{ (inventory_hostname in groups["control"])|bool|to_json }},
 {% if inventory_hostname in groups["control"] %}
+  {% if group_ipv4.control|list|length == 1 %}
+  "bootstrap": true,
+  {% else %}
   "bootstrap_expect": {{ group_ipv4.control|list|length }},
+  {% endif %}
   "performance": {
     "raft_multiplier": 3
   },
