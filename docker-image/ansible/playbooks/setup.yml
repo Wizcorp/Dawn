@@ -60,6 +60,7 @@
       with_items:
         - pip
         - python-consul
+        - pyOpenSSL
         - docker-py
         - hvac
       tags: [ 'always' ]
