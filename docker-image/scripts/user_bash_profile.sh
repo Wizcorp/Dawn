@@ -11,8 +11,9 @@ SCRIPTS_PATH="${ROOT_FOLDER}/scripts/setup"
 if
     [ -f ./inventory ]
 then
-    # Link the project inventory to the ansible folder
+    # Link the project inventory and group vars to the ansible folder
     sudo ln -sfT ${PROJECT_ENVIRONMENT_FILES_PATH}/inventory /etc/ansible/hosts
+    sudo ln -sfT ${PROJECT_ENVIRONMENT_FILES_PATH}/ansible/group_vars /etc/ansible/group_vars
 
     # Setup the user environment
     eval "$( "${ROOT_FOLDER}/scripts/setup_environment.py" )"

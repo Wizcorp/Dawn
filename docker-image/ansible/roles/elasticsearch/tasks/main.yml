@@ -63,6 +63,7 @@
     env:
       LOGGING_VERBOSE: "false"
       LOGGING_QUIET: "true"
+      XPACK_SECURITY_ENABLED: "false"
     restart_policy: unless-stopped
     published_ports:
       - "5601:5601"

@@ -1,6 +1,5 @@
 ---
 - name: "Register CA on all hosts"
-  include: register_ca.yml target_host="{{ item }}"
+  include_tasks: register_ca.yml target_host="{{ item }}"
   with_items: "{{ groups['control'] | union(groups['edge']) | union(groups['worker']) }}"
-  static: false
   run_once: true
