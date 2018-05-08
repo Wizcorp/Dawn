@@ -14,19 +14,19 @@
 
 # Setup consul
 - name: "Setup consul in local mode"
-  include_role:
+  import_role:
     name: AerisCloud.consul
 
 # Setup vault
 - name: "Setup vault in local mode"
-  include_role:
+  import_role:
     name: AerisCloud.vault
 
-- include: vault_init.yml vault_status="{{ vault_status }}"
-- include: root_ca.yml
+- import_tasks: vault_init.yml vault_status="{{ vault_status }}"
+- import_tasks: root_ca.yml
 
 # finally generate an app role for ansible
-- include: approle.yml
+- import_tasks: approle.yml
 
 - name: "Save bootstrap status"
   copy:

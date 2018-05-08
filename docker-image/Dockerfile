@@ -6,10 +6,10 @@ ARG root_folder=/dawn
 ARG shell_user=dawn
 ARG configuration_folder=dawn
 ARG configuration_filename=dawn.yml
-ARG ansible_version=2.3.3.0
-ARG terraform_version=0.11.2
-ARG vault_version=0.9.3
-ARG docker_version=17.12.0-ce
+ARG ansible_version=2.5.1
+ARG terraform_version=0.11.7
+ARG vault_version=0.10.0
+ARG docker_version=18.03.0-ce
 
 # Update the package list
 RUN apk update && apk upgrade

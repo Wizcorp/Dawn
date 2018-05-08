@@ -14,8 +14,8 @@ import (
 
 	"path/filepath"
 
-	"github.com/ProtonMail/go-appdir"
-	"gopkg.in/yaml.v2"
+	appdir "github.com/ProtonMail/go-appdir"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // The following variables values should normally
@@ -245,12 +245,16 @@ func getDockerFilePath() string {
 	return fmt.Sprintf("%s/%s", getConfigurationFolderPath(), "Dockerfile")
 }
 
-func getFullImageName(image string) string {
-	if strings.Index(image, ":") == -1 {
-		return fmt.Sprintf("%s:%s", cliDefaultImageName, image)
+func getFullImageName(config *Config, environment string) string {
+	if config.BaseImage != "" && strings.Index(config.Image, ":") == -1 {
+		return fmt.Sprintf("%s:%s", config.Image, environment)
 	}
 
-	return image
+	if strings.Index(config.Image, ":") == -1 {
+		return fmt.Sprintf("%s:%s", cliDefaultImageName, config.Image)
+	}
+
+	return config.Image
 }
 
 func doesConfigurationFileExist() bool {
@@ -399,13 +403,13 @@ func runBuild(environment string) (int, error) {
 
 	arguments := []string{
 		"build",
-		"-t", fmt.Sprintf("%s:%s", configuration.ProjectName, environment),
+		"-t", fmt.Sprintf("%s:%s", configuration.Image, environment),
 		"dawn",
 		"--build-arg", fmt.Sprintf("base_image=%s", configuration.BaseImage),
 		"--build-arg", fmt.Sprintf("default_env=%s", environment),
 	}
 
-	fmt.Println(arguments)
+	//fmt.Println(arguments)
 
 	return runSubProcess("docker", arguments)
 }
@@ -442,7 +446,7 @@ func runEnvironmentContainer(environment string, configuration *Config, command 
 		arguments = append(arguments, fmt.Sprintf("%s/docker-image/templates:%s/templates", development, cliRootFolder))
 	}
 
-	arguments = append(arguments, getFullImageName(configuration.Image))
+	arguments = append(arguments, getFullImageName(configuration, environment))
 
 	return runSubProcess("docker", append(arguments, command...))
 }
