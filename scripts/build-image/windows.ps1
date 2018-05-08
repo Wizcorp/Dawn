@@ -3,18 +3,20 @@ $PROJECT_DIR = split-path $SCRIPT_DIR -parent | split-path -parent
 
 . "${PROJECT_DIR}/scripts/buildconfig.ps1"
 
-$binary_name="$(getBuildConfig .binary.name)"
-$root_folder="$(getBuildConfig .image.root_folder)"
-$shell_user="$(getBuildConfig .image.shell_user)"
-$configuration_folder="$(getBuildConfig .configuration.folder)"
-$configuration_filename="$(getBuildConfig .configuration.filename)"
-$ansible_version="$(getBuildConfig .image.software_versions.ansible)"
-$terraform_version="$(getBuildConfig .image.software_versions.terraform)"
-$docker_version="$(getBuildConfig .image.software_versions.docker)"
+$binary_name="$(getBuildConfig binary.name)"
+$root_folder="$(getBuildConfig image.root_folder)"
+$shell_user="$(getBuildConfig image.shell_user)"
+$configuration_folder="$(getBuildConfig configuration.folder)"
+$configuration_filename="$(getBuildConfig configuration.filename)"
+$ansible_version="$(getBuildConfig image.software_versions.ansible)"
+$terraform_version="$(getBuildConfig image.software_versions.terraform)"
+$docker_version="$(getBuildConfig image.software_versions.docker)"
 
-$organization="$(getBuildConfig .image.organization)"
-$name="$(getBuildConfig .image.name)"
+$organization="$(getBuildConfig image.organization)"
+$name="$(getBuildConfig image.name)"
 $image_name="${organization}/${name}"
+
+Write-Output "Building image ${image_name}"
 
 docker build `
     "${PROJECT_DIR}/docker-image" `
