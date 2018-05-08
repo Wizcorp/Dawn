@@ -6,7 +6,7 @@ $env:DEVELOPMENT_MODE = "${PROJECT_DIR}"
 
 . "${PROJECT_DIR}\scripts\buildconfig.ps1"
 
-$name="$(getBuildConfig .github.name)"
+$name="$(getBuildConfig github.name)"
 
 function prompt {
     "PS [${name} development] $(Get-Location)> "

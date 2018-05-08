@@ -7,14 +7,14 @@ PROJECT_DIR="${SCRIPT_DIR}/../.."
 
 source "${PROJECT_DIR}/scripts/buildconfig.sh"
 
-binary_name="$(getBuildConfig .binary.name)"
-binary_version="$(getBuildConfig .binary.version)"
+binary_name="$(getBuildConfig binary.name)"
+binary_version="$(getBuildConfig binary.version)"
 
-image_name="$(getBuildConfig .image.organization)/$(getBuildConfig .image.name)"
-image_version="$(getBuildConfig .image.version)"
+image_name="$(getBuildConfig image.organization)/$(getBuildConfig image.name)"
+image_version="$(getBuildConfig image.version)"
 
-github_organization="$(getBuildConfig .gitub.organization)"
-github_name="$(getBuildConfig .github.name)"
+github_organization="$(getBuildConfig gitub.organization)"
+github_name="$(getBuildConfig github.name)"
 github_repo="${github_organization}/${github_name}"
 
 if

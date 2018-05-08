@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 getBuildConfig () {
-    cat ${PROJECT_DIR}/buildconfig.yml \
-        | docker run \
-            -i \
-            --rm \
-jlordiales/jyparser:allow-command-line-options-in-jq \
-            get -r ${@}
+    docker run \
+        -i \
+        --rm \
+        -v ${PROJECT_DIR}:/project \
+        mikefarah/yq:1.15.0 \
+        yq r /project/buildconfig.yml ${@}
 }

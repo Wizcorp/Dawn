@@ -8,7 +8,7 @@ PROJECT_DIR="$(dirname $(dirname ${SCRIPT_DIR}))"
 source "${PROJECT_DIR}/scripts/buildconfig.sh"
 
 local_os="$(uname -s | tr '[:upper:]' '[:lower:]')"
-name="$(getBuildConfig .github.name)"
+name="$(getBuildConfig github.name)"
 
 # Make sure everything is built
 ${SCRIPT_DIR}/../build-image/nix.sh
