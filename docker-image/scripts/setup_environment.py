@@ -43,4 +43,18 @@ if __name__ == "__main__":
         templates.append(run_template)
 
     # print all the templates
-    print(env.template(*templates))
+    try:
+        print(env.template(*templates))
+    except Exception as e:
+        # template rendering issue means that the inventory is empty or was not
+        # generated properly
+        print('''
+cat <<- EOM
+
+It seems your inventory is empty, if using the bare template make sure to run
+vagrant before starting your container to start the VMs and provision your
+inventory file.
+
+EOM
+''')
+        sys.exit(0)

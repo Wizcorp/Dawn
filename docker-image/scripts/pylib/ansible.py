@@ -68,12 +68,16 @@ class AnsibleEnvironment():
 
         group = self._inventory.groups['all']
 
+        control_host = None
+        if len(group.get_hosts()) > 0:
+            control_host = group.get_hosts()[0]
+
         # make sure we load all magic variables on top of the global variables
         self._vars = combine_vars(
             var_manager.get_vars(
                 play=play,
                 task=Task(),
-                host=group.get_hosts()[0]
+                host=control_host
             ),
             {'env': os.environ}
         )
