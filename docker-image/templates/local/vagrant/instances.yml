@@ -52,6 +52,10 @@ base: &base
     ? swarm
     ? consul
 
+# The network gateway to use/set up. This should match with the network
+# used by the instances below
+gateway: "172.24.0.1"
+
 # this is our list of instances, usually you will want at least one control, one
 # edge and one worker, though you should be able to merge them by specifying the
 # right groups
