@@ -65,6 +65,7 @@ type Config struct {
 	ProjectName string
 	BaseImage   string
 	Image       string
+	DNS         []string
 }
 
 // FileConfig is a struct where the content of
@@ -73,6 +74,7 @@ type FileConfig struct {
 	ProjectName  string           `yaml:"project_name"`
 	Image        string           `yaml:"image"`
 	BaseImage    string           `yaml:"base_image"`
+	DNS          []string         `yaml:"dns,omitempty"`
 	Environments FileEnvironments `yaml:"environments,omitempty"`
 }
 
@@ -84,8 +86,9 @@ type FileEnvironments map[string]FileEnvironmentConfig
 // FileEnvironmentConfig is a set of custom configuration to
 // apply to the global environment
 type FileEnvironmentConfig struct {
-	Image     string `yaml:"image"`
-	BaseImage string `yaml:"base_image"`
+	Image     string   `yaml:"image"`
+	BaseImage string   `yaml:"base_image"`
+	DNS       []string `yaml:"dns,omitempty"`
 }
 
 // Used by readLine
@@ -348,6 +351,7 @@ func getFileConfiguration() (*FileConfig, error) {
 
 func getConfigurationForEnvironment(environment string) (*Config, error) {
 	var image string
+	var dns []string
 	baseImage := fmt.Sprintf("%s:%s", cliDefaultImageName, cliDefaultImageVersion)
 	fileConfig, err := getFileConfiguration()
 
@@ -355,18 +359,29 @@ func getConfigurationForEnvironment(environment string) (*Config, error) {
 		return nil, err
 	}
 
+	baseImage = fileConfig.BaseImage
+	image = fileConfig.Image
+	dns = fileConfig.DNS
+
 	if environmentConfiguration, ok := fileConfig.Environments[environment]; ok {
-		image = environmentConfiguration.Image
-		baseImage = environmentConfiguration.BaseImage
-	} else {
-		image = fileConfig.Image
-		baseImage = fileConfig.BaseImage
+		if environmentConfiguration.Image != "" {
+			image = environmentConfiguration.Image
+		}
+
+		if environmentConfiguration.BaseImage != "" {
+			baseImage = environmentConfiguration.BaseImage
+		}
+
+		if len(environmentConfiguration.DNS) > 0 {
+			dns = environmentConfiguration.DNS
+		}
 	}
 
 	return &Config{
 		fileConfig.ProjectName,
 		baseImage,
 		image,
+		dns,
 	}, nil
 }
 
@@ -428,6 +443,13 @@ func runEnvironmentContainer(environment string, configuration *Config, command 
 		"-e", fmt.Sprintf("PROJECT_NAME=%s", configuration.ProjectName),
 		"-v", fmt.Sprintf("%s:%s/project", getProjectRoot(), cliRootFolder),
 		"-v", fmt.Sprintf("%s:/home/%s", localEnvironmentDir, cliShellUser),
+	}
+
+	if len(configuration.DNS) > 0 {
+		for _, dns := range configuration.DNS {
+			arguments = append(arguments, "--dns")
+			arguments = append(arguments, dns)
+		}
 	}
 
 	// During development, it is possible to mount directly the local
