@@ -1,5 +1,13 @@
+param(
+  [Switch] $ResetNetwork = $false
+)
+
 # Make sure network is set up
-.\vagrant\networking.ps1
+if ($ResetNetwork) {
+  .\vagrant\networking.ps1 -Reset
+} else {
+  .\vagrant\networking.ps1
+}
 
 # We try to find sh and ssh on the local system;
 # we essentially check to see if git or cygwin is
@@ -23,4 +31,4 @@ $index = $switch.LineNumber
 
 # This option is just to automate
 # the virtual switch selection
-sh -c "yes $index | vagrant up"
+sh -c "yes ${index} | vagrant up"
