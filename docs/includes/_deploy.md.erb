@@ -182,3 +182,19 @@ running your container.
 
 You can use this to declare a service on the local consul agent or find out the
 IP of the host machine for service discovery.
+
+Finally when using a custom domain for example in a local environment running in
+vagrant it might be useful to tell the dawn binary to use the DNS installed on
+your control node. To do so you can edit your dawn configuration like so:
+
+```yaml
+project_name: my_project
+base_image: <%= build_config['image']['organization'] %>/<%= build_config['image']['name'] %>:1.0.0
+image: my_org/my_project
+
+environments:
+  local:
+    dns:
+    - 172.24.0.50 # your control node's IP
+    - 192.168.1.1 # your normal DNS for fallback
+```

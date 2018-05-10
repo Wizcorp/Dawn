@@ -52,16 +52,17 @@ to simply use the ones you already know.
 
 ```yaml
 project_name: hello-world
-image: 1.0.0 # This will be used as the default version
+base_image: <%= build_config['image']['organization'] %>/<%= build_config['image']['name'] %>:1.0.0 # The default version to use
+image: project_name # This will create a custom image for your project, tag is the environment
 
 environment:
     # Bump the image version number for the staging environment
     staging:
-        image: 1.0.1
+        base_image: <%= build_config['image']['organization'] %>/<%= build_config['image']['name'] %>:1.0.1
 
     # Maintain an experimental environment using a custom local container
     experimental:
-        image: stelcheck/custom:latest
+        base_image: stelcheck/custom:latest
 ```
 
 When creating a new environment, we hard-code the version of the local Docker image
