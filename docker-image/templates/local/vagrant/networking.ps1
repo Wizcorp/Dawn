@@ -1,3 +1,7 @@
+param(
+  [Switch] $Reset = $false
+)
+
 # Sources:
 #   https://blogs.msdn.microsoft.com/virtual_pc_guy/2010/09/23/a-self-elevating-powershell-script/
 #   https://quotidian-ennui.github.io/blog/2016/08/17/vagrant-windows10-hyperv/
@@ -23,11 +27,21 @@ If (-NOT $myWindowsPrincipal.IsInRole($adminRole)) {
   # Specify the current script path and name as a parameter
   $newProcess.Arguments = $myInvocation.MyCommand.Definition;
 
+  # Append reset flag
+  if ($Reset) {
+    $newProcess.Arguments = $newProcess.Arguments, "-Reset";
+  }
+
   # Indicate that the process should be elevated
   $newProcess.Verb = "runas";
 
   # Start the new process
   $proc = [System.Diagnostics.Process]::Start($newProcess);
+
+  if ($proc -eq $null) {
+    exit
+  }
+
   $proc.WaitForExit()
 
   # Exit from the current, unelevated, process
@@ -39,6 +53,14 @@ $Host.UI.RawUI.WindowTitle = $myInvocation.MyCommand.Definition + "(Elevated)"
 $Host.UI.RawUI.BackgroundColor = "Blue"
 $Host.UI.RawUI.ForegroundColor = "White"
 clear-host
+
+If ($Reset.ToBool()) {
+  Write-Host -NoNewline "Cleaning up existing interface and NAT... "
+  Remove-NetNat -Confirm:$false -Name "dawn-local-nat"
+  Remove-NetIPAddress -Confirm:$false -InterfaceAlias "vEthernet (dawn-local)"
+  Remove-VMSwitch -Force -SwitchName "dawn-local"
+  Write-Output "[Done]"
+}
 
 # Network switch
 $res = Get-VMSwitch dawn-local -ErrorAction "SilentlyContinue"

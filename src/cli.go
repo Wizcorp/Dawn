@@ -53,6 +53,10 @@ ENV PROJECT_NAME {{ .ProjectName }}
 
 COPY . /dawn/project/dawn`))
 
+var dockerignoreTpl = template.Must(template.New("dockerignore").Parse(`# Vagrant files
+*/.vagrant/*
+`))
+
 // In this directory, we will be storing local project data, such as
 // the shell history, ssh keys, and so on. This is also where any
 // global configuration should go in the future.
@@ -245,6 +249,10 @@ func getDockerFilePath() string {
 	return fmt.Sprintf("%s/%s", getConfigurationFolderPath(), "Dockerfile")
 }
 
+func getDockerIgnorePath() string {
+	return fmt.Sprintf("%s/%s", getConfigurationFolderPath(), ".dockerignore")
+}
+
 func getFullImageName(config *Config, environment string) string {
 	if config.BaseImage != "" && strings.Index(config.Image, ":") == -1 {
 		return fmt.Sprintf("%s:%s", config.Image, environment)
@@ -298,6 +306,16 @@ func createProjectDockerfile(projectName string) error {
 	})
 }
 
+func createProjectDockerIgnore(projectName string) error {
+	file, err := os.OpenFile(getDockerIgnorePath(), os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	return dockerignoreTpl.Execute(file, map[string]string{})
+}
+
 func requestConfigurationFileCreation() bool {
 	fmt.Printf("This project is not configured yet to use %s. Would you like to configure it? [y/n]: ", cliName)
 	answer := readLine()
@@ -323,6 +341,12 @@ func requestConfigurationFileCreation() bool {
 	err = createProjectDockerfile(projectName)
 	if err != nil {
 		fmt.Printf("Failed to create Dockerfile: %#v", err)
+		return false
+	}
+
+	err = createProjectDockerIgnore(projectName)
+	if err != nil {
+		fmt.Printf("Failed to create .dockerignore: %#v", err)
 		return false
 	}
 

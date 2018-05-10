@@ -133,7 +133,13 @@ Vagrant.configure("2") do |config|
 
       # we don't need this (also causes issues with centos 7 image)
       instance.vm.synced_folder ".", "/vagrant", disabled: true
-      instance.vm.hostname = instance_name
+
+      # This has been disabled for some environments because
+      # vagrant will fail upon trying to reset the hostname on the remote machine
+      # (more specifically, when trying to restart the network service)
+      if !isWindows()
+        instance.vm.hostname = instance_name
+      end
 
       # vagrant doesn't currently support private networking on Hyper-V;
       # the workaround is to manually set up the networking
