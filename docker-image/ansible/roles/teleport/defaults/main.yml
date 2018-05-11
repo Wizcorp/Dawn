@@ -1,0 +1,8 @@
+teleport_version: v2.5.6
+teleport_checksum: sha256:8352f0442ee3be20bd303ef0e53b601512dedef2291a07a1dcac42632e1c6fab
+
+teleport_server_max_ttl: 17520h
+teleport_cert_file: /etc/ssl/certs/teleport/server.cert.pem
+teleport_key_file: /etc/ssl/certs/teleport/server.key.pem
+teleport_ca_file: /etc/ssl/certs/teleport/server.ca.pem
+teleport_server_cert_ttl: 8760h

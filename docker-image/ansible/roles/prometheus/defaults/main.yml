@@ -1,5 +1,5 @@
 prometheus_image: prom/prometheus
-prometheus_version: v1.6.1
+prometheus_version: v2.2.1
 prometheus_stack_file: /opt/dawn/prometheus.yml
 prometheus_stack: prometheus
 prometheus_stack_constraints:

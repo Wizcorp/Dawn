@@ -49,7 +49,7 @@ function docker-select() {
         echo "usage: docker-select <host>"
     else
         echo "Selecting docker server ${1}"
-        export DOCKER_HOST="tcp://${1}.node.{{ local_domain_name }}:2376"
+        export DOCKER_HOST="tcp://${1}.node.{{ local_domain_full }}:2376"
     fi
 }
 export -f docker-select

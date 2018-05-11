@@ -1,0 +1,45 @@
+- name: "Download version archive"
+  get_url:
+    url: "https://github.com/gravitational/teleport/releases/download/{{ teleport_version }}/teleport-{{ teleport_version }}-linux-amd64-bin.tar.gz"
+    dest: "/tmp/teleport-{{ teleport_version }}.tar.gz"
+    checksum: "{{ teleport_checksum }}"
+  register: teleport_download
+
+- name: "Extract archive to /tmp"
+  unarchive:
+    src: "/tmp/teleport-{{ teleport_version }}.tar.gz"
+    dest: /tmp
+    remote_src: yes
+
+- name: "Create /var directory"
+  file:
+    path: /var/lib/teleport
+    owner: root
+    group: root
+    mode: 0700
+    state: directory
+
+- name: "Copy binaries and systemd file"
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode }}"
+    remote_src: "{{ item.remote_src|default(omit) }}"
+  with_items:
+    - src: /tmp/teleport/tctl
+      dest: /usr/bin/tctl
+      mode: "0755"
+      remote_src: yes
+    - src: /tmp/teleport/teleport
+      dest: /usr/bin/teleport
+      mode: "0755"
+      remote_src: yes
+    - src: /tmp/teleport/tsh
+      dest: /usr/bin/tsh
+      mode: "0755"
+      remote_src: yes
+
+- name: "Delete archive and extracted files"
+  file:
+    path: /tmp/teleport
+    state: absent

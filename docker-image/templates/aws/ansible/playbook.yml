@@ -39,6 +39,8 @@
       tags: [ 'group:control', 'role:ldap' ]
     - role: registry
       tags: [ 'group:control', 'role:registry', 'type:docker' ]
+    - role: teleport
+      tags: [ 'group:control', 'role:teleport' ]
 
 # Have the workers join the swarm
 - hosts: worker
@@ -46,6 +48,8 @@
   roles:
     - role: swarm
       tags: [ 'group:worker', 'role:swarm', 'type:docker' ]
+    - role: teleport
+      tags: [ 'group:worker', 'role:teleport' ]
 
 # Have the edge nodes join the swarm and run traefik
 - hosts: edge
@@ -55,6 +59,8 @@
       tags: [ 'group:edge', 'role:swarm', 'type:docker' ]
     - role: traefik
       tags: [ 'group:edge', 'role:traefik' ]
+    - role: teleport
+      tags: [ 'group:edge', 'role:teleport' ]
 
 - hosts: monitor
   become: true
