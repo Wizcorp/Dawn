@@ -443,12 +443,10 @@ func runBuild(environment string) (int, error) {
 	arguments := []string{
 		"build",
 		"-t", fmt.Sprintf("%s:%s", configuration.Image, environment),
-		"dawn",
+		getConfigurationFolderPath(),
 		"--build-arg", fmt.Sprintf("base_image=%s", configuration.BaseImage),
 		"--build-arg", fmt.Sprintf("default_env=%s", environment),
 	}
-
-	//fmt.Println(arguments)
 
 	return runSubProcess("docker", arguments)
 }

@@ -1,5 +1,5 @@
 grafana_image: grafana/grafana
-grafana_version: 4.2.0
+grafana_version: 5.1.0
 grafana_user: admin
 grafana_password: admin
 grafana_link_to_container: prometheus

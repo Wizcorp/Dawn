@@ -1,0 +1,12 @@
+dependencies:
+  - vault-auth
+  - role: vault-setup-ca
+    backend_name: teleport
+    server_ttl: "{{ teleport_server_max_ttl }}"
+  - role: register-ca
+    backend: teleport
+  - role: traefik-expose
+    service_name: teleport
+    service_scheme: https
+    service_port: 3080
+    service_ip: "{{ group_ipv4.control[0] }}"

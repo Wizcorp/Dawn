@@ -1,0 +1,56 @@
+- name: "Retrieve installed version"
+  shell: "teleport version | awk '{ print $2 }'"
+  register: teleport_installed_version
+  changed_when: teleport_installed_version.stderr != ""
+  ignore_errors: yes
+
+- name: "Check TLS certificates status"
+  stat:
+    path: "{{ teleport_cert_file }}"
+  register: teleport_certs_stat
+
+- name: "Generate server TLS certificates"
+  when: >
+    teleport_certs_stat.stat.exists|bool == False
+    or cert_rotate_teleport_server|default(false)|bool
+    or cert_rotate_teleport|default(false)|bool
+    or cert_rotate_server|default(false)|bool
+    or cert_rotate_all|default(false)|bool
+  include_role:
+    name: generate-tls
+  vars:
+    pki:
+      # vault backend
+      backend: teleport
+      role: server
+      # targets
+      files:
+        cert: "{{ teleport_cert_file }}"
+        key: "{{ teleport_key_file }}"
+        ca: "{{ teleport_ca_file }}"
+      # TLS request data
+      request_data:
+        common_name: "teleport.{{ local_domain_name }}"
+        ip_sans: "{{ private_ipv4 }}"
+        ttl: "{{ teleport_server_cert_ttl }}"
+
+- include_tasks: install.yml
+  when: teleport_installed_version.stdout != teleport_version
+
+- name: "Install configuration"
+  template:
+    src: teleport.yaml.j2
+    dest: /etc/teleport.yaml
+
+- name: "Setup the systemd service file"
+  template:
+    src: teleport.service.j2
+    dest: /usr/lib/systemd/system/teleport.service
+    mode: "0644"
+
+- name: "Start teleport"
+  systemd:
+    daemon_reload: yes
+    name: teleport
+    state: started
+    enabled: yes

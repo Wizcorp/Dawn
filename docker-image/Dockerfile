@@ -1,3 +1,15 @@
+# Compile teleport for musl
+FROM golang:1.8-alpine as teleport
+
+ARG teleport_version=v2.5.7
+
+RUN apk add -U git openssl openssh-client make gcc musl-dev \
+	&& wget -O /tmp/teleport.tar.gz https://github.com/gravitational/teleport/archive/${teleport_version}.tar.gz \
+	&& mkdir -p /go/src/github.com/gravitational/teleport \
+	&& tar -C /go/src/github.com/gravitational/teleport -xvf /tmp/teleport.tar.gz --strip-components=1 \
+	&& cd /go/src/github.com/gravitational/teleport \
+	&& make
+
 FROM alpine:3.5
 
 # Arguments to inject at build time
@@ -76,6 +88,11 @@ RUN wget -q https://download.docker.com/linux/static/stable/x86_64/docker-${dock
     && mv docker/* /usr/bin \
     && rmdir docker
 
+# Install Teleport binaries
+COPY --from=teleport /go/src/github.com/gravitational/teleport/build/tctl /usr/bin/tctl
+COPY --from=teleport /go/src/github.com/gravitational/teleport/build/teleport /usr/bin/teleport
+COPY --from=teleport /go/src/github.com/gravitational/teleport/build/tsh /usr/bin/tsh
+
 # Environment
 ENV BINARY_NAME="${binary_name}"
 ENV CONFIG_FOLDER="${configuration_folder}"
@@ -99,6 +116,10 @@ ENV SHELL_USER=${shell_user}
 RUN adduser -D -s /bin/bash ${shell_user}
 RUN chown -fR ${shell_user}.${shell_user} ${root_folder}
 RUN echo "${shell_user} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+# Setup teleport
+RUN sudo mkdir -p /var/lib/teleport \
+	&& sudo chown ${shell_user} /var/lib/teleport
 
 # Volumes. The first one is where the project files will be found;
 # The second one will be mounted from

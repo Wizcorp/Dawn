@@ -9,3 +9,14 @@
     update_cache: yes
     name: '*'
     state: latest
+
+- name: "Install chrony"
+  yum:
+    name: chrony
+    state: latest
+
+- name: "Start chrony"
+  service:
+    name: chronyd
+    enabled: yes
+    state: started
