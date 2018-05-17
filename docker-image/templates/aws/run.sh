@@ -43,14 +43,14 @@ echo ""
 
 # Warn user if deploy key is not found
 if
-    [ ! -f /home/${SHELL_USER_HOMEDIR}/.ssh/deploy ]
+    [ ! -f /home/${SHELL_USER}/.ssh/deploy ]
 then
     echo "** Warning ** private deploy key not found (/home/${SHELL_USER_HOMEDIR}/.ssh/deploy)"
     echo "** Warning ** While you may still be able to start or stop new machines"
     echo "** Warning ** using Terraform, you will not be able to provision them"
     echo "** Warning ** using Ansible. Request the private key, and put it here:"
     echo "** Warning **"
-    echo "** Warning ** /home/${SHELL_USER_HOMEDIR}/.ssh/deploy"
+    echo "** Warning ** /home/${SHELL_USER}/.ssh/deploy"
     echo "** Warning **"
     echo ""
 fi
