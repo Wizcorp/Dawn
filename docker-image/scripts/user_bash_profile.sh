@@ -8,27 +8,13 @@
 
 SCRIPTS_PATH="${ROOT_FOLDER}/scripts/setup"
 
-if
-    [ -f ./inventory ]
-then
-    # Link the project inventory and group vars to the ansible folder
-    sudo ln -sfT ${PROJECT_ENVIRONMENT_FILES_PATH}/inventory /etc/ansible/hosts
-    sudo ln -sfT ${PROJECT_ENVIRONMENT_FILES_PATH}/ansible/group_vars /etc/ansible/group_vars
+# Link the project inventory and group vars to the ansible folder
+sudo ln -sfT ${PROJECT_ENVIRONMENT_FILES_PATH}/inventory /etc/ansible/hosts
+sudo ln -sf ${PROJECT_ENVIRONMENT_FILES_PATH}/ansible/group_vars /etc/ansible/group_vars
 
-    # Setup the user environment
-    eval "$( "${ROOT_FOLDER}/scripts/setup_environment.py" )"
-else
-    cat <<-EOM
+# Setup the user environment
+eval "$( "${ROOT_FOLDER}/scripts/setup_environment.py" )"
 
-No inventory file was found in the project folder, either run the provisioning
-tool associated with your environment (vagrant, terraform, etc...) or write your
-own inventory (see the documentation for more details).
-
-Once the inventory file exists either logout/login or source ~/.bash/profile to
-load the environment variables associated with your project.
-
-EOM
-fi
 
 # Allow the user to override what they want by running .bashrc
 [[ -f ~/.bashrc ]] && . ~/.bashrc

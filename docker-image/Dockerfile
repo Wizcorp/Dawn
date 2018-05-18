@@ -121,6 +121,16 @@ RUN echo "${shell_user} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 RUN sudo mkdir -p /var/lib/teleport \
 	&& sudo chown ${shell_user} /var/lib/teleport
 
+# inputrc
+RUN echo -en '# mappings for Ctrl-left-arrow and Ctrl-right-arrow for word moving \n \
+"\\e[1;5C": forward-word \n \
+"\\e[1;5D": backward-word \n \
+"\\e[5C": forward-word \n \
+"\\e[5D": backward-word \n \
+"\\e\\e[C": forward-word \n \
+"\\e\\e[D": backward-word \n \
+' > /etc/inputrc
+
 # Volumes. The first one is where the project files will be found;
 # The second one will be mounted from
 # %APP_DATA%/projects/[project_name]/[environment_name]
