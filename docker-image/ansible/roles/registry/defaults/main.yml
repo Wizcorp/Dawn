@@ -7,6 +7,7 @@ docker_auth_version: 1
 
 registry_image: registry
 registry_version: 2
+registry_whitelist: 0.0.0.0/0
 
 ldap_server: "{{ group_ipv4.control[0] }}"
 ldap_server_port: 389

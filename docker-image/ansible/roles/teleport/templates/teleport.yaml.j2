@@ -82,7 +82,7 @@ auth_service:
     #
     # IMPORTANT: if you change cluster_name, it will invalidate all generated
     # certificates and keys (may need to wipe out /var/lib/teleport directory)
-    cluster_name: "wizcorp"
+    cluster_name: "{{ teleport_cluster_name }}"
 
 # This section configures the 'node service':
 ssh_service:

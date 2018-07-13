@@ -111,13 +111,13 @@ network).
 More labels are available, here is a list of the most common ones and if you want
 to know more about them check the [documentation](https://docs.traefik.io/toml/#docker-backend):
 
-label                                        | description
----------------------------------------------|-----------------------------------------
-`traefik.port=<int>`                         | On which port your app is listening
-`traefik.protocol=<string>`                  | If your app uses https you can define it here
-`traefik.enable=<bool>`                      | Allows you to disable the container (maybe for maintenance)
-`traefik.backend.loadbalancer.sticky=<bool>` | Allow usage of sticky sessions
-`traefik.frontend.rule=<string>`             | Alows overriding the domain the container is listening to, see [matchers](https://docs.traefik.io/basics/#matchers)
+label                                            | description
+-------------------------------------------------|-----------------------------------------
+`traefik.port=<int>`                             | On which port your app is listening
+`traefik.protocol=<string>`                      | If your app uses https you can define it here
+`traefik.enable=<bool>`                          | Allows you to disable the container (maybe for maintenance)
+`traefik.backend.loadbalancer.stickiness=<bool>` | Allow usage of sticky sessions
+`traefik.frontend.rule=<string>`                 | Alows overriding the domain the container is listening to, see [matchers](https://docs.traefik.io/basics/#matchers)
 
 ## Monitoring your deployment
 

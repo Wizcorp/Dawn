@@ -60,15 +60,10 @@
     image: "{{ phpldapadmin_image }}:{{ phpldapadmin_version }}"
     restart_policy: always
     published_ports:
-      - "6443:443"
+      - "18080:80"
     links:
       - "openldap:ldap"
-    volumes:
-      - "{{ https_cert_file }}:/container/service/phpldapadmin/assets/apache2/certs/cert.pem:ro"
-      - "{{ https_key_file }}:/container/service/phpldapadmin/assets/apache2/certs/key.pem:ro"
-      - "{{ https_ca_file }}:/container/service/phpldapadmin/assets/apache2/certs/ca.pem:ro"
     env:
-      PHPLDAPADMIN_LDAP_HOSTS: ldap
-      PHPLDAPADMIN_HTTPS_CRT_FILENAME: cert.pem
-      PHPLDAPADMIN_HTTPS_KEY_FILENAME: key.pem
-      PHPLDAPADMIN_HTTPS_CA_CRT_FILENAME: ca.pem
+      PHPLDAPADMIN_LDAP_HOSTS: "ldap"
+      PHPLDAPADMIN_HTTPS: "false"
+      PHPLDAPADMIN_TRUST_PROXY_SSL: "true"

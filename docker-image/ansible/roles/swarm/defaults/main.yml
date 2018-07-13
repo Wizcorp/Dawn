@@ -18,7 +18,10 @@ swarm_worker: "{{ inventory_hostname not in groups['control'] and inventory_host
 swarm_remote_addrs: []
 
 # on which (address|interface)[:port] the swarm should be listening
-swarm_listen_addr: 0.0.0.0
+swarm_listen_addr: "0.0.0.0"
 
 # advertise address, docker will try to find a decent default
 swarm_advertise_addr: "{{ private_ipv4 }}"
+
+# network range to use for swarm containers
+swarm_network: "172.18.0.1/16"

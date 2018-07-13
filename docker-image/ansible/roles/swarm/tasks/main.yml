@@ -1,5 +1,14 @@
 ---
-# tasks file for AerisCloud.swarm
+- name: "Create a custom network"
+  docker_network:
+    name: "docker_gwbridge"
+    driver_options:
+      com.docker.network.bridge.enable_icc: "false"
+      com.docker.network.bridge.enable_ip_masquerade: "true"
+      com.docker.network.bridge.name: "docker_gwbridge"
+    ipam_options:
+      subnet: "{{ swarm_network }}"
+
 - include: swarm_init.yml
   when: swarm_leader|bool
 
