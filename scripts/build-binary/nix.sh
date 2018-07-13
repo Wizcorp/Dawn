@@ -18,8 +18,8 @@ docker run \
     -u `id -u` \
     -v "${PROJECT_DIR}:/go/src/cli" \
     -w /go/src/cli/src \
-    myobplatform/go-glide:1.7-alpine \
-    glide install
+    instrumentisto/glide:0.13.1-go1.10 \
+    install
 
 docker run \
     -it \
@@ -28,8 +28,9 @@ docker run \
     -u `id -u` \
     -v "${PROJECT_DIR}:/go/src/cli" \
     -w /go/src/cli/src \
-    myobplatform/go-glide:1.7-alpine \
-    go run make.go \
+    --entrypoint "/usr/local/go/bin/go" \
+    instrumentisto/glide:0.13.1-go1.10 \
+    run make.go \
         --target "${target}" \
         --version "${version}" \
         --image "${image}"
