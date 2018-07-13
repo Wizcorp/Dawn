@@ -25,7 +25,8 @@
 - name: "Unseal vault"
   when: >
     vault_init.changed|default(false)|bool
-    or (vault_status.status.sealed is defined
+    or (vault_status.status is defined
+      and vault_status.status.sealed is defined
       and vault_status.status.sealed|default(false)|bool)
   hashivault_unseal:
     keys: "{{ vault_vars['keys']|join(' ') }}"
