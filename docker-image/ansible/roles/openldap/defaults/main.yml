@@ -15,4 +15,5 @@ openldap_image: osixia/openldap
 openldap_version: 1.1.8
 
 phpldapadmin_image: osixia/phpldapadmin
-phpldapadmin_version: 0.6.12
+phpldapadmin_version: 0.7.1
+phpldapadmin_whitelist: 0.0.0.0/0

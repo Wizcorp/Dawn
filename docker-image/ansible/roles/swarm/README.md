@@ -12,4 +12,5 @@ or `worker`.
 * `swarm_worker = "{{ inventory_hostname not in groups['control'] and inventory_hostname not in groups['edge'] }}"`
 * `swarm_remote_addrs = []`
 * `swarm_listen_addr = 0.0.0.0`
+* `swarm_listen_addr = 172.18.0.1/16`
 * `swarm_advertise_addr = "{{ private_ipv4 }}"`

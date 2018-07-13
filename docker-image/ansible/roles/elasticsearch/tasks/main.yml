@@ -33,7 +33,7 @@
       transport.host: 0.0.0.0
       discovery.zen.minimum_master_nodes: 1
       node.name: "{{ inventory_hostname }}"
-      xpack.security.enabled: 0
+      xpack.security.enabled: "false"
     restart_policy: unless-stopped
     published_ports:
       - "9200:9200"

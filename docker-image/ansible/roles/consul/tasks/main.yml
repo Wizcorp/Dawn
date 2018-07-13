@@ -63,6 +63,7 @@
         cert: "{{ consul_client_cert_file }}"
         key: "{{ consul_client_key_file }}"
         ca: "{{ consul_client_ca_file }}"
+        permissions: 664
       # TLS request data
       request_data:
         common_name: "client.consul.{{ local_domain_name }}"

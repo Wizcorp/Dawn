@@ -6,3 +6,6 @@ teleport_cert_file: /etc/ssl/certs/teleport/server.cert.pem
 teleport_key_file: /etc/ssl/certs/teleport/server.key.pem
 teleport_ca_file: /etc/ssl/certs/teleport/server.ca.pem
 teleport_server_cert_ttl: 8760h
+
+teleport_cluster_name: "dawn"
+teleport_whitelist: 0.0.0.0/0

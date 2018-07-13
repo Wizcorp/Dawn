@@ -30,5 +30,5 @@ services:
       labels:
         traefik.port: 9090
         traefik.frontend.rule: "Host:prometheus.{{ local_domain_name }}"
-        traefik.backend.loadbalancer.sticky: "true"
+        traefik.backend.loadbalancer.stickiness: "true"
         traefik.docker.network: traefik_net

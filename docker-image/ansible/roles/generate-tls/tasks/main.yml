@@ -42,7 +42,7 @@
   copy:
     content: "{{ certificates.json.data[item.key] }}"
     dest: "{{ item.file }}"
-    mode: 0660
+    mode: {{ pki.permissions | default(0600) }}
     owner: "{{ pki.owner|default(omit) }}"
     group: "{{ pki.group|default(omit) }}"
   notify: "{{ pki.notify|default(omit) }}"
@@ -61,7 +61,7 @@
   copy:
     content: "{{ certificates.json.data[item.key] }}"
     dest: "{{ item.file }}"
-    mode: 0660
+    mode: {{ pki.permissions | default(0600) }}
     owner: "{{ pki.owner|default(omit) }}"
     group: "{{ pki.group|default(omit) }}"
   notify: "{{ pki.notify|default(omit) }}"

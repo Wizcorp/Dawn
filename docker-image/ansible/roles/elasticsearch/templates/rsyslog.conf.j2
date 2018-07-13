@@ -33,7 +33,7 @@ filter {
 
 			ruby {
 				code => "
-					if event.get('container_name').include? '_'
+					if event.get('container_name') and event.get('container_name').include? '_'
 						_stack_els = event.get('container_name')[/^([a-z0-9_-]+)/i, 0].split('_', 2)
 						event.set('docker_stack', _stack_els[0])
 						event.set('docker_service', _stack_els[1])
