@@ -3,12 +3,14 @@
     src: "grafana.ini.j2"
     dest: /etc/grafana.ini
     mode: 0644
+  register: grafana_config_file_status
 
 - name: "Create grafana ldap config file"
   template:
     src: "{{ grafana_ldap_template }}"
     dest: /etc/grafana-ldap.toml
     mode: 0644
+  register: grafana_ldap_file_status
 
 - name: "Create grafana stack file"
   template:
@@ -17,7 +19,10 @@
   register: grafana_stack_file_status
 
 - name: "Start grafana on the cluster"
-  when: grafana_stack_file_status.changed|bool
+  when: >
+    grafana_config_file_status.changed|bool
+    or grafana_ldap_file_status.changed|bool
+    or grafana_stack_file_status.changed|bool
   shell: "docker stack deploy -c '{{ grafana_stack_file }}' {{ grafana_stack }}"
 
 - name: "Build internal grafana URL"

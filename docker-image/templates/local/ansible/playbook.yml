@@ -67,10 +67,10 @@
   roles:
     - role: elasticsearch
       tags: [ 'group:monitor', 'role:elasticsearch', 'type:monitoring' ]
-    - role: prometheus
-      tags: [ 'group:monitor', 'role:prometheus', 'type:monitoring' ]
     - role: grafana
       tags: [ 'group:monitor', 'role:grafana', 'type:monitoring' ]
+    - role: prometheus
+      tags: [ 'group:monitor', 'role:prometheus', 'type:monitoring' ]
 
 # Fetch client certificates
 - include: /dawn/ansible/playbooks/client_certs.yml
