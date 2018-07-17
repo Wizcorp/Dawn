@@ -43,7 +43,7 @@ then
     echo "* Building binary"
     ${SCRIPT_DIR}/../build-binary/nix.sh ${binary_version} all ${image_version} &>> ./build.log
 
-    echo "* Pushing v${binary_version} to ${github_repo} (code and tags)"
+    echo "* Pushing ${binary_version} to ${github_repo} (code and tags)"
     git tag "${binary_version}" &>> build.log
     git push --tags git@github.com:${github_repo}.git &>> build.log
 
