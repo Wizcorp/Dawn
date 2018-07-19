@@ -23,7 +23,7 @@ bind_dn = "{{ ldap_admin_user }}"
 bind_password = """{{ ldap_admin_password }}"""
 
 # User search filter, for example "(cn=%s)" or "(sAMAccountName=%s)" or "(uid=%s)"
-search_filter = "(cn=%s)"
+search_filter = "(uid=%s)"
 
 # An array of base dns to search through
 search_base_dns = ["{{ ldap_dc }}"]
@@ -50,33 +50,26 @@ search_base_dns = ["{{ ldap_dc }}"]
 #     member_of = "distinguishedName"
 
 ## Group search filter, to retrieve the groups of which the user is a member (only set if memberOf attribute is not available)
-# group_search_filter = "(&(objectClass=posixGroup)(memberUid=%s))"
-## Group search filter user attribute defines what user attribute gets substituted for %s in group_search_filter.
-## Defaults to the value of username in [server.attributes]
-## Valid options are any of your values in [servers.attributes]
-## If you are using nested groups you probably want to set this and member_of in
-## [servers.attributes] to "distinguishedName"
-# group_search_filter_user_attribute = "distinguishedName"
+group_search_filter = "(&(objectClass=posixGroup)(memberUid=%s))"
+
 ## An array of the base DNs to search through for groups. Typically uses ou=groups
-# group_search_base_dns = ["ou=groups,dc=grafana,dc=org"]
+group_search_base_dns = ["ou=groups,{{ ldap_dc }}"]
 
 # Specify names of the ldap attributes your ldap uses
 [servers.attributes]
 name = "givenName"
 surname = "sn"
-username = "cn"
-member_of = "memberOf"
-email =  "email"
+username = "uid"
+member_of = "cn"
+email =  "mail"
 
 # Map ldap groups to grafana org roles
 [[servers.group_mappings]]
-group_dn = "cn=admins,{{ ldap_dc }}"
+group_dn = "admins"
 org_role = "Admin"
-# The Grafana organization database id, optional, if left out the default org (id 1) will be used
-# org_id = 1
 
 [[servers.group_mappings]]
-group_dn = "cn=users,{{ ldap_dc }}"
+group_dn = "editors"
 org_role = "Editor"
 
 [[servers.group_mappings]]
