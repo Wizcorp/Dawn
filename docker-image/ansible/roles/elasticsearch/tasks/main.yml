@@ -33,6 +33,7 @@
       transport.host: 0.0.0.0
       discovery.zen.minimum_master_nodes: 1
       node.name: "{{ inventory_hostname }}"
+      cluster.name: "{{ elasticsearch_cluster_name }}"
       xpack.security.enabled: "false"
     restart_policy: unless-stopped
     published_ports:
