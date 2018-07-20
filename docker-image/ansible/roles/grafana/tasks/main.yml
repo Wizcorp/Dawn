@@ -65,7 +65,34 @@
     headers:
       Host: "{{ grafana_host }}"
 
-- name: "Check if a dashboard exists"
+- name: "Setup elasticsearch source on grafana"
+  when: "'elasticsearch' not in grafana_datasources.json|map(attribute='name')"
+  uri:
+    url: "{{ grafana_url }}/api/datasources"
+    method: POST
+    user: "{{ grafana_user }}"
+    password: "{{ grafana_password }}"
+    body:
+      name: "elasticsearch"
+      type: "elasticsearch"
+      url: "http://{{ group_ipv4.control[0] }}:9200"
+      access: "proxy"
+      basicAuth: false
+      database: "[elasticsearch_metrics-]YYYY.MM.DD"
+      jsonData:
+        esVersion: 56
+        interval: "Daily"
+        keepCookies: []
+        maxConcurrentShardRequests: 256
+        timeField: "@timestamp"
+    force_basic_auth: yes
+    status_code: 200
+    body_format: json
+    validate_certs: no
+    headers:
+      Host: "{{ grafana_host }}"
+
+- name: "Check if the hardware dashboard exists"
   uri:
     url: "{{ grafana_url }}/api/search?query=Hardware"
     return_content: yes
@@ -75,16 +102,43 @@
     validate_certs: no
     headers:
       Host: "{{ grafana_host }}"
-  register: grafana_dashboards
+  register: grafana_hardware_dashboards
 
 - name: "Register hardware dashboard"
-  when: grafana_dashboards.json|length == 0
+  when: grafana_hardware_dashboards.json|length == 0
   uri:
     url: "{{ grafana_url }}/api/dashboards/db"
     method: POST
     user: "{{ grafana_user }}"
     password: "{{ grafana_password }}"
     body: "{\"dashboard\":{{ lookup('file','dashboard.json') }},\"overwrite\":false}"
+    force_basic_auth: yes
+    status_code: 200
+    body_format: json
+    validate_certs: no
+    headers:
+      Host: "{{ grafana_host }}"
+
+- name: "Check if the elasticsearch dashboard exists"
+  uri:
+    url: "{{ grafana_url }}/api/search?query=Elasticsearch"
+    return_content: yes
+    user: "{{ grafana_user }}"
+    password: "{{ grafana_password }}"
+    force_basic_auth: yes
+    validate_certs: no
+    headers:
+      Host: "{{ grafana_host }}"
+  register: grafana_elasticsearch_dashboards
+
+- name: "Register elasticsearch dashboard"
+  when: grafana_elasticsearch_dashboards.json|length == 0
+  uri:
+    url: "{{ grafana_url }}/api/dashboards/db"
+    method: POST
+    user: "{{ grafana_user }}"
+    password: "{{ grafana_password }}"
+    body: "{\"dashboard\":{{ lookup('file','elasticsearch.json') }},\"overwrite\":false}"
     force_basic_auth: yes
     status_code: 200
     body_format: json

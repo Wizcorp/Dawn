@@ -11,8 +11,22 @@ networks:
 volumes:
   grafana:
 services:
+  es_metrics:
+    image: govale/es-monitor:latest
+    environment:
+      ES_METRICS_CLUSTER_URL: "http://{{ group_ipv4.control[0] }}:9200"
+      ES_METRICS_INTERVAL: 30
+      ES_METRICS_INDEX_NAME: elasticsearch_metrics
+      ES_METRICS_MONITORING_CLUSTER_URL: "http://{{ group_ipv4.control[0] }}:9200"
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints: {{ grafana_stack_constraints|to_yaml }}
+
   app:
-    image: {{ grafana_image}}:{{ grafana_version }}
+    image: {{ grafana_image }}:{{ grafana_version }}
     networks:
       - net
       - prometheus
