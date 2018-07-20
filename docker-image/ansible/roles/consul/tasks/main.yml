@@ -35,6 +35,7 @@
         cert: "{{ consul_cert_file }}"
         key: "{{ consul_key_file }}"
         ca: "{{ consul_ca_file }}"
+      permissions: 660
       # TLS request data
       request_data:
         common_name: "{{ inventory_hostname }}.node.{{ local_domain_full }}"
@@ -63,7 +64,7 @@
         cert: "{{ consul_client_cert_file }}"
         key: "{{ consul_client_key_file }}"
         ca: "{{ consul_client_ca_file }}"
-        permissions: 664
+      permissions: 664
       # TLS request data
       request_data:
         common_name: "client.consul.{{ local_domain_name }}"
