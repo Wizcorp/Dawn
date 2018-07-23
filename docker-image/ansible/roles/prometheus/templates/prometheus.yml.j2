@@ -37,3 +37,8 @@ scrape_configs:
         target_label: job
         replacement: ${1}
 
+  # Monitor docker services labeled with 'prometheus.scan: true'
+  - job_name: 'swarm'
+    file_sd_configs:
+      - files:
+        - /etc/endpoints/swarm.json

@@ -5,8 +5,11 @@ networks:
   traefik:
     external:
       name: traefik_net
+
 volumes:
   prometheus:
+  endpoints:
+
 services:
   server:
     image: {{ prometheus_image }}:{{ prometheus_version }}
@@ -19,8 +22,11 @@ services:
       - "{{ consul_client_ca_file }}:/etc/ssl/certs/consul/ca.pem:ro"
       - "{{ consul_client_cert_file }}:/etc/ssl/certs/consul/cert.pem:ro"
       - "{{ consul_client_key_file }}:/etc/ssl/certs/consul/key.pem:ro"
+      # Docker Swarm
+      - /var/run/docker.sock:/var/run/docker.sock
       # Data Volumes
       - "prometheus:/prometheus"
+      - "endpoints:/etc/endpoints"
       # Extra CAs from our architecture
       - "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem:/etc/ssl/certs/ca-certificates.crt:ro"
     deploy:
@@ -32,3 +38,25 @@ services:
         traefik.frontend.rule: "Host:prometheus.{{ local_domain_name }}"
         traefik.backend.loadbalancer.stickiness: "true"
         traefik.docker.network: traefik_net
+
+  swarm-discover:
+    image: stelcheck/prometheus-swarm:1.0.0
+    command:
+      # Interval: 10 seconds
+      - "-i"
+      - "10"
+      # Output configuration
+      - "-o"
+      - "/endpoints/swarm.json"
+      # Service name
+      - "-p"
+      - "prometheus_server"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - endpoints:/endpoints
+    labels:
+        prometheus.ignore: "true"
+    deploy:
+      mode: global
+      placement:
+        constraints: {{ prometheus_stack_constraints|to_yaml }}
