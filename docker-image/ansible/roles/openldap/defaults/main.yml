@@ -1,7 +1,13 @@
 ldap_external_server: false
 
+ldap_server: "{{ group_ipv4.control[0] }}"
+ldap_server_port: 389
 ldap_server_max_ttl: 17520h
 ldap_server_cert_ttl: 8760h
+
+ldap_dc: "dc={{ local_domain_name.split('.') | join(',dc=') }}"
+ldap_admin_user: "cn=admin,{{ ldap_dc }}"
+
 ldap_cert_file: /etc/ssl/certs/ldap/server.key.pem
 ldap_key_file: /etc/ssl/certs/ldap/server.cert.pem
 ldap_ca_file: /etc/ssl/certs/ldap/server.ca.pem
