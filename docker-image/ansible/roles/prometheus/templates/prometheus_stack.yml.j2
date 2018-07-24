@@ -40,22 +40,13 @@ services:
         traefik.docker.network: traefik_net
 
   swarm-discover:
-    image: stelcheck/prometheus-swarm:1.0.0
-    command:
-      # Interval: 10 seconds
-      - "-i"
-      - "10"
-      # Output configuration
-      - "-o"
-      - "/endpoints/swarm.json"
-      # Service name
-      - "-p"
-      - "prometheus_server"
+    image: stelcheck/prometheus-swarm:1.3.0
+    command: "-i 10 -o /endpoints/swarm.json -p prometheus_server"
+    networks:
+      - net
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - endpoints:/endpoints
-    labels:
-        prometheus.ignore: "true"
     deploy:
       mode: global
       placement:
