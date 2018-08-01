@@ -50,6 +50,7 @@
         - python-virtualenv
         - openssl-devel
         - openldap-devel
+        - gcc
       tags: [ 'always' ]
 
     - name: "Install docker python library"
