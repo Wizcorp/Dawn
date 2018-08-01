@@ -11,3 +11,9 @@ local_storage_dir: "/home/dawn"
 local_vault_client_key_file: "{{ local_storage_dir }}/certs/vault/client.key.pem"
 local_vault_client_cert_file: "{{ local_storage_dir }}/certs/vault/client.cert.pem"
 local_vault_client_ca_file: "{{ local_storage_dir }}/certs/vault/client.ca.pem"
+
+##
+# Use AWS's DNS
+##
+dnsmasq_default_dns:
+  - 169.254.169.253
