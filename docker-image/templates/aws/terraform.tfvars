@@ -4,7 +4,7 @@ region = "us-west-1"
 # Availability zone
 availability_zone = "us-west-1b"
 
-# CIDR Block to assign to te VPC's network
+# CIDR Block to assign to the VPC's network
 cidr_blocks = {
   vpc     = "172.24.0.0/16"
   public  = "172.24.0.0/20"
