@@ -40,7 +40,7 @@ services:
         traefik.docker.network: traefik_net
 
   swarm-discover:
-    image: stelcheck/prometheus-swarm:1.3.0
+    image: stelcheck/prometheus-swarm:1.3.1
     command: "-i 10 -o /endpoints/swarm.json -p prometheus_server"
     networks:
       - net
