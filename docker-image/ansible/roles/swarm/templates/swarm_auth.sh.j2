@@ -12,7 +12,7 @@ alias curl="docker run --rm -i appropriate/curl"
 if
   [[ -z "${VAULT_ADDR}" ]] || [[ -z "${VAULT_ROLE_ID}" ]] || [[ -z "${VAULT_SECRET_ID}" ]]
 then
-  echo "Missing vault credentials and address, make sure that VAULT_ADDR, VAULT_ROLE_ID and VAULT_SECRET_ID are set"
+  echo "!!! Missing vault credentials and address, make sure that VAULT_ADDR, VAULT_ROLE_ID and VAULT_SECRET_ID are set"
   exit 1
 fi
 
@@ -35,6 +35,15 @@ echo "${DOCKER_CERT}" | jq -r .data.certificate > "${DOCKER_CERT_PATH}/cert.pem"
 echo "${DOCKER_CERT}" | jq -r .data.issuing_ca  > "${DOCKER_CERT_PATH}/ca.pem"
 echo "${DOCKER_CERT}" | jq -r .data.private_key > "${DOCKER_CERT_PATH}/key.pem"
 chmod -R 0640 "${DOCKER_CERT_PATH}"
+
+# health check - if null, the received data differs from expected
+if
+  ! grep -sr null "${DOCKER_CERT_PATH}"
+then
+  echo "!!! Certificate creation failed:"
+  echo "${DOCKER_CERT}"
+  exit 1
+fi
 
 echo "* Stored docker client certificates in ${DOCKER_CERT_PATH}:"
 ls -l "${DOCKER_CERT_PATH}"
