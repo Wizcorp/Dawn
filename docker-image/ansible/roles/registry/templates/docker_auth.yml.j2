@@ -9,12 +9,12 @@
 
 server:
   addr: ":5001"
-  certificate: "/etc/ssl/certs/https/cert.pem"
-  key: "/etc/ssl/certs/https/key.pem"
 
 token:
   issuer: "Dawn"  # Must match issuer in the Registry config.
   expiration: 900
+  certificate: "/etc/ssl/certs/https/cert.pem"
+  key: "/etc/ssl/certs/https/key.pem"
 
 # LDAP authentication.
 # Authentication is performed by first binding to the server, looking up the user entry

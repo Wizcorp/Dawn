@@ -32,8 +32,6 @@
     name: registry
     image: "{{ registry_image }}:{{ registry_version }}"
     restart_policy: always
-    links:
-      - "docker_auth:auth"
     published_ports:
       - "5000:5000"
     volumes:
