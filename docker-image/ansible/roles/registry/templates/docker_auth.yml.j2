@@ -12,7 +12,7 @@ server:
 
 token:
   issuer: "Dawn"  # Must match issuer in the Registry config.
-  expiration: 900
+  expiration: {{ docker_auth_expiration }}
   certificate: "/etc/ssl/certs/https/cert.pem"
   key: "/etc/ssl/certs/https/key.pem"
 

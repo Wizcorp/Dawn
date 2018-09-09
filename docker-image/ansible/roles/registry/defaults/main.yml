@@ -4,6 +4,7 @@ https_ca_file: /etc/ssl/certs/https/server.ca.pem
 
 docker_auth_image: cesanta/docker_auth
 docker_auth_version: 1.3.1
+docker_auth_expiration: 900
 
 registry_image: registry
 registry_version: 2
