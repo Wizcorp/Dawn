@@ -6,7 +6,6 @@ services:
   lb:
     image: {{ traefik_image }}
     command: >
-      --cluster.node="{{ inventory_hostname }}"
       {{ traefik_extra_args|default("") }}
     ports:
       - target: 80
