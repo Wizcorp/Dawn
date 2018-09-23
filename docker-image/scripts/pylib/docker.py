@@ -12,12 +12,12 @@ keymap = [
 
 def setup_docker(env):
     vault_addr = env.get_var('vault.addr')
-    vault_cacert = env.get_var('vault.cacert')
     vault_token = env.get_var('vault.token')
-    vault_client = VaultClient(vault_addr, vault_cacert, vault_token)
 
-    if vault_token is None:
+    if not vault_token:
         return '''# Docker setup (canceled due to vault not being ready)'''
+
+    vault_client = VaultClient(vault_addr, vault_token)
 
     cert_path = os.path.join(os.environ.get('HOME'), 'certs/docker')
     if not os.path.exists(cert_path):

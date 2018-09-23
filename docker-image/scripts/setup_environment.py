@@ -2,6 +2,7 @@
 
 import os
 import sys
+import traceback
 import urllib2
 
 from pylib import base_template, motd_template, run_template
@@ -30,6 +31,7 @@ if __name__ == "__main__":
     except Exception as e:
         print('echo "Vault cannot be reached, try to restart it and logout/login again":')
         print('echo "  %s"' % e)
+        traceback.print_exc()
         sys.exit(0)
 
     # setup our templates
