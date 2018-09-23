@@ -12,15 +12,10 @@ class VaultClient(object):
     that supports verifying IP SANs on python 2.7
     """
 
-    def __init__(self, vault_addr, vault_cacert=None, vault_token=None):
+    def __init__(self, vault_addr, vault_token=None):
         self._ctx = customssl.create_default_context()
-
-        if vault_cacert is not None:
-            self._ctx.load_verify_locations(vault_cacert)
-            self._ctx.verify_flags = ssl.VERIFY_DEFAULT
-        else:
-            self._ctx.check_hostname = False
-            self._ctx.verify_mode = ssl.CERT_NONE
+        self._ctx.check_hostname = False
+        self._ctx.verify_mode = ssl.CERT_NONE
 
         self._vault_addr = vault_addr
         self._vault_token = vault_token
@@ -57,8 +52,6 @@ def setup_vault(env):
     config_root = os.path.join(home_folder, ".vault.root.conf")
 
     vault_addr = env.template("https://{{ control_ip }}:8200")
-    vault_cacert = "whatever"
-    vault_cacert_source = "vault"
 
     try:
         local_domain_name = env.get_var("local_domain_name")
@@ -67,14 +60,6 @@ def setup_vault(env):
         # changes his DNS)
         socket.gethostbyname("vault.%s" % local_domain_name)
         vault_addr = "https://vault.%s" % local_domain_name
-
-        if env.get_var("https_custom_ca") is not None:
-            vault_cacert = env.get_var("https_custom_ca")
-            vault_cacert_source = "custom"
-        else:
-            # this cert if fetched from the vault server itself
-            vault_cacert = "https"
-            vault_cacert_source = "https"
     except socket.gaierror:
         pass
 
@@ -108,29 +93,8 @@ EOM
                 if res['t'] <= 0:
                     break
 
-    # retrieve the vault CA certificate if necessary
-    if not os.path.exists(vault_cacert) and vault_cacert_source != "custom":
-        warnings.simplefilter("ignore", RuntimeWarning)
-        vault_cacert = os.tempnam()
-        with open(vault_cacert, "w") as fd:
-            # first fetch the root CA
-            root_ca_url = "%s/v1/pki/ca/pem" % (vault_addr)
-
-            # do not check the certificate's validity
-            ctx = ssl.create_default_context()
-            ctx.check_hostname = False
-            ctx.verify_mode = ssl.CERT_NONE
-
-            fd.write(urllib2.urlopen(root_ca_url, context=ctx).read())
-            fd.write("\n")
-
-            # then add the intermediate CA
-            ca_url = "%s/v1/%s/pki/ca/pem" % (vault_addr, vault_cacert_source)
-
-            fd.write(urllib2.urlopen(ca_url, context=ctx).read())
-
     # recreate the vault with the proper ca_cert
-    vault_client = VaultClient(vault_addr, vault_cacert)
+    vault_client = VaultClient(vault_addr)
 
     # try one of the many supported login methods
     vault_token = None
@@ -182,27 +146,41 @@ EOM
 
     env.set_var('vault', {
         'addr': vault_addr,
-        'cacert': vault_cacert,
         'token': vault_token
     })
 
     return '''# Vault setup
-export VAULT_ADDR={{ vault.addr }}
-export VAULT_CACERT={{ vault.cacert }}
-{% if vault.token is defined and vault.token != None %}
-export VAULT_TOKEN={{ vault.token }}
+export VAULT_ADDR="{{ vault.addr }}"
+{% if vault.token %}
+export VAULT_TOKEN="{{ vault.token }}"
 {% else %}
-cat <<- EOM
+echo -e "\\n** Authenticating to vault **\\n"
 
-None of the vault configuration files were found at either ~/.vault.conf or
-~/.vault.root.conf, this means that we cannot generate a valid certificate for
-connecting to docker. Please contact an administrator of the project to procure
-a valid vault AppRole and save it in "${HOME}/.vault.conf".
+while [ -z "${success}" ]
+do
+    echo -en "\\nEnter your LDAP username (leave empty to skip): "
+    read -r username
 
-If you intend to rotate certificates or do any action in ansible that requires
-vault access, you will need a valid ~/.vault.ansible.conf file, as above please
-contact your administrator if you are missing this file.
+    if
+        [ -z "${username}" ]
+    then
+    echo "** Skipping"
+        return 0
+    fi
 
-EOM
+    if
+        vault auth -method=ldap "username=${username}"
+    then
+        success=true
+    elif
+        [ "${?}" == "130" ]
+    then
+        echo -e "\\n** Aborting!"
+        exit 0
+    fi
+done
+
+source ~/.bash_profile
+return
 {% endif %}
 '''
