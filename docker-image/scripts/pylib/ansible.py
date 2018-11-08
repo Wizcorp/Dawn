@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import os
 
+from ansible.config.manager import ConfigManager
 from ansible.errors import (AnsibleFileNotFound, AnsibleParserError,
                             AnsibleUndefinedVariable)
 from ansible.inventory.manager import InventoryManager
@@ -53,24 +54,38 @@ class AnsibleEnvironment():
     _cache = {}
 
     def __init__(self):
+        initial_dir = os.getcwd()
         ansible_basedir = os.path.join(
             os.environ.get("PROJECT_ENVIRONMENT_FILES_PATH"), "ansible")
-        inv_file = '/etc/ansible/hosts'
+
+        # Move to project directory
+        os.chdir(os.environ.get("PROJECT_ENVIRONMENT_FILES_PATH"))
+
+        # Load list of inventories from config:w
+        config = ConfigManager('/etc/ansible/ansible.cfg')
+        sources = config.data.get_setting('DEFAULT_HOST_LIST').value
 
         loader = CustomLoader()
         loader.set_basedir(ansible_basedir)
 
         # load the inventory, set the basic playbook directory
-        self._inventory = InventoryManager(loader=loader, sources=[inv_file])
+        self._inventory = InventoryManager(loader=loader, sources=sources)
         var_manager = VariableManager(loader=loader, inventory=self._inventory)
-        hostvars = HostVars(inventory=self._inventory, variable_manager=var_manager, loader=loader)
         play = Play.load(dict(hosts=['all']), loader=loader, variable_manager=var_manager)
 
-        group = self._inventory.groups['all']
+        # Move back to directory of origin
+        os.chdir(initial_dir)
 
+        control_group = self._inventory.groups['control']
         control_host = None
-        if len(group.get_hosts()) > 0:
-            control_host = group.get_hosts()[0]
+
+        if len(control_group.get_hosts()) > 0:
+            control_host = control_group.get_hosts()[0]
+
+        # Hostvars
+        hostvars = {}
+        for host in self._inventory.get_hosts():
+            hostvars[host.name] = host.vars
 
         # make sure we load all magic variables on top of the global variables
         self._vars = combine_vars(
@@ -79,7 +94,10 @@ class AnsibleEnvironment():
                 task=Task(),
                 host=control_host
             ),
-            {'env': os.environ}
+            {
+                'hostvars': hostvars,
+                'env': os.environ
+            }
         )
 
         # create the template renderer
