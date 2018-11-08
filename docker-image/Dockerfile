@@ -102,12 +102,13 @@ ENV PROJECT_CONFIG_FILE_PATH="${PROJECT_FILES_PATH}/${configuration_filename}"
 ENV ANSIBLE_ROLES_PATH="/etc/ansible/roles:${root_folder}/ansible/roles"
 
 # Create the directory structure, install Ansible Galaxy roles
-RUN mkdir -p ${root_folder}/project
-ADD ./ansible ${root_folder}/ansible
+RUN mkdir -p ${root_folder}/project/ansible
+ADD ./ansible/requirements.yml ${root_folder}/ansible/requirements.yml
 
 RUN cd ${root_folder}/ansible \
     && ansible-galaxy install -r requirements.yml
 
+ADD ./ansible ${root_folder}/ansible
 ADD ./templates ${root_folder}/templates
 ADD ./scripts ${root_folder}/scripts
 

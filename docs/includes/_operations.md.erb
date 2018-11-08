@@ -137,6 +137,12 @@ above and take one of the keys and input/paste it in the vault prompt.
 
 Run the command again 2 more times with different keys to finish the unseal process.
 
+### Renew Ansible's approle credentials
+
+```shell
+ansible-playbook /dawn/ansible/playbooks/renew_approles.yml
+```
+
 ### Backup
 
 Currently vault stores data inside consul and this makes the backup process quite

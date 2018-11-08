@@ -1,0 +1,74 @@
+- name: "Read vault configuration"
+  include_vars:
+    file: "{{ vault_local_root_config }}"
+    name: vault_vars
+
+- name: "Check if the {{ approle_name }} approle is enabled"
+  hashivault_auth_list:
+    token: "{{ vault_vars.root_token }}"
+  changed_when: false
+  register: vault_auth_list
+
+- name: "Enable approle auth"
+  when: vault_auth_list.backends['approle/'] is not defined
+  hashivault_auth_enable:
+    token: "{{ vault_vars.root_token }}"
+    name: approle
+
+- name: "Check for enabled roles"
+  hashivault_list:
+    token: "{{ vault_vars.root_token }}"
+    secret: /auth/approle/role
+  ignore_errors: true
+  register: vault_auth_roles
+
+# The policy is a root policy, make sure that only gets access to it!
+- name: "Check for existing policies"
+  hashivault_policy_list:
+    token: "{{ vault_vars.root_token }}"
+  register: vault_policy_list
+
+- name: "Create the {{ approle_name }} app policy"
+  when: "'{{ approle_name }}' not in vault_policy_list.policies|default([])"
+  hashivault_policy_set:
+    token: "{{ vault_vars.root_token }}"
+    name: "{{ approle_name }}"
+    rules: "{{ approle_policy }}"
+
+# Finally create our role
+- name: "Create the {{ approle_name }} app role"
+  when: "'{{ approle_name }}' not in vault_auth_roles.secrets|default([])"
+  hashivault_write:
+    token: "{{ vault_vars.root_token }}"
+    secret: "/auth/approle/role/{{ approle_name }}"
+    data:
+      token_ttl: "{{ approle_token_ttl }}"
+      token_max_ttl: "{{ approle_token_max_ttl }}"
+      secret_id_ttl: "{{ approle_secret_id_ttl }}"
+      secret_id_num_uses: "{{ approle_secret_id_num_uses }}"
+      policies: "default,{{ approle_name }}"
+
+- name: "Read {{ approle_name }} role data"
+  hashivault_read:
+    token: "{{ vault_vars.root_token }}"
+    secret: "/auth/approle/role/{{ approle_name }}/role-id"
+    key: role_id
+  register: vault_role
+
+# Create a new secret for the user
+- name: "Create secret"
+  hashivault_write:
+    token: "{{ vault_vars.root_token }}"
+    secret: "/auth/approle/role/{{ approle_name }}/secret-id"
+  register: vault_secret
+
+- name: "Save role/secret pair to local file"
+  copy:
+    content: |
+      {
+        "role_id": {{ vault_role.value|to_json }},
+        "secret_id": {{ vault_secret.data.data.secret_id|to_json }},
+        "secret_id_accessor": {{ vault_secret.data.data.secret_id_accessor|to_json }}
+      }
+    dest: "{{ approle_local_config_dest }}"
+  delegate_to: localhost

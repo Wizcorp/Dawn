@@ -1,0 +1,17 @@
+- include: /dawn/ansible/playbooks/setup.yml
+
+- hosts: 'control[0]'
+  become: true
+  vars:
+    vault_addr: "http://127.0.0.1:8200"
+  environment:
+    VAULT_ADDR: "{{ vault_addr }}"
+  roles:
+    - role: vault-approle
+      approle_name: "ansible"
+      approle_policy: "{{ lookup('file', playbook_dir + '/../files/vault/policies/ansible.hcl') }}"
+      approle_token_ttl: "{{ vault_ansible_token_ttl|default(7200) }}"
+      approle_token_max_ttl: "{{ vault_ansible_token_max_ttl|default(7200) }}"
+      approle_secret_id_ttl: "{{ vault_ansible_secret_id_ttl|default(31536000) }}"
+      approle_secret_id_num_uses: "{{ vault_ansible_secret_id_num_uses|default(0) }}"
+      approle_local_config_dest: "{{ vault_local_ansible_config|default(local_storage_dir + '/.vault.ansible.conf') }}"
