@@ -48,10 +48,14 @@
     name: logstash
     image: "{{ logstash_image }}:{{ elasticsearch_version }}"
     restart_policy: unless-stopped
+    expose:
+      - "9600:9600"
+      - "5044:5044"
+      - "1514:1514"
     published_ports:
       - "9600:9600"
+      - "5044:5044"
       - "1514:1514"
-      - "1514:1514/udp"
     volumes:
       - "/etc/logstash/elasticsearch-template.json:/etc/logstash/elasticsearch-template.json:ro"
       - "/etc/logstash/pipeline/:/usr/share/logstash/pipeline/"
