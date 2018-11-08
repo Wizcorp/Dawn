@@ -1,3 +1,14 @@
+- name: "Check SELinux port"
+  shell: "semanage port -l | grep syslogd_port_t | grep tcp | grep 1514"
+  register: rsyslog_selinux_port_info
+  changed_when: rsyslog_selinux_port_info.rc != 0
+  ignore_errors: yes
+
+- name: "Configure SELinux port"
+  shell: "semanage port -a -t syslogd_port_t -p tcp 1514"
+  when: rsyslog_selinux_port_info.changed
+  notify: "Restart rsyslog"
+
 - name: "Install rsyslog config"
   template:
     src: "rsyslog.conf.j2"
