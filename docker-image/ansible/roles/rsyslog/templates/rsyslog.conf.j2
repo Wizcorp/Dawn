@@ -88,8 +88,8 @@ local7.*                                                /var/log/boot.log
 # remote host is: name/ip:port, e.g. 192.168.0.1:514, port optional
 {% if rsyslog_json|bool %}
 template(name="JSONLog" type="list") { property(name="$!all-json") }
-*.* @{{ rsyslog_target }};JSONLog
+*.* @@{{ rsyslog_target }};JSONLog
 {% else %}
-*.* @{{ rsyslog_target }}
+*.* @@{{ rsyslog_target }}
 {% endif %}
 # ### end of the forwarding rule ###

@@ -50,6 +50,7 @@
     restart_policy: unless-stopped
     published_ports:
       - "9600:9600"
+      - "1514:1514"
       - "1514:1514/udp"
     volumes:
       - "/etc/logstash/elasticsearch-template.json:/etc/logstash/elasticsearch-template.json:ro"
