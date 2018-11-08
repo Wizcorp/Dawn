@@ -41,7 +41,7 @@ binary:
   name: "dawn"
 
   # The current version of the binary
-  version: "0.12.1"
+  version: "0.12.2"
 
   # (Optional) URLs to call when attempting auto-update.
   # Defaults:
@@ -78,7 +78,7 @@ image:
   name: dawn
 
   # Current image version
-  version: "0.12.1"
+  version: "0.12.2"
 
   # Root folder where most files will be uploaded or mounted
   root_folder: /dawn
@@ -91,4 +91,4 @@ image:
     ansible:   "2.5.1"
     terraform: "0.11.7"
     vault:     "0.10.0"
-    docker:    "18.03.0-ce"
+    docker:    "18.09.0-ce"
