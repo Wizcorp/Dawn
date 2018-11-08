@@ -26,7 +26,18 @@
 - import_tasks: root_ca.yml
 
 # finally generate an app role for ansible
-- import_tasks: approle.yml
+- name: "Create Ansible Approle"
+  include_role:
+    name: approle
+    tasks_from: vault-approle
+    vars:
+      approle_name: "ansible"
+      approle_policy: "{{ lookup('file', playbook_dir + '/../files/vault/policies/ansible.hcl') }}"
+      approle_token_ttl: "{{ vault_ansible_token_ttl }}"
+      approle_token_max_ttl: "{{ vault_ansible_token_max_ttl }}"
+      approle_secret_id_ttl: "{{ vault_ansible_secret_id_ttl }}"
+      approle_secret_id_num_uses: "{{ vault_ansible_secret_id_num_uses }}"
+      approle_local_config_dest: "{{ vault_local_ansible_config }}"
 
 - name: "Save bootstrap status"
   copy:
