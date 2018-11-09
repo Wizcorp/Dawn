@@ -16,3 +16,5 @@
       value: "Host:{{ service_name }}.{{ local_domain_name }}"
     - key: "traefik/frontends/{{ service_name }}/whitelist/sourcerange"
       value: "{{ service_whitelist | default('0.0.0.0/0') }}"
+    - key: "traefik/frontends/{{ service_name }}/headers/SSLRedirect"
+      value: "true"

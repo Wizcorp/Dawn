@@ -15,6 +15,16 @@
         msg: "--limit is not supported on those playbooks due to ansible limitations"
       when: ansible_play_batch|length != groups['all']|length
 
+    # Some infrastructures such as AWS do not expose the public IP on
+    # the machine's interface. We expect the templates to populate this value
+    # for us when necessary
+    - name: "Save the public IPv4 as fact"
+      set_fact:
+        # Can be set through inventory
+        public_ipv4: "{{ public_ipv4|default('127.0.0.1') }}"
+      tags:
+        - always
+
     # We need to use the private_interface of the target otherwise we'll run into
     # issues with multi-os clusters
     - name: "Save the private IPv4 as fact"
