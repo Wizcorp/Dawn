@@ -1,4 +1,26 @@
 ---
+- hosts: all
+  become: true
+  tasks:
+    - name: "Dynamically read the private network interface"
+      shell: "ls /sys/class/net | grep ens"
+      register: private_interface_read
+      when: private_interface is undefined
+      tags: [ 'always' ]
+    - name: "Dynamically set the private network interface"
+      set_fact:
+        private_interface:  "{{ private_interface_read.stdout_lines[0] }}"
+      when: private_interface is undefined
+      tags: [ 'always' ]
+    - name: "Gather EC2-specific facts"
+      ec2_facts:
+      tags: [ 'always' ]
+    - name: "Save the public IPv4 as fact"
+      set_fact:
+        public_ipv4: "{{ ansible_ec2_public_ipv4 }}"
+      when: ansible_ec2_public_ipv4 is defined
+      tags: [ 'always' ]
+
 # Query servers and setup custom facts
 - include: /dawn/ansible/playbooks/setup.yml
 

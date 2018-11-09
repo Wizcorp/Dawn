@@ -39,7 +39,7 @@
       request_data:
         common_name: "{{ inventory_hostname }}.node.{{ local_domain_full }}"
         alt_names: "docker.service.{{ local_domain_full }},swarm.service.{{ local_domain_full }},*.swarm.service.{{ local_domain_full }}"
-        ip_sans: "{{ ansible_all_ipv4_addresses|join(',') }}"
+        ip_sans: "{{ public_ipv4 }},{{ ansible_all_ipv4_addresses|join(',') }}"
         ttl: "{{ docker_server_cert_ttl }}"
       notify:
         - Restart docker
