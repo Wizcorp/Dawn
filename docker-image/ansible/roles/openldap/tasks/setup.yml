@@ -69,7 +69,7 @@
       PHPLDAPADMIN_TRUST_PROXY_SSL: "true"
 
 - name: "Create the different organizational units"
-  ldap_entry: &ldap_auth
+  ldap_entry:
     server_uri: "ldap://{{ ldap_server }}:{{ ldap_server_port }}/"
     bind_dn: "{{ ldap_admin_user }}"
     bind_pw: "{{ ldap_admin_password }}"
@@ -81,7 +81,9 @@
 
 - name: "Create the different groups"
   ldap_entry:
-    <<: *ldap_auth
+    server_uri: "ldap://{{ ldap_server }}:{{ ldap_server_port }}/"
+    bind_dn: "{{ ldap_admin_user }}"
+    bind_pw: "{{ ldap_admin_password }}"
     dn: "cn={{ item.name }},ou=groups,{{ ldap_dc }}"
     objectClass: posixGroup
     attributes:

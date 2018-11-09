@@ -17,6 +17,15 @@ from ansible.utils.vars import combine_vars
 from ansible.vars.hostvars import HostVars
 from ansible.vars.manager import VariableManager
 
+class CustomInventoryManager(InventoryManager):
+    def _setup_inventory_plugins(self):
+        '''
+        Do not print error output when there are no errors; this is mostly set
+        for the script inventory loader (called when using dynamic inventories)
+        '''
+        super(CustomInventoryManager, self)._setup_inventory_plugins()
+        for plugin in self._inventory_plugins:
+            plugin.set_option('always_show_stderr', False)
 
 # this is a custom loader that ignores anything that is encrypted with vault
 class CustomLoader(DataLoader):
@@ -38,6 +47,7 @@ class CustomLoader(DataLoader):
         try:
             with open(b_file_name, 'rb') as f:
                 data = f.read()
+
                 if is_encrypted(data):
                     data = b"\n"
                     show_content = False
@@ -69,7 +79,7 @@ class AnsibleEnvironment():
         loader.set_basedir(ansible_basedir)
 
         # load the inventory, set the basic playbook directory
-        self._inventory = InventoryManager(loader=loader, sources=sources)
+        self._inventory = CustomInventoryManager(loader=loader, sources=sources)
         var_manager = VariableManager(loader=loader, inventory=self._inventory)
         play = Play.load(dict(hosts=['all']), loader=loader, variable_manager=var_manager)
 

@@ -39,7 +39,6 @@ then
         sync
     fi
 fi
-echo ""
 
 # Warn user if deploy key is not found
 if
@@ -69,8 +68,3 @@ then
 fi
 
 source "${AWS_CREDENTIALS_FILE}"
-
-echo "** Note ** See terraform.tfvars for configuration options."
-echo "** Note ** To run terraform make sure to append the directory:"
-echo "           $ terraform <command> terraform"
-echo ""

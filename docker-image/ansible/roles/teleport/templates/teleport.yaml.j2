@@ -109,7 +109,7 @@ ssh_service:
 # This section configures the 'proxy servie'
 proxy_service:
     # Turns 'proxy' role on. Default is 'yes'
-    enabled: {{ 'yes' if inventory_hostname in groups['control'] else 'no' }}
+    enabled: {{ 'yes' if inventory_hostname in groups['edge'] else 'no' }}
 
     # SSH forwarding/proxy address. Command line (CLI) clients always begin their
     # SSH sessions by connecting to this port
