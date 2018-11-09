@@ -19,6 +19,9 @@ variable "region" {}
 # Which availability zone to target
 variable "availability_zone" {}
 
+# Only whitelisted CIDRs are allowed to access sensitive services
+variable "secure_access_whitelist" { default = [] }
+
 # Configuration for the VPC
 variable "cidr_blocks" {
   type = "map"

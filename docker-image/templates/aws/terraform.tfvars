@@ -11,6 +11,10 @@ cidr_blocks = {
   private = "172.24.16.0/20"
 }
 
+secure_access_whitelist = [
+  "0.0.0.0./0"
+]
+
 #
 nodes = {
   edge_count         = 1

@@ -66,14 +66,29 @@ resource "aws_security_group" "external_access" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = "${var.secure_access_whitelist}"
   }
 
   egress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = "${var.secure_access_whitelist}"
+  }
+
+  # Teleport
+  ingress {
+    from_port   = 3022
+    to_port     = 3026
+    protocol    = "tcp"
+    cidr_blocks = "${var.secure_access_whitelist}"
+  }
+
+  egress {
+    from_port   = 3022
+    to_port     = 3026
+    protocol    = "tcp"
+    cidr_blocks = "${var.secure_access_whitelist}"
   }
 
   # Docker
@@ -81,30 +96,44 @@ resource "aws_security_group" "external_access" {
     from_port   = 2376
     to_port     = 2376
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = "${var.secure_access_whitelist}"
   }
 
   egress {
     from_port   = 2376
     to_port     = 2376
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = "${var.secure_access_whitelist}"
   }
 
+  # Traefik dashboard
+  ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = "${var.secure_access_whitelist}"
+  }
+
+  egress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = "${var.secure_access_whitelist}"
+  }
 
   # Consul UI
   ingress {
     from_port   = 8500
     to_port     = 8500
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = "${var.secure_access_whitelist}"
   }
 
   egress {
     from_port   = 8500
     to_port     = 8500
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = "${var.secure_access_whitelist}"
   }
 
   # Ping
