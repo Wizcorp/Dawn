@@ -47,6 +47,7 @@
     src: teleport.service.j2
     dest: /usr/lib/systemd/system/teleport.service
     mode: "0644"
+  notify: "Restart teleport"
 
 - name: "Start teleport"
   systemd:

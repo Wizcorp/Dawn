@@ -10,6 +10,14 @@
     src: "prometheus_stack.yml.j2"
   register: prometheus_stack_file_status
 
+- name: "Check if prometheus is running"
+  shell: "docker stack ps {{ prometheus_stack }}"
+  changed_when: prometheus_running_state.rc != 0
+  ignore_errors: yes
+  register: prometheus_running_state
+
 - name: "Start prometheus on the cluster"
-  when: prometheus_stack_file_status.changed|bool
+  when: >
+    prometheus_stack_file_status.changed|bool
+    or prometheus_running_state.changed|bool
   shell: "docker stack deploy -c '{{ prometheus_stack_file }}' {{ prometheus_stack }}"

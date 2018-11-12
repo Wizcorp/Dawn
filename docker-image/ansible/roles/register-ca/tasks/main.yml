@@ -1,5 +1,44 @@
----
-- name: "Register CA on all hosts"
-  include_tasks: register_ca.yml target_host="{{ item }}"
-  with_items: "{{ groups['control'] | union(groups['edge']) | union(groups['worker']) }}"
+- name: "Create distribution group"
+  set_fact:
+    register_ca_control: "{{ groups['control'][0] }}"
+    register_ca_group: "{{ groups['control'] | union(groups['edge']) | union(groups['worker']) }}"
+
+- name: "Fetch remote CA"
+  uri:
+    headers:
+      X-Vault-Token: "{{ vault_token }}"
+    url: "http://127.0.0.1:8200/v1/{{ backend }}/pki/ca/pem"
+    method: GET
+    return_content: yes
+  delegate_to: "{{ register_ca_control }}"
+  register: ca_cert
+
+- name: "Save {{ backend }} CA to anchors folder"
+  copy:
+    content: "{{ ca_cert.content }}"
+    dest: "/etc/pki/ca-trust/source/anchors/{{ backend }}.pem"
+  register: anchors_copy
+  delegate_to: "{{ item }}"
+  with_items: "{{ register_ca_group }}"
   run_once: true
+
+- name: "Regenerate CAs"
+  when: anchors_copy.changed|bool
+  shell: update-ca-trust
+  delegate_to: "{{ item }}"
+  with_items: "{{ register_ca_group }}"
+  run_once: true
+  loop_control:
+    label: "{{ item }}"
+  register: cas_regeneration
+  async: 7200
+  poll: 0
+
+- name: "Wait for CAs to be regenerated"
+  when: anchors_copy.changed|bool
+  async_status:
+    jid: "{{ item.ansible_job_id }}"
+  register: cas_jobs
+  until: cas_jobs.finished
+  retries: 300
+  with_items: cas_regeneration.results

@@ -1,0 +1,4 @@
+- name: "Restart teleport"
+  service:
+    name: teleport
+    state: restarted

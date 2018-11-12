@@ -18,9 +18,16 @@
     src: "grafana_stack.yml.j2"
   register: grafana_stack_file_status
 
+- name: "Check if grafana is running"
+  shell: "docker stack ps {{ grafana_stack }}"
+  changed_when: grafana_running_state.rc != 0
+  ignore_errors: yes
+  register: grafana_running_state
+
 - name: "Start grafana on the cluster"
   when: >
-    grafana_config_file_status.changed|bool
+    grafana_running_state.changed|bool
+    or grafana_config_file_status.changed|bool
     or grafana_ldap_file_status.changed|bool
     or grafana_stack_file_status.changed|bool
   shell: "docker stack deploy -c '{{ grafana_stack_file }}' {{ grafana_stack }}"
