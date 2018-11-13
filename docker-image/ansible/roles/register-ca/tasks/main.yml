@@ -35,7 +35,7 @@
   poll: 0
 
 - name: "Wait for CAs to be regenerated"
-  when: anchors_copy.changed|bool
+  when: cas_regeneration.changed|bool
   async_status:
     jid: "{{ item.ansible_job_id }}"
   register: cas_jobs

@@ -3,6 +3,7 @@ import json
 import os
 import socket
 import ssl
+import time
 import urllib2
 import warnings
 
@@ -106,8 +107,14 @@ EOM
     # from the default vault login mechanism
     vault_token_file = os.path.join(home_folder, '.vault-token')
     if vault_token is None and os.path.exists(vault_token_file):
-        with open(vault_token_file) as fd:
-            vault_token = fd.read()
+        stats = os.stat(vault_token_file)
+        last_time = time.time() - stats.st_mtime
+
+        if last_time > 60 * 60 * 24:
+            os.remove(vault_token_file)
+        else:
+            with open(vault_token_file) as fd:
+                vault_token = fd.read()
 
     # from the environment as a role
     if (vault_token is None and 'VAULT_ROLE_ID' in os.environ and
