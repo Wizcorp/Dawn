@@ -31,7 +31,7 @@ services:
       labels:
         traefik.port: 9000
         traefik.frontend.rule: "Host: {{ portainer_endpoint }}"
-        traefik.frontend.whitelist.sourceRange: "{{ portainer_whitelist }}"
+        traefik.frontend.whiteList.sourceRange: "{{ portainer_whitelist }}"
         traefik.frontend.headers.SSLRedirect: "true"
         traefik.backend.loadbalancer.stickiness: "true"
         traefik.docker.network: traefik_net

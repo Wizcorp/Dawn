@@ -5,6 +5,7 @@ resource "ansible_group" "all" {
     ansible_ssh_private_key_file = "/home/dawn/.ssh/deploy"
     ansible_host_key_checking    = "false"
     local_domain_name            = "${var.domain}"
+    gateway_ipv4                 = "${aws_eip.nat.public_ip}"
     smtp_hostname                = "email-smtp.${var.ses_region}.amazonaws.com"
     smtp_port                    = "587"
     smtp_username                = "${aws_iam_access_key.smtp.id}"
