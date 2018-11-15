@@ -75,3 +75,23 @@
       - "5601:5601"
     links:
       - elasticsearch
+
+- name: "Install curator"
+  pip:
+    name: elasticsearch-curator==5.6.0
+    virtualenv: /opt/dawn/deploy
+    virtualenv_site_packages: yes
+  when: groups['control'][0] == inventory_hostname
+
+- name: "Install small binary to help clean old ES indices"
+  template:
+    src: "es_purge.sh.j2"
+    dest: "/usr/local/bin/es_purge"
+    mode: 0755
+
+- name: "Setup a cron to clean up ES/Kibana logs periodically"
+  when: groups['control'][0] == inventory_hostname
+  cron:
+    name: "purge kibana logs"
+    special_time: "daily"
+    job: es_purge "logstash-" {{ log_retention }}

@@ -12,6 +12,9 @@ local_vault_client_key_file: "{{ local_storage_dir }}/certs/vault/client.key.pem
 local_vault_client_cert_file: "{{ local_storage_dir }}/certs/vault/client.cert.pem"
 local_vault_client_ca_file: "{{ local_storage_dir }}/certs/vault/client.ca.pem"
 
+log_retention_days: 14
+metrics_retention_days: 14
+
 # Email configuration
 smtp_hostname: ""
 smtp_port: "25"

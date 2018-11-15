@@ -1,3 +1,5 @@
+metrics_retention: 14 days
+
 grafana_image: grafana/grafana
 grafana_version: 5.1.0
 grafana_whitelist: 0.0.0.0/0

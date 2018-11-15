@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+set -e
+
+source {{ ansible_virtualenv }}/bin/activate
+
+pattern="${1}"
+count="${2}"
+unit="${3}"
+
+if
+    [ "${pattern}" == "" ] || [ "${count}" == "" ] || [ "${unit}" == "" ]
+then
+    echo "Usage: ${0} [prefix] [count] [days|weeks]"
+    exit 1
+fi
+
+curator_cli \
+    delete_indices \
+    --ignore_empty_list \
+    --filter_list "[
+        {\"filtertype\": \"pattern\", \"kind\": \"prefix\", \"value\": \"${pattern}\"},
+        {
+        \"filtertype\":\"age\",
+        \"source\":\"name\",
+        \"timestring\":\"%Y.%m.%d\",
+        \"direction\":\"older\",
+        \"unit\":\"${unit}\",
+        \"unit_count\": ${count}
+        }
+    ]"

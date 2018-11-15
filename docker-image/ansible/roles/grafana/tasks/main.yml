@@ -99,6 +99,14 @@
     headers:
       Host: "{{ grafana_host }}"
 
+- name: "Setup a cron to clean up ES metrics periodically"
+  when: groups['control'][0] == inventory_hostname
+  cron:
+    name: "purge ES metrics"
+    special_time: "daily"
+    job: es_purge "elasticsearch_metrics-" {{ log_retention }}
+
+
 - name: "Check if the hardware dashboard exists"
   uri:
     url: "{{ grafana_url }}/api/search?query=Hardware"

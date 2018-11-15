@@ -11,6 +11,9 @@ local_vault_client_key_file: "{{ local_storage_dir }}/certs/vault/client.key.pem
 local_vault_client_cert_file: "{{ local_storage_dir }}/certs/vault/client.cert.pem"
 local_vault_client_ca_file: "{{ local_storage_dir }}/certs/vault/client.ca.pem"
 
+log_retention: 14 days
+metrics_retention: 14 days
+
 ##
 # Use AWS's DNS
 ##
