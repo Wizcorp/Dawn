@@ -14,7 +14,7 @@ local_vault_client_ca_file: "{{ local_storage_dir }}/certs/vault/client.ca.pem"
 log_retention: 14 days
 metrics_retention: 14 days
 
-whitelist: "10.0.0.0/8,172.16.0.0/12,{{ gateway_ipv4 }}/32"
+whitelist: "10.0.0.0/8,172.16.0.0/12,{{ gateway_cidr }},{{ edges_cidr }}"
 portainer_whitelist: "{{ whitelist }}"
 kibana_whitelist: "{{ whitelist }}"
 grafana_whitelist: "{{ whitelist }}"
