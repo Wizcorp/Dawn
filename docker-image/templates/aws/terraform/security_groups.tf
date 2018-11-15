@@ -136,6 +136,14 @@ resource "aws_security_group" "external_access" {
     cidr_blocks = "${var.secure_access_whitelist}"
   }
 
+  # Send email
+  egress {
+    from_port   = 587
+    to_port     = 587
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   # Ping
   ingress {
     from_port   = -1

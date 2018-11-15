@@ -80,11 +80,13 @@ motd() {
 
     # display additional information
     motd_section "Web UI"
+    motd_section_entry "Portainer" "https://portainer.{{ local_domain_name }}/"
     motd_section_entry "Kibana" "https://kibana.{{ local_domain_name }}/"
     motd_section_entry "Grafana" "https://grafana.{{ local_domain_name }}/"
     motd_section_entry "Prometheus" "https://prometheus.{{ local_domain_name }}"
     motd_section_entry "Traefik" "https://{{ local_domain_name }}:8080"
     motd_section_entry "LDAP Admin" "https://ldap-admin.{{ local_domain_name }}"
+    motd_section_entry "Pass. reset" "https://ldap-ssp.{{ local_domain_name }}"
     motd_section_entry "Teleport" "https://teleport.{{ local_domain_name }}"
     motd_section_end
 

@@ -9,12 +9,16 @@ variable "project_name" {}
 
 variable "project_environment" {}
 
+variable "domain" {}
+
 variable "deploy_pubkey" {}
 
 ###
 # AWS Configuration
 ###
 variable "region" {}
+
+variable "ses_region" {}
 
 # Which availability zone to target
 variable "availability_zone" {}

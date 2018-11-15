@@ -1,0 +1,60 @@
+- name: "Create portainer stack file"
+  template:
+    dest: "{{ portainer_stack_file }}"
+    src: "portainer_stack.yml.j2"
+  register: portainer_stack_file_status
+
+- name: "Check if portainer is running"
+  shell: "docker stack ps {{ portainer_stack }}"
+  changed_when: portainer_running_state.rc != 0
+  ignore_errors: yes
+  register: portainer_running_state
+
+- name: "Start portainer on the cluster"
+  when: >
+    portainer_running_state.changed|bool
+    or portainer_stack_file_status.changed|bool
+  shell: "docker stack deploy -c '{{ portainer_stack_file }}' {{ portainer_stack }}"
+
+- name: "Check if we will need to create admin user"
+  uri:
+    url: "https://{{ portainer_endpoint }}/api/auth"
+    method: POST
+    return_content: yes
+    body_format: json
+    body: '{ "Username":"{{ portainer_admin_username }}", "Password":"{{ portainer_admin_password }}"}'
+  changed_when: portainer_create_user|failed
+  register: portainer_create_user
+  ignore_errors: true
+
+- name: "Configure admin user password"
+  uri:
+    url: "https://{{ portainer_endpoint }}/api/users/admin/init"
+    method: POST
+    return_content: yes
+    body_format: json
+    body: '{ "Username":"{{ portainer_admin_username }}", "Password":"{{ portainer_admin_password }}"}'
+  when: portainer_create_user.changed|bool
+  register: portainer_user_created
+  retries: 10
+  delay: 10
+  until: portainer_user_created|success
+
+- name: "Generate authentication token"
+  uri:
+    url: "https://{{ portainer_endpoint }}/api/auth"
+    method: POST
+    return_content: yes
+    body_format: json
+    body: '{ "Username":"{{ portainer_admin_username }}", "Password":"{{ portainer_admin_password }}"}'
+  register: auth_token
+
+- name: "Configure portainer settings"
+  uri:
+    url: "https://{{ portainer_endpoint }}/api/settings"
+    method: PUT
+    return_content: yes
+    headers:
+      Authorization: "{{ (auth_token.content|from_json).jwt }}"
+    body_format: json
+    body: "{{ lookup('template','settings.json.j2') }}"

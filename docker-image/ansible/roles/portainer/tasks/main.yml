@@ -1,0 +1,43 @@
+- import_tasks: server.yml
+  when: groups['control'][0] == inventory_hostname
+
+- name: "Generate authentication token"
+  uri:
+    url: "https://{{ portainer_endpoint }}/api/auth"
+    method: POST
+    return_content: yes
+    body_format: json
+    body: '{ "Username":"{{ portainer_admin_username }}", "Password":"{{ portainer_admin_password }}"}'
+  register: auth_token
+
+- name: "Check if endpoint is registered"
+  warn: false
+  shell: |
+    curl "https://{{ portainer_endpoint }}/api/endpoints" \
+      -XGET \
+      -H "Authorization: {{ (auth_token.content|from_json).jwt }}"
+  register: portainer_endpoints
+  changed_when: >
+    portainer_endpoints.stdout
+      |from_json
+      |selectattr("Name", "equalto", inventory_hostname)
+      |list
+      |length == 0
+
+- name: "Register endpoint"
+  warn: false
+  shell: |
+    curl "https://{{ portainer_endpoint }}/api/endpoints" \
+      -XPOST \
+      -H "Authorization: {{ (auth_token.content|from_json).jwt }}" \
+      -F "Name={{ inventory_hostname }}" \
+      -F "EndpointType=1" \
+      -F "URL=tcp://{{ private_ipv4 + ":2376" }}" \
+      -F "PublicURL={{ private_ipv4 + ":2376" }}" \
+      -F "TLS=true" \
+      -F "TLSSkipVerify=false" \
+      -F "TLSSkipClientVerify=false" \
+      -F "TLSCACertFile=@{{ docker_client_ca_file }}" \
+      -F "TLSCertFile=@{{ docker_client_cert_file }}" \
+      -F "TLSKeyFile=@{{ docker_client_key_file }}"
+  when: portainer_endpoints.changed|bool

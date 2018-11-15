@@ -1,5 +1,10 @@
 # Provider definition
 provider "aws" {
+  region = "${var.ses_region}"
+  alias  = "ses_region"
+}
+
+provider "aws" {
   region = "${var.region}"
 }
 

@@ -12,6 +12,12 @@ local_vault_client_key_file: "{{ local_storage_dir }}/certs/vault/client.key.pem
 local_vault_client_cert_file: "{{ local_storage_dir }}/certs/vault/client.cert.pem"
 local_vault_client_ca_file: "{{ local_storage_dir }}/certs/vault/client.ca.pem"
 
+# Email configuration
+smtp_hostname: ""
+smtp_port: "25"
+smtp_username: ""
+smtp_password: ""
+
 # This is the external interface that the servers use for talking to the
 # outside world
 private_interface: eth0

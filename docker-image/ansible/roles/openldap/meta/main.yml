@@ -11,3 +11,9 @@ dependencies:
     service_port: 18080
     service_ip: "{{ group_ipv4.control[0] }}"
     service_whitelist: "{{ phpldapadmin_whitelist }}"
+  - role: traefik-expose
+    service_name: ldap-ssp
+    service_scheme: http
+    service_port: 28080
+    service_ip: "{{ group_ipv4.control[0] }}"
+    service_whitelist: "{{ phpldapadmin_whitelist }}"

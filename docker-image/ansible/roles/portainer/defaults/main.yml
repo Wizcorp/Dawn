@@ -1,0 +1,21 @@
+portainer_version: "1.19.2"
+
+portainer_endpoint: "portainer.{{ local_domain_name }}"
+portainer_whitelist: "0.0.0.0/0"
+portainer_stack: "portainer"
+portainer_stack_file: "/opt/dawn/portainer.yml"
+
+portainer_admin_username: "admin"
+portainer_admin_password: "RkhGg!,n4JM.SqcTV>4r@sEM"
+
+portainer_allow_bindmounts_users: true
+portainer_allow_privileged_users: true
+
+docker_client_key_file: /etc/ssl/certs/docker/client.key.pem
+docker_client_cert_file: /etc/ssl/certs/docker/client.cert.pem
+docker_client_ca_file: /etc/ssl/certs/docker/client.ca.pem
+
+ldap_server: "{{ group_ipv4.control[0] }}"
+ldap_server_port: 389
+ldap_dc: "dc={{ local_domain_name.split('.') | join(',dc=') }}"
+ldap_admin_user: "cn=admin,{{ ldap_dc }}"

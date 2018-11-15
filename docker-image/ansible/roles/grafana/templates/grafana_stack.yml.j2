@@ -51,5 +51,6 @@ services:
         traefik.port: 3000
         traefik.frontend.rule: "Host:grafana.{{ local_domain_name }}"
         traefik.frontend.whitelist.sourceRange: "{{ grafana_whitelist }}"
+        traefik.frontend.headers.SSLRedirect: "true"
         traefik.backend.loadbalancer.stickiness: "true"
         traefik.docker.network: traefik_net

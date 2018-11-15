@@ -1,8 +1,12 @@
 # Region
 region = "us-west-1"
+ses_region = "us-west-2"
 
 # Availability zone
 availability_zone = "us-west-1b"
+
+# Domain name for the environment
+domain = ""
 
 # CIDR Block to assign to the VPC's network
 cidr_blocks = {

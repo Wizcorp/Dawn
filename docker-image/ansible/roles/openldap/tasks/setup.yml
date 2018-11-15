@@ -68,6 +68,31 @@
       PHPLDAPADMIN_HTTPS: "false"
       PHPLDAPADMIN_TRUST_PROXY_SSL: "true"
 
+- name: "Start self-service password reset"
+  docker_container:
+    name: ldap-ssp
+    image: tiredofit/self-service-password
+    restart_policy: always
+    published_ports:
+      - "28080:80"
+    links:
+      - "openldap:ldap"
+    env:
+      SECRETEKEY: "all your base are belong to us"
+      LDAP_SERVER: "ldap://{{ ldap_server }}:{{ ldap_server_port }}"
+      LDAP_BINDDN: "{{ ldap_admin_user }}"
+      LDAP_BINDPASS: "{{ ldap_admin_password }}"
+      LDAP_BASE_SEARCH: "{{ ldap_dc }}"
+      PASSWORD_MIN_LENGTH: 8
+      MAIL_FROM: "ldap@{{ local_domain_name }}"
+      MAIL_FROM_NAME: "LDAP:{{ local_domain_name }}"
+      NOTIFY_ON_CHANGE: true
+      SMTP_HOST: "{{ smtp_hostname }}"
+      SMTP_PORT: "{{ smtp_port }}"
+      SMTP_AUTH_ON: "true"
+      SMTP_USER: "{{ smtp_username }}"
+      SMTP_PASS: "{{ smtp_password }}"
+
 - name: "Create the different organizational units"
   ldap_entry:
     server_uri: "ldap://{{ ldap_server }}:{{ ldap_server_port }}/"

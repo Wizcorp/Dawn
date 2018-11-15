@@ -72,6 +72,22 @@ RUN wget -q https://releases.hashicorp.com/terraform/${terraform_version}/terraf
     && unzip -q /tmp/terraform.zip \
     && rm /tmp/terraform.zip
 
+# Ansible inventory using Terraform state
+RUN wget https://raw.githubusercontent.com/nbering/terraform-inventory/master/terraform.py \
+    -O /etc/ansible/terraform.py \
+    && chmod 755 /etc/ansible/terraform.py
+
+# Ansible provider
+ARG terraform_ansible_repo=https://github.com/nbering/terraform-provider-ansible
+ARG terraform_ansible_version=v0.0.4
+
+RUN cd /tmp \
+    && export zip="terraform-provider-ansible-linux_386.zip" \
+    && wget ${terraform_ansible_repo}/releases/download/${terraform_ansible_version}/${zip} \
+    && unzip ${zip} \
+    && mv linux_386/terraform-provider-ansible_${terraform_ansible_version} /usr/bin/terraform-provider-ansible \
+    && rm ${zip}
+
 # Install Vault
 RUN wget -q https://releases.hashicorp.com/vault/${vault_version}/vault_${vault_version}_linux_amd64.zip \
       -O /tmp/vault.zip \

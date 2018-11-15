@@ -1,0 +1,38 @@
+{
+  {% if portainer_templates_url is defined %}
+  "TemplatesURL": "{{ portainer_templates_url }}",
+  {% endif %}
+  {% if portainer_company_logo_url is defined %}
+  "LogoURL": "{{ portainer_company_logo_url }}",
+  {% endif %}
+  "DisplayDonationHeader": false,
+  "DisplayExternalContributors": true,
+  "AuthenticationMethod": 2,
+  "LDAPSettings": {
+    "ReaderDN": "{{ ldap_admin_user }}",
+    "Password": "{{ ldap_admin_password }}",
+    "URL": "{{ ldap_server }}:{{ ldap_server_port }}",
+    "TLSConfig": {
+      "TLS": false,
+      "TLSSkipVerify": true
+    },
+    "StartTLS": false,
+    "SearchSettings": [
+      {
+        "BaseDN": "ou=users,{{ ldap_dc }}",
+        "Filter": "",
+        "UserNameAttribute": "uid"
+      }
+    ],
+    "GroupSearchSettings": [
+      {
+        "GroupBaseDN": "ou=groups,{{ ldap_dc }}",
+        "GroupFilter": "",
+        "GroupAttribute": "cn"
+      }
+    ],
+    "AutoCreateUsers": true
+  },
+  "AllowBindMountsForRegularUsers": {{ portainer_allow_bindmounts_users }},
+  "AllowPrivilegedModeForRegularUsers": {{ portainer_allow_privileged_users }}
+}

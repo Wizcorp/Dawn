@@ -72,5 +72,13 @@
     - role: prometheus
       tags: [ 'group:monitor', 'role:prometheus', 'type:monitoring' ]
 
+# Deploy portainer
+- hosts: all
+  become: true
+  gather_facts: yes
+  roles:
+    - role: portainer
+      tags: [ 'role:portainer' ]
+
 # Fetch client certificates
 - include: /dawn/ansible/playbooks/client_certs.yml

@@ -65,6 +65,12 @@ fi
 
 popd > /dev/null
 
+if
+  [ -d "${PROJECT_ENVIRONMENT_FILES_PATH}/terraform" ]
+then
+  export ANSIBLE_INVENTORY="/etc/ansible/terraform.py"
+fi
+
 # We finally downgrade the user and run the
 # command. The reason for this is twofold:
 #
