@@ -30,15 +30,3 @@
   run_once: true
   loop_control:
     label: "{{ item }}"
-  register: cas_regeneration
-  async: 7200
-  poll: 0
-
-- name: "Wait for CAs to be regenerated"
-  when: cas_regeneration.changed|bool
-  async_status:
-    jid: "{{ item.ansible_job_id }}"
-  register: cas_jobs
-  until: cas_jobs.finished
-  retries: 300
-  with_items: cas_regeneration.results
