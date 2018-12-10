@@ -1,0 +1,14 @@
+- name: "Install ntp"
+  yum:
+    name: ntp
+    state: latest
+  register: ntp_installed
+
+- name: "Sychronize time"
+  shell: ntpdate pool.ntp.org
+  when: ntp_installed.changed
+
+- name: "Ensure NTP Daemon is running"
+  service:
+    name: ntpd
+    enabled: yes
