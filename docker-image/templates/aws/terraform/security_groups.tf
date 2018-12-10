@@ -61,6 +61,14 @@ resource "aws_security_group" "external_access" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # NTP requests
+  egress {
+    from_port   = 123
+    to_port     = 123
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   # SSH
   ingress {
     from_port   = 22

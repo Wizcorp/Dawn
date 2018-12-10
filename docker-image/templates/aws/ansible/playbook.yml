@@ -48,6 +48,8 @@
       tags: [ 'role:https', 'type:certificates' ]
     - role: rsyslog
       tags: [ 'role:rsyslog', 'type:monitoring' ]
+    - role: ntp
+      tags: [ 'role:ntp' ]
 
 # Setup vault, ldap and swarm on the control nodes
 - hosts: control
