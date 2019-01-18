@@ -29,7 +29,7 @@
   register: vault_policy_list
 
 - name: "Create the {{ approle_name }} app policy"
-  when: "'{{ approle_name }}' not in vault_policy_list.policies|default([])"
+  when: "approle_force_renew or approle_name not in vault_policy_list.policies|default([])"
   hashivault_policy_set:
     token: "{{ vault_vars.root_token }}"
     name: "{{ approle_name }}"
@@ -37,7 +37,7 @@
 
 # Finally create our role
 - name: "Create the {{ approle_name }} app role"
-  when: "'{{ approle_name }}' not in vault_auth_roles.secrets|default([])"
+  when: "approle_force_renew or approle_name not in vault_auth_roles.secrets|default([])"
   hashivault_write:
     token: "{{ vault_vars.root_token }}"
     secret: "/auth/approle/role/{{ approle_name }}"

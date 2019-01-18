@@ -1,4 +1,4 @@
-- include: /dawn/ansible/playbooks/setup.yml
+- import_playbook: /dawn/ansible/playbooks/setup.yml
 
 - hosts: 'control[0]'
   become: true
@@ -8,6 +8,7 @@
     VAULT_ADDR: "{{ vault_addr }}"
   roles:
     - role: vault-approle
+      approle_force_renew: true
       approle_name: "ansible"
       approle_policy: "{{ lookup('file', playbook_dir + '/../files/vault/policies/ansible.hcl') }}"
       approle_token_ttl: "{{ vault_ansible_token_ttl|default(7200) }}"
