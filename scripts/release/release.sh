@@ -38,7 +38,7 @@ release_args="--user ${github_organization} --repo ${github_name} --tag ${binary
 GITHUB_RELEASE="docker run --rm -it -v $(pwd)/src/dist:/dist -e GITHUB_TOKEN=${GITHUB_TOKEN} casualjim/github-release"
 
 if
-    ! (git tag | grep -q "^v${binary_version}$")
+    ! (git tag | grep -q "^${binary_version}$")
 then
     echo "* Building binary"
     ${SCRIPT_DIR}/../build-binary/nix.sh ${binary_version} all ${image_version} &>> ./build.log
