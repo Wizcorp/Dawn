@@ -41,7 +41,7 @@ binary:
   name: "dawn"
 
   # The current version of the binary
-  version: "0.14.8"
+  version: "0.14.9"
 
   # (Optional) URLs to call when attempting auto-update.
   # Defaults:
@@ -78,7 +78,7 @@ image:
   name: dawn
 
   # Current image version
-  version: "0.14.8"
+  version: "0.14.9"
 
   # Root folder where most files will be uploaded or mounted
   root_folder: /dawn
