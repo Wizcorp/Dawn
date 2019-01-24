@@ -19,14 +19,14 @@
     "StartTLS": false,
     "SearchSettings": [
       {
-        "BaseDN": "ou=users,{{ ldap_dc }}",
+        "BaseDN": "{{ portainer_ldap_user_search }}",
         "Filter": "",
         "UserNameAttribute": "uid"
       }
     ],
     "GroupSearchSettings": [
       {
-        "GroupBaseDN": "ou=groups,{{ ldap_dc }}",
+        "GroupBaseDN": "{{ portainer_ldap_group_search }}",
         "GroupFilter": "",
         "GroupAttribute": "cn"
       }

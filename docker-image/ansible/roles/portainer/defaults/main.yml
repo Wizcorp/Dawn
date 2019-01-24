@@ -19,3 +19,7 @@ ldap_server: "{{ group_ipv4.control[0] }}"
 ldap_server_port: 389
 ldap_dc: "dc={{ local_domain_name.split('.') | join(',dc=') }}"
 ldap_admin_user: "cn=admin,{{ ldap_dc }}"
+
+portainer_ldap_user_search: "users,{{ ldap_dc }}"
+portainer_ldap_group_search: "groups,{{ ldap_dc }}"
+
