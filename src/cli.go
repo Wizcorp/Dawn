@@ -127,6 +127,8 @@ func printHelp() {
 	fmt.Println("    --update              Update this binary")
 	fmt.Println("    --version             Show version information")
 	fmt.Println("    --build <environment> Build a docker image that embeds the environment")
+	fmt.Println("    --push <environment>  Push image for an environment")
+	fmt.Println("    --pull <environment>  Pull image for an environment")
 	fmt.Println("    --help                Show this screen")
 	fmt.Println()
 	fmt.Printf("For more information: %s\n", cliDocsURL)
@@ -242,6 +244,10 @@ func getProjectRoot() string {
 
 func getConfigurationFolderPath() string {
 	return fmt.Sprintf("%s/%s", getProjectRoot(), cliConfigurationFolder)
+}
+
+func getEnvironmentFolderPath(env string) string {
+	return fmt.Sprintf("%s/%s", getConfigurationFolderPath(), env)
 }
 
 func getConfigurationFilePath() string {
@@ -434,6 +440,34 @@ func runUpdate() (int, error) {
 	return runSubProcess(shell, arguments)
 }
 
+func runPull(environment string) (int, error) {
+	configuration, err := getConfigurationForEnvironment(environment)
+	if err != nil {
+		panic(err)
+	}
+
+	arguments := []string{
+		"pull",
+		fmt.Sprintf("%s:%s", configuration.Image, environment),
+	}
+
+	return runSubProcess("docker", arguments)
+}
+
+func runPush(environment string) (int, error) {
+	configuration, err := getConfigurationForEnvironment(environment)
+	if err != nil {
+		panic(err)
+	}
+
+	arguments := []string{
+		"push",
+		fmt.Sprintf("%s:%s", configuration.Image, environment),
+	}
+
+	return runSubProcess("docker", arguments)
+}
+
 func runBuild(environment string) (int, error) {
 	configuration, err := getConfigurationForEnvironment(environment)
 	if err != nil {
@@ -512,6 +546,20 @@ func main() {
 		printVersion()
 	case "--update":
 		exitCode, err = runUpdate()
+	case "--pull":
+		if len(args) < 2 {
+			printHelp()
+			return
+		}
+
+		exitCode, err = runPull(args[1])
+	case "--push":
+		if len(args) < 2 {
+			printHelp()
+			return
+		}
+
+		exitCode, err = runPush(args[1])
 	case "--build":
 		if len(args) < 2 {
 			printHelp()
@@ -545,6 +593,11 @@ func main() {
 		configuration, err := getConfigurationForEnvironment(environment)
 		if err != nil {
 			panic(err)
+		}
+
+		envFolder := getEnvironmentFolderPath(environment)
+		if _, err := os.Stat(envFolder); os.IsNotExist(err) {
+			exitCode, err = runBuild(environment)
 		}
 
 		// Run the container
