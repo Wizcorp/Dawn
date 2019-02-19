@@ -12,6 +12,10 @@ grafana_stack_constraints:
   - engine.labels.dawn.node.type == control
 grafana_config_template: "config.ini.j2"
 grafana_ldap_template: "ldap.toml.j2"
+grafana_install_plugins:
+  - grafana-piechart-panel
+  - raintank-worldping-app
+  - sbueringer-consul-datasource
 
 ldap_server: "{{ group_ipv4.control[0] }}"
 ldap_server_port: 389
