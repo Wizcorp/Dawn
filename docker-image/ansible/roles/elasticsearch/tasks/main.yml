@@ -42,6 +42,32 @@
     volumes:
       - "esdata:/usr/share/elasticsearch/data"
 
+- name: "Build internal elasticsearch URL"
+  set_fact:
+    elasticsearch_url: "http://{{ group_ipv4.monitor[0] }}:9200"
+
+- name: "Check if started elasticsearch"
+  uri:
+    url: "{{ elasticsearch_url }}/_cluster/health"
+    method: GET
+  retries: 6
+  delay: 10
+  register: elasticsearch_health
+  until: elasticsearch_health.status == 200
+
+- name: "Post elasticsearch default template"
+  when: "elasticsearch_health.status == 200"
+  uri:
+    url: "{{ elasticsearch_url }}/_template/default"
+    method: PUT
+    body_format: json
+    body:
+      template: "*"
+      order: "-1"
+      settings:
+        number_of_shards: "{{ elasticsearch_number_of_shards }}"
+        number_of_replicas: "{{ elasticsearch_number_of_replicas }}"
+
 - name: "Start Logstash on monitoring nodes"
   docker_container:
     # setup elastic search for log storage from remote fluentd instances
