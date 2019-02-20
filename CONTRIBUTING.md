@@ -79,7 +79,45 @@ them under the `./scripts` folder.
 Releasing
 ---------
 
-To make a release, update `buildconfig.yml`, then:
+**Note**: You will need to set a `GITHUB_TOKEN` environment variable for the
+release process to work properly. 
+
+See [this help page](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/) to
+learn how to
+create one. We then recommend to add the variable to your `~/.bashrc`. `~/.zshrc` or equivalent.
+
+> ~/.bashrc
+
+```shell
+export GITHUB_TOKEN="deadbeef15dead"
+```
+
+To make a release, update `buildconfig.yml`. There are two version
+numbers being recorded: one for the binary, and one for the Dawn image.
+
+> buildconfig.yml
+
+```yml
+binary:
+  # The name of the binary to output
+  name: "dawn"
+
+  # The current version of the binary
+  version: "0.15.0"
+
+# [...]
+image:
+  # User or organization on Docker Hub
+  organization: wizcorp
+
+  # Image name (must match the Docker Hub repository name)
+  name: dawn
+
+  # Current image version
+  version: "0.15.0"
+```
+
+> Releasing Dawn
 
 ```bash
 ./scripts/release/release.sh
