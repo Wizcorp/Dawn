@@ -41,35 +41,35 @@ if
     ! (git tag | grep -q "^${binary_version}$")
 then
     echo "* Building binary"
-    ${SCRIPT_DIR}/../build-binary/nix.sh ${binary_version} all ${image_version} &>> ./build.log
+    ${SCRIPT_DIR}/../build-binary/nix.sh ${binary_version} all ${image_version} >> ./build.log 2>&1
 
     echo "* Pushing ${binary_version} to ${github_repo} (code and tags)"
-    git tag "${binary_version}" &>> build.log
-    git push --tags git@github.com:${github_repo}.git &>> build.log
+    git tag "${binary_version}" >> build.log 2>&1
+    git push --tags git@github.com:${github_repo}.git >> build.log 2>&1
 
     echo "* Creating GitHub release ${binary_version}"
-    ${GITHUB_RELEASE} release ${release_args} --name "${binary_version}" --description "${description}" &>> build.log
+    ${GITHUB_RELEASE} release ${release_args} --name "${binary_version}" --description "${description}" >> build.log 2>&1
 
     echo "* Uploading files to GitHub release"
-    ${GITHUB_RELEASE} upload ${release_args} --name "${binary_name}-darwin" --file "/dist/darwin/${binary_name}" &>> build.log
-    ${GITHUB_RELEASE} upload ${release_args} --name "${binary_name}-linux" --file "/dist/linux/${binary_name}" &>> build.log
-    ${GITHUB_RELEASE} upload ${release_args} --name "${binary_name}.exe" --file "/dist/windows/${binary_name}.exe" &>> build.log
+    ${GITHUB_RELEASE} upload ${release_args} --name "${binary_name}-darwin" --file "/dist/darwin/${binary_name}" >> build.log 2>&1
+    ${GITHUB_RELEASE} upload ${release_args} --name "${binary_name}-linux" --file "/dist/linux/${binary_name}" >> build.log 2>&1
+    ${GITHUB_RELEASE} upload ${release_args} --name "${binary_name}.exe" --file "/dist/windows/${binary_name}.exe" >> build.log 2>&1
 fi
 
 if
     ! docker pull "${image_name}:${image_version}" &> /dev/null
 then
     echo "* Building image"
-    ${SCRIPT_DIR}/../build-image/nix.sh &>> ./build.log
+    ${SCRIPT_DIR}/../build-image/nix.sh >> ./build.log 2>&1
 
     echo "* Log in to Docker Hub"
     docker login
 
     echo "* Pushing Docker images to Docker Hub (version ${image_version})"
-    docker tag ${image_name} ${image_name}:${image_version} &>> build.log
-    docker tag ${image_name} ${image_name}:latest &>> build.log
-    docker push ${image_name}:${image_version} &>> build.log
-    docker push ${image_name}:latest &>> build.log
+    docker tag ${image_name} ${image_name}:${image_version} >> build.log 2>&1
+    docker tag ${image_name} ${image_name}:latest >> build.log 2>&1
+    docker push ${image_name}:${image_version} >> build.log 2>&1
+    docker push ${image_name}:latest >> build.log 2>&1
 fi
 
 echo "* Release ${binary_version} (docker image version ${image_version}) completed"
