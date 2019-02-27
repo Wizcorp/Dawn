@@ -120,4 +120,4 @@
   cron:
     name: "purge kibana logs"
     special_time: "daily"
-    job: es_purge "logstash-" {{ log_retention }}
+    job: /usr/local/bin/es_purge "logstash-" {{ log_retention }}

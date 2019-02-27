@@ -9,13 +9,8 @@
     force: yes
 
 - name: "Set the hostname"
-  copy:
-    dest: /etc/hostname
-    content: "{{ inventory_hostname }}"
-    force: yes
-    owner: root
-    group: root
-    mode: 0644
+  hostname:
+    name: "{{ inventory_hostname }}"
 
 - name: "Configure hosts file"
   template:

@@ -86,11 +86,12 @@ class AnsibleEnvironment():
         # Move back to directory of origin
         os.chdir(initial_dir)
 
-        control_group = self._inventory.groups['control']
         control_host = None
+        if 'control' in self._inventory.groups:
+            control_group = self._inventory.groups['control']
 
-        if len(control_group.get_hosts()) > 0:
-            control_host = control_group.get_hosts()[0]
+            if len(control_group.get_hosts()) > 0:
+                control_host = control_group.get_hosts()[0]
 
         # Hostvars
         hostvars = {}

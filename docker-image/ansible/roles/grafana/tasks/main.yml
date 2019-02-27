@@ -104,7 +104,7 @@
   cron:
     name: "purge ES metrics"
     special_time: "daily"
-    job: es_purge "elasticsearch_metrics-" {{ log_retention }}
+    job: /usr/local/bin/es_purge "elasticsearch_metrics-" {{ log_retention }}
 
 
 - name: "Check if the hardware dashboard exists"
