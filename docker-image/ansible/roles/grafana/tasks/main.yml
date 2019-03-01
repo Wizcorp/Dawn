@@ -1,6 +1,6 @@
 - name: "Create grafana main config file"
   template:
-    src: "grafana.ini.j2"
+    src: "{{ grafana_config_template }}"
     dest: /etc/grafana.ini
     mode: 0644
   register: grafana_config_file_status
