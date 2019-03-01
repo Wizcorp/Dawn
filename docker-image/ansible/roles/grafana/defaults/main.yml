@@ -10,7 +10,7 @@ grafana_stack_file: /opt/dawn/grafana.yml
 grafana_stack: grafana
 grafana_stack_constraints:
   - engine.labels.dawn.node.type == control
-grafana_config_template: "config.ini.j2"
+grafana_config_template: "grafana.ini.j2"
 grafana_ldap_template: "ldap.toml.j2"
 grafana_install_plugins:
   - grafana-piechart-panel
