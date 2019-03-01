@@ -273,16 +273,18 @@ config_file = /etc/grafana/ldap.toml
 
 #################################### SMTP / Emailing ##########################
 [smtp]
-enabled = true
-host = {{ smtp_hostname }}:{{ smtp_port }}
-user = {{ smtp_username }}
+enabled = {{ grafana_use_smtp }}
+{% if grafana_use_smtp %}
+host = {{ grafana_stmp_host }}
+user = {{ grafana_smtp_username }}
 # If the password contains # or ; you have to wrap it with trippel quotes. Ex """#password;"""
-password = {{ smtp_password }}
+password = {{ grafana_smtp_password }}
 ;cert_file =
 ;key_file =
 ;skip_verify = false
 from_address = grafana@{{ local_domain_name }}
 from_name = Grafana:{{ local_domain_name }}
+{% endif %}
 
 [emails]
 ;welcome_email_on_sign_up = false
