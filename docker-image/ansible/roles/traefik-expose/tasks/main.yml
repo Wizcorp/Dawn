@@ -12,6 +12,8 @@
       value: "1"
     - key: "traefik/frontends/{{ service_name }}/backend"
       value: "{{ service_name }}"
+    - key: "traefik/frontends/{{ service_name }}/entrypoints"
+      value: "{{ service_entrypoints | default('http,https') }}"
     - key: "traefik/frontends/{{ service_name }}/routes/{{ service_name }}/rule"
       value: "Host:{{ service_name }}.{{ local_domain_name }}"
     - key: "traefik/frontends/{{ service_name }}/whitelist/sourcerange"
