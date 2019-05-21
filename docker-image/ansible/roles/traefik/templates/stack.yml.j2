@@ -2,6 +2,10 @@ version: "3.2"
 networks:
   net:
     driver: overlay
+    ipam:
+      config:
+        - subnet: {{ traefik_subnet }}
+
 services:
   lb:
     image: {{ traefik_image }}
