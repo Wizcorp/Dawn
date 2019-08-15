@@ -22,7 +22,7 @@
     dest: /etc/logstash/elasticsearch-template.json
     mode: 0644
 
-- name: "Start ElasticSearch on monitoring nodes"
+- name: "Start ElasticSearch version 6 or earlier on monitoring nodes"
   docker_container:
     # setup elastic search for log storage from remote fluentd instances
     name: elasticsearch
@@ -41,6 +41,31 @@
       - "9300:9300"
     volumes:
       - "esdata:/usr/share/elasticsearch/data"
+  when: elasticsearch_version is match("[56]\.\d+\.\d+")
+
+- name: "Start ElasticSearch version 7 or later on monitoring nodes"
+  docker_container:
+    # setup elastic search for log storage from remote fluentd instances
+    name: elasticsearch
+    image: "{{ elasticsearch_image }}:{{ elasticsearch_version }}"
+    env:
+      ES_JAVA_OPTS: "{{ elasticsearch_java_opts }}"
+      http.host: 0.0.0.0
+      transport.host: 0.0.0.0
+      node.name: "{{ inventory_hostname }}"
+      cluster.initial_master_nodes: "{{ inventory_hostname }}"
+      cluster.name: "{{ elasticsearch_cluster_name }}"
+      xpack.security.enabled: "false"
+      bootstrap.memory_lock: "true"
+    restart_policy: unless-stopped
+    ulimits:
+      - "memlock:-1:-1"
+    published_ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - "esdata:/usr/share/elasticsearch/data"
+  when: not elasticsearch_version is match("[56]\.\d+\.\d+")
 
 - name: "Build internal elasticsearch URL"
   set_fact:
