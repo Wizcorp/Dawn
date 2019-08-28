@@ -20,6 +20,8 @@ grafana_use_smtp: true
 grafana_stmp_host: "{{ smtp_hostname }}:{{ smtp_port }}"
 grafana_smtp_username: "{{ smtp_username }}"
 grafana_smtp_password: "{{ smtp_password }}"
+# Elasticsearch version as a number (2/5/56/60/70)
+grafana_datasource_es_version: 56
 
 ldap_server: "{{ group_ipv4.control[0] }}"
 ldap_server_port: 389

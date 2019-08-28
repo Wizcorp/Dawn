@@ -87,7 +87,7 @@
       basicAuth: false
       database: "[elasticsearch_metrics-]YYYY.MM.DD"
       jsonData:
-        esVersion: 56
+        esVersion: "{{ grafana_datasource_es_version }}"
         interval: "Daily"
         keepCookies: []
         maxConcurrentShardRequests: 256
