@@ -9,3 +9,4 @@ elasticsearch_cluster_name: "dawn"
 logstash_image: docker.elastic.co/logstash/logstash
 kibana_image: docker.elastic.co/kibana/kibana
 kibana_whitelist: 0.0.0.0/0
+kibana_i18n_locale: en
