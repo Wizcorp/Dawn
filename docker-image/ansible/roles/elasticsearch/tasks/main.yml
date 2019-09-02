@@ -121,6 +121,7 @@
       LOGGING_VERBOSE: "false"
       LOGGING_QUIET: "true"
       XPACK_SECURITY_ENABLED: "false"
+      I18N_LOCALE: "{{ kibana_i18n_locale }}"
     restart_policy: unless-stopped
     published_ports:
       - "5601:5601"
