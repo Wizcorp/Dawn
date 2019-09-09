@@ -130,7 +130,7 @@
 
 - name: "Install curator"
   pip:
-    name: elasticsearch-curator==5.6.0
+    name: elasticsearch-curator==5.7.6
     virtualenv: /opt/dawn/deploy
     virtualenv_site_packages: yes
   when: groups['control'][0] == inventory_hostname
