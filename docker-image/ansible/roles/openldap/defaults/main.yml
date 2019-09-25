@@ -8,8 +8,8 @@ ldap_server_cert_ttl: 8760h
 ldap_dc: "dc={{ local_domain_name.split('.') | join(',dc=') }}"
 ldap_admin_user: "cn=admin,{{ ldap_dc }}"
 
-ldap_cert_file: /etc/ssl/certs/ldap/server.key.pem
-ldap_key_file: /etc/ssl/certs/ldap/server.cert.pem
+ldap_cert_file: /etc/ssl/certs/ldap/server.cert.pem
+ldap_key_file: /etc/ssl/certs/ldap/server.key.pem
 ldap_ca_file: /etc/ssl/certs/ldap/server.ca.pem
 ldap_organisation: Dawn
 
